@@ -1,0 +1,373 @@
+{
+    "_meta": {
+        "project": "D-Music",
+        "description": "D-Music音乐平台完整配置变量",
+        "version": "2.0.0",
+        "created": "2026-02-21",
+        "updated": "2026-02-21",
+        "author": "YYC³ Team",
+        "database": "yyc3_music",
+        "server_port": 3250
+    },
+    "database": {
+        "mysql": {
+            "host": "127.0.0.1",
+            "port": 3306,
+            "database": "yyc3_music",
+            "user": "yyc3_music",
+            "password": "yyc3_music_0379",
+            "charset": "utf8mb4",
+            "collation": "utf8mb4_unicode_ci",
+            "timezone": "+08:00",
+            "connectionString": "mysql://yyc3_music:yyc3_music_0379@127.0.0.1:3306/yyc3_music?charset=utf8mb4",
+            "pool": {
+                "min": 5,
+                "max": 20,
+                "idle": 10000,
+                "acquire": 30000
+            },
+            "tables": {
+                "count": 21,
+                "list": [
+                    "users",
+                    "user_social",
+                    "user_preferences",
+                    "user_star_power",
+                    "star_power_transactions",
+                    "star_power_rules",
+                    "musics",
+                    "albums",
+                    "playlists",
+                    "playlist_musics",
+                    "playlist_collaborators",
+                    "ranking_data",
+                    "likes",
+                    "comments",
+                    "shares",
+                    "play_history",
+                    "favorites",
+                    "favorite_items",
+                    "follows",
+                    "messages",
+                    "checkins"
+                ]
+            }
+        },
+        "redis": {
+            "host": "127.0.0.1",
+            "port": 6379,
+            "password": "",
+            "db": 2,
+            "prefix": "dmusic:",
+            "keyPrefix": "dmusic:",
+            "connectionString": "redis://127.0.0.1:6379/2"
+        }
+    },
+    "server": {
+        "name": "D-Music",
+        "port": 3250,
+        "host": "0.0.0.0",
+        "env": "development",
+        "debug": true,
+        "apiPrefix": "/api/v1",
+        "cors": {
+            "enabled": true,
+            "origin": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+            "headers": ["Content-Type", "Authorization"]
+        }
+    },
+    "jwt": {
+        "secret": "yyc3_dmusic_jwt_secret_key_2026_0379",
+        "expiresIn": "7d",
+        "refreshExpiresIn": "30d",
+        "issuer": "D-Music",
+        "audience": "dmusic-users"
+    },
+    "starPower": {
+        "initial": 100,
+        "dailyCheckinBase": 10,
+        "inviteFriend": 100,
+        "vipMultiplierBase": 1.0,
+        "rules": {
+            "daily_checkin": {
+                "amount": 10,
+                "dailyLimit": 1,
+                "vipMultiplier": 1.0,
+                "description": "每日签到获得星力"
+            },
+            "invite_friend": {
+                "amount": 100,
+                "dailyLimit": null,
+                "vipMultiplier": 1.5,
+                "description": "邀请好友获得星力"
+            },
+            "first_play": {
+                "amount": 5,
+                "dailyLimit": 10,
+                "vipMultiplier": 1.0,
+                "description": "首次播放新歌获得星力"
+            },
+            "share_content": {
+                "amount": 3,
+                "dailyLimit": 5,
+                "vipMultiplier": 1.0,
+                "description": "分享内容获得星力"
+            },
+            "create_playlist": {
+                "amount": 20,
+                "dailyLimit": 3,
+                "vipMultiplier": 1.2,
+                "description": "创建播放列表获得星力"
+            },
+            "upload_music": {
+                "amount": 50,
+                "dailyLimit": 5,
+                "vipMultiplier": 1.5,
+                "description": "上传音乐获得星力"
+            },
+            "comment": {
+                "amount": 2,
+                "dailyLimit": 20,
+                "vipMultiplier": 1.0,
+                "description": "发表评论获得星力"
+            },
+            "like": {
+                "amount": 1,
+                "dailyLimit": 50,
+                "vipMultiplier": 1.0,
+                "description": "点赞获得星力"
+            },
+            "complete_profile": {
+                "amount": 200,
+                "dailyLimit": 1,
+                "vipMultiplier": 1.0,
+                "description": "完善资料获得星力"
+            },
+            "bind_email": {
+                "amount": 100,
+                "dailyLimit": 1,
+                "vipMultiplier": 1.0,
+                "description": "绑定邮箱获得星力"
+            }
+        }
+    },
+    "mheart": {
+        "initial": 0,
+        "levelThreshold": 100,
+        "levels": [
+            {"level": 1, "min": 0, "max": 99, "name": "初心者", "color": "#9E9E9E"},
+            {"level": 2, "min": 100, "max": 299, "name": "探索者", "color": "#8BC34A"},
+            {"level": 3, "min": 300, "max": 599, "name": "追随者", "color": "#03A9F4"},
+            {"level": 4, "min": 600, "max": 999, "name": "热爱者", "color": "#2196F3"},
+            {"level": 5, "min": 1000, "max": 1999, "name": "守护者", "color": "#673AB7"},
+            {"level": 6, "min": 2000, "max": 3999, "name": "星光者", "color": "#9C27B0"},
+            {"level": 7, "min": 4000, "max": 7999, "name": "星辰者", "color": "#E91E63"},
+            {"level": 8, "min": 8000, "max": 15999, "name": "银河者", "color": "#FF5722"},
+            {"level": 9, "min": 16000, "max": 31999, "name": "宇宙者", "color": "#FF9800"},
+            {"level": 10, "min": 32000, "max": null, "name": "永恒者", "color": "#FFD700"}
+        ]
+    },
+    "vip": {
+        "maxLevel": 10,
+        "expBase": 1000,
+        "expMultiplier": 1.5,
+        "levels": [
+            {"level": 1, "name": "普通会员", "expRequired": 0, "benefits": ["基础播放"], "color": "#9E9E9E"},
+            {"level": 2, "name": "青铜会员", "expRequired": 1000, "benefits": ["无损音质", "歌词显示"], "color": "#CD7F32"},
+            {"level": 3, "name": "白银会员", "expRequired": 2500, "benefits": ["下载特权", "专属皮肤"], "color": "#C0C0C0"},
+            {"level": 4, "name": "黄金会员", "expRequired": 5500, "benefits": ["VIP曲库", "优先客服"], "color": "#FFD700"},
+            {"level": 5, "name": "铂金会员", "expRequired": 10000, "benefits": ["专属客服", "活动优先"], "color": "#E5E4E2"},
+            {"level": 6, "name": "钻石会员", "expRequired": 17500, "benefits": ["演唱会优先", "限量周边"], "color": "#B9F2FF"},
+            {"level": 7, "name": "星耀会员", "expRequired": 28000, "benefits": ["定制服务", "专属标识"], "color": "#9C27B0"},
+            {"level": 8, "name": "王者会员", "expRequired": 42000, "benefits": ["全站特权", "专属活动"], "color": "#FF5722"},
+            {"level": 9, "name": "传奇会员", "expRequired": 60000, "benefits": ["终身特权", "限量礼品"], "color": "#E91E63"},
+            {"level": 10, "name": "至尊会员", "expRequired": 100000, "benefits": ["全部特权", "专属顾问"], "color": "#FFD700"}
+        ]
+    },
+    "storage": {
+        "type": "local",
+        "basePath": "/Volume2/dmusic",
+        "paths": {
+            "music": "/Volume2/dmusic/music",
+            "covers": "/Volume2/dmusic/covers",
+            "avatars": "/Volume2/dmusic/avatars",
+            "temp": "/Volume2/dmusic/temp",
+            "backup": "/Volume2/dmusic/backup"
+        },
+        "maxSize": 52428800,
+        "supportedFormats": ["mp3", "flac", "wav", "aac", "ogg"],
+        "url": {
+            "music": "/static/music",
+            "covers": "/static/covers",
+            "avatars": "/static/avatars"
+        }
+    },
+    "audio": {
+        "maxBitrate": 320,
+        "sampleRate": 44100,
+        "qualities": [
+            {"name": "low", "bitrate": 128, "label": "流畅", "size": "约3MB/首"},
+            {"name": "medium", "bitrate": 192, "label": "标准", "size": "约5MB/首"},
+            {"name": "high", "bitrate": 320, "label": "高品质", "size": "约8MB/首"},
+            {"name": "lossless", "bitrate": 1000, "label": "无损", "size": "约25MB/首"}
+        ]
+    },
+    "ranking": {
+        "updateInterval": 300000,
+        "wilsonConfidence": 0.95,
+        "topLimit": 100,
+        "types": ["daily", "weekly", "monthly", "all_time"],
+        "weights": {
+            "playCount": 1.0,
+            "likeCount": 2.0,
+            "shareCount": 3.0,
+            "starPowerBoost": 0.1
+        }
+    },
+    "websocket": {
+        "port": 3251,
+        "path": "/ws",
+        "heartbeat": 30000,
+        "maxConnections": 1000
+    },
+    "security": {
+        "passwordSaltRounds": 12,
+        "loginMaxAttempts": 5,
+        "loginLockDuration": 1800,
+        "rateLimit": {
+            "window": 60000,
+            "max": 100
+        },
+        "twoFactor": {
+            "enabled": true,
+            "issuer": "D-Music"
+        }
+    },
+    "logging": {
+        "level": "debug",
+        "path": "/var/log/dmusic",
+        "maxSize": 10485760,
+        "maxFiles": 5,
+        "format": "combined"
+    },
+    "cache": {
+        "ttl": 3600,
+        "prefix": "dmusic:",
+        "keys": {
+            "user": "user:{id}",
+            "music": "music:{id}",
+            "playlist": "playlist:{id}",
+            "ranking": "ranking:{type}:{date}"
+        }
+    },
+    "email": {
+        "enabled": true,
+        "host": "smtp.0379.email",
+        "port": 465,
+        "secure": true,
+        "user": "noreply@0379.email",
+        "from": "D-Music <noreply@0379.email>",
+        "templates": {
+            "welcome": "welcome",
+            "verify": "verify-email",
+            "reset": "reset-password"
+        }
+    },
+    "features": {
+        "registration": true,
+        "socialLogin": false,
+        "musicUpload": true,
+        "playlistCollaboration": true,
+        "realTimeSync": true,
+        "aiRecommendation": true,
+        "lyricsDisplay": true,
+        "visualizer": true,
+        "spaceTimeShoutout": true,
+        "timeCapsules": true,
+        "voiceMessages": true,
+        "locationMessages": true,
+        "nearbyMessages": true,
+        "sttTranscription": true,
+        "creativeCollaboration": true,
+        "forkTree": true,
+        "achievementBadges": true,
+        "starPowerEconomy": true,
+        "leaderboardBoost": true,
+        "templateUnlock": true,
+        "mvCreator": true,
+        "ipMatrix": true,
+        "creatorExplore": true,
+        "pwaSupport": true,
+        "aiAssistant": true,
+        "i18n": true
+    },
+    "limits": {
+        "maxPlaylistsPerUser": 50,
+        "maxTracksPerPlaylist": 500,
+        "maxFavoritesPerUser": 20,
+        "maxFollowPerDay": 100,
+        "maxCommentsPerDay": 100,
+        "maxUploadsPerDay": 10
+    },
+    "defaults": {
+        "avatar": "/images/default-avatar.png",
+        "cover": "/images/default-cover.jpg",
+        "playlistCover": "/images/default-playlist.jpg",
+        "albumCover": "/images/default-album.jpg"
+    },
+    "supabase": {
+        "storageBuckets": {
+            "voice": {
+                "name": "make-f626b673-voice",
+                "access": "private",
+                "signedUrlExpiry": 3600,
+                "description": "语音消息音频存储"
+            }
+        },
+        "kvPrefixes": {
+            "messages": "spacetime:messages",
+            "capsules": "spacetime:capsules",
+            "replies": "spacetime:replies:{msgId}",
+            "sharedWorks": "shared-works",
+            "songStats": "song:stats:{songId}",
+            "songLikes": "song:likes:{songId}",
+            "songAnnotations": "song:annotations:{songId}",
+            "songComments": "song:comments:{songId}",
+            "userStarpower": "user:{userId}:starpower",
+            "userProfile": "user:{userId}:profile",
+            "userHistory": "user:{userId}:listening-history",
+            "userThemes": "user:{userId}:unlocked-themes",
+            "userAchievements": "user:{userId}:achievements",
+            "userAchievementStats": "user:{userId}:achievement-stats",
+            "forkChain": "fork-chain:{workId}"
+        },
+        "edgeFunctionRoute": "make-server-f626b673",
+        "totalRoutes": 46
+    },
+    "achievements": {
+        "definitions": 12,
+        "list": [
+            { "id": "first_creation", "nameZh": "初创者", "condition": "totalWorks >= 1" },
+            { "id": "prolific_3", "nameZh": "多产新手", "condition": "totalWorks >= 3" },
+            { "id": "prolific_10", "nameZh": "创作达人", "condition": "totalWorks >= 10" },
+            { "id": "inspiration_fountain", "nameZh": "灵感喷泉", "condition": "streakDays >= 7" },
+            { "id": "community_torch", "nameZh": "社区火炬手", "condition": "totalLikesReceived >= 100" },
+            { "id": "remix_master", "nameZh": "改编大师", "condition": "totalForks >= 5" },
+            { "id": "popular_10k", "nameZh": "万人迷", "condition": "totalPlays >= 10000" },
+            { "id": "social_butterfly", "nameZh": "社交蝴蝶", "condition": "totalMessages >= 50" },
+            { "id": "time_traveler", "nameZh": "时光旅行者", "condition": "totalCapsules >= 5" },
+            { "id": "star_collector", "nameZh": "星力收集者", "condition": "peakStarPower >= 2000" },
+            { "id": "location_explorer", "nameZh": "位置探索者", "condition": "locationMessages >= 5" },
+            { "id": "voice_artist", "nameZh": "声音艺术家", "condition": "voiceMessages >= 10" }
+        ]
+    },
+    "brand": {
+        "name": "D-Music",
+        "slogan": "星辰旋律，心之所向",
+        "logo": "/images/logo.png",
+        "company": "YYC³ Team",
+        "email": "admin@0379.email",
+        "website": "https://dmusic.0379.email"
+    }
+}

@@ -1,0 +1,161 @@
+# ================================================================================
+# YYC³ 环境配置示例文件
+# ================================================================================
+#
+# > YanYuCloudCube
+# > 言启象限 | 语枢未来
+# > Words Initiate Quadrants, Language Serves as Core for Future
+# > 万象归元于云枢 | 深栈智启新纪元
+#
+# 创建日期: 2026-02-25
+# 版本: 1.0.0
+# 说明: 环境变量配置示例文件（复制此文件为 .env 并填入实际值）
+#
+# ================================================================================
+
+# 环境标识
+NODE_ENV=development
+ENVIRONMENT=development
+
+# ================================================================================
+# PostgreSQL 数据库配置
+# ================================================================================
+
+PG_HOST=localhost
+PG_PORT=5432
+PG_DATABASE=yyc3_lp
+PG_USER=yyc3_lp
+PG_PASSWORD=yyc3_lp
+PG_SCHEMA=public
+PG_POOL_SIZE=20
+PG_IDLE_TIMEOUT=30000
+PG_CONNECTION_TIMEOUT=10000
+PG_SSL_MODE=disable
+
+# ================================================================================
+# MySQL 数据库配置
+# ================================================================================
+
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=yyc3_lp
+MYSQL_USER=yyc3_lp
+MYSQL_PASSWORD=yyc3_lp
+MYSQL_CHARSET=utf8mb4
+MYSQL_COLLATION=utf8mb4_unicode_ci
+MYSQL_POOL_SIZE=20
+MYSQL_IDLE_TIMEOUT=30000
+MYSQL_CONNECTION_TIMEOUT=10000
+MYSQL_SSL=false
+
+# ================================================================================
+# Redis 缓存配置
+# ================================================================================
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redis_0379
+REDIS_DB=0
+REDIS_MAX_CONNECTIONS=100
+REDIS_IDLE_TIMEOUT=10000
+REDIS_CONNECTION_TIMEOUT=5000
+REDIS_SSL=false
+
+REDIS_CACHE_PREFIX=yyc3:
+REDIS_SESSION_PREFIX=yyc3:session:
+REDIS_AI_RESPONSE_PREFIX=yyc3:ai:response:
+REDIS_AI_SESSION_PREFIX=yyc3:ai:session:
+
+REDIS_CACHE_TTL=3600
+REDIS_SESSION_TTL=604800
+REDIS_AI_RESPONSE_TTL=86400
+REDIS_AI_SESSION_TTL=1800
+
+# ================================================================================
+# API 服务配置
+# ================================================================================
+
+APP_NAME=YYC3-Project
+APP_VERSION=1.0.0
+APP_PORT=3000
+APP_HOST=0.0.0.0
+API_BASE_URL=http://localhost:3000
+
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_SKIP_FAILED_REQUESTS=false
+
+CORS_ORIGIN=http://localhost:3000,http://localhost:5173
+CORS_METHODS=GET,POST,PUT,DELETE,PATCH,OPTIONS
+CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Requested-With
+CORS_CREDENTIALS=true
+CORS_MAX_AGE=86400
+
+REQUEST_TIMEOUT=30000
+REQUEST_MAX_BODY_SIZE=10mb
+REQUEST_MAX_FILE_SIZE=50mb
+
+# ================================================================================
+# JWT 认证配置
+# ================================================================================
+
+JWT_SECRET=your-jwt-secret-key-min-32-chars
+JWT_REFRESH_SECRET=your-refresh-secret-key-min-32-chars
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_EXPIRES_IN=30d
+JWT_ISSUER=yyc3-project
+JWT_AUDIENCE=yyc3-users
+JWT_ALGORITHM=HS256
+
+# ================================================================================
+# 邮件服务配置
+# ================================================================================
+
+SMTP_HOST=smtp.0379.email
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=noreply@0379.email
+SMTP_PASSWORD=your-smtp-password
+SMTP_FROM_NAME=YYC³ Project
+SMTP_FROM_EMAIL=noreply@0379.email
+
+# ================================================================================
+# 监控与日志配置
+# ================================================================================
+
+LOG_LEVEL=info
+LOG_FORMAT=json
+LOG_OUTPUT=console,file
+LOG_FILE_PATH=./logs
+LOG_FILE_MAX_SIZE=100m
+LOG_FILE_MAX_FILES=30
+LOG_DATE_FORMAT=YYYY-MM-DD HH:mm:ss
+
+DEBUG=false
+VERBOSE=false
+
+# ================================================================================
+# 开发工具配置
+# ================================================================================
+
+HOT_RELOAD=true
+WATCH_MODE=true
+SOURCE_MAP=true
+DEV_SERVER_PORT=3000
+DEV_SERVER_HOST=0.0.0.0
+
+# ================================================================================
+# 功能开关配置
+# ================================================================================
+
+FEATURE_API_DOCS=true
+FEATURE_USER_MANAGEMENT=true
+FEATURE_RATE_LIMIT=true
+FEATURE_CACHE=true
+FEATURE_LOGGING=true
+FEATURE_MONITORING=false
+FEATURE_DEBUG=true
+
+# ================================================================================
+# 结束
+# ================================================================================
