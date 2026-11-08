@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-ui",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music UI 基础组件库 — shadcn/Radix 基件 + D-Music 设计层（DButton/DataViz 等）",
   "type": "module",
   "main": "./src/index.ts",

@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-emotion",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music 情感赋能音效系统 — 小语角色 / 情感类型 / 语音 Hook / 情感映射",
   "type": "module",
   "main": "./src/index.ts",

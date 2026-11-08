@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-audio",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
   "type": "module",
   "main": "./src/index.ts",

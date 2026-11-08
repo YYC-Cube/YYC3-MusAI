@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-commerce",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music 商业组件 — 二级市场/专辑商店/版权面板",
   "type": "module",
   "main": "./src/index.ts",

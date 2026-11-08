@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-hooks",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music 交互逻辑层 — 播放引擎/i18n/触感/PWA/手势/虚拟列表 9 hooks",
   "type": "module",
   "main": "./src/index.ts",

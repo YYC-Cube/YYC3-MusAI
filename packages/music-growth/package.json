@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-growth",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music 成长组件 — 星力面板/星力商城/排行榜/成就/IP 矩阵",
   "type": "module",
   "main": "./src/index.ts",

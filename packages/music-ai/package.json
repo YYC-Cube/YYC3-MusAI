@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-ai",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music AI 创作组件 — AI 助手/歌词生成/创作工作室/MV 生成器",
   "type": "module",
   "main": "./src/index.ts",

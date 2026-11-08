@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-testing",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "YYC³ D-Music 测试套件 — 自研 TestSuite 运行器与单元/集成/E2E 三档测试（150+ 用例）",
   "type": "module",
   "main": "./src/index.ts",

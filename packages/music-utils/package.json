@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-utils",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ MusAI 基础工具层 — 本地 API 适配 / 加密 / 偏好 / 性能注册表 / 监控",
   "type": "module",
   "main": "./src/index.ts",

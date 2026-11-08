@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-design-tokens",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "YYC³ D-Music 设计 Token — 六主题体系与主题应用引擎",
   "type": "module",
   "main": "./src/index.ts",
