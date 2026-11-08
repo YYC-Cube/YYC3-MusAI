@@ -1,4 +1,4 @@
-# YYC³ D-Music 项目主文档
+# YYC³ MusAI 项目主文档
 
 > ***YanYuCloudCube***
 > *言启象限 | 语枢未来*
@@ -8,7 +8,7 @@
 
 ---
 
-# D-Music
+# YYC3-MusAI
 
 <div align="center">
 
@@ -16,16 +16,13 @@
 ![Status](https://img.shields.io/badge/status-active-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**YYC³ AI Family - 智能音乐播放器**
+**YYC³ AI Family - 智能音乐平台**
 
-> ⚠️ **产品基线 · src 冻结声明**（2026-11-07，卷 11 P2）
-> 本仓库是 D-Music **v11.2 产品基线正身**：`src/` 前端源码已拆分至
-> `yyc3-music-monorepo/`（16 包 + 1 应用，npm `@yyc3/music-*`）并**冻结为只读参照**。
-> **后续前端修改只发生在 `yyc3-music-monorepo/`，禁止在本仓库 `src/` 演进**（防多副本漂移）。
-> monorepo 已升级至 React 19.3.1 / Vite 7.3.7 / TypeScript 5.9.3，与本仓工具链对齐；
-> 其历史已并入本仓（`mono/main`，7 个提交），全仓仅保留单一 `.git`。
-> 本仓库继续承载：`supabase/`（后端源，已镜像至 monorepo `@yyc3/music-server`）、
-> `public/` 品牌媒体源、docs 00-09 产品治理文档、data/ 数据库治理、.env 环境体系。
+> 🏛️ **单仓一体化架构**（2026-11-09 扁平化）
+> 本仓库为 YYC3-MusAI **唯一开发主线**：`apps/d-music`（主应用）+ `packages/`（16 个 `@yyc3/music-*` 库包）
+> 由 pnpm workspace + Turborepo 统一管理，**无嵌套子仓**。
+> v11.2 扁平化之前的 `src/` 基线快照已归档至 `archive/baseline/src/`，仅供追溯，不再演进。
+> 治理资产：`docs/` 全生命周期文档、`data/` 数据库治理、`supabase/` 后端源、`config/` 参数定义。
 
 [快速开始](#快速开始) • [文档](#文档) • [贡献指南](#贡献指南) • [许可证](#许可证)
 
@@ -147,54 +144,50 @@ YYC3-MusAI 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先�
 
 ```
 YYC3-MusAI/
-├── src/                          # 源代码目录
-│   ├── app/                       # 应用主目录
-│   │   ├── components/              # React 组件
-│   │   ├── lib/                   # 工具库
-│   │   ├── hooks/                 # 自定义 Hooks
-│   │   ├── types/                 # TypeScript 类型定义
-│   │   └── App.tsx                # 主应用组件
-│   ├── styles/                    # 样式文件
-│   └── main.tsx                  # 应用入口
+├── apps/
+│   └── d-music/                     # 主应用（Vite + React 19）
+│       ├── src/app/                 # 应用源码：App.tsx / main.tsx / components
+│       ├── src/styles/              # 全局样式（tailwind/theme/fonts）
+│       ├── public/                  # 静态资源（musai-icons 多端图标、music、mv、CNAME）
+│       ├── e2e/                     # Playwright 冒烟用例
+│       ├── index.html               # 应用入口 HTML（含 PWA/图标配置）
+│       ├── vite.config.ts           # 构建配置（含 manualChunks 分包）
+│       └── package.json             # @yyc3/d-music
 │
-├── supabase/                     # Supabase 函数
-│   └── functions/                # Edge Functions
-│       └── server/               # 服务器端路由
+├── packages/                        # 16 个库包（@yyc3/music-*）
+│   ├── music-ai/  music-audio/  music-commerce/  music-community/
+│   ├── music-data/  music-design-tokens/  music-emotion/  music-growth/
+│   ├── music-hooks/  music-lyrics/  music-player/  music-server/
+│   ├── music-testing/  music-ui/  music-utils/  music-voice/
 │
-├── public/                       # 静态资源
-│   ├── mv/                      # 视频文件
-│   └── assets/                  # 资源文件
-│
-├── data/                        # 数据库相关文件
-│   ├── 00-规划与设计/           # 需求与设计文档
-│   ├── 01-环境管理/             # 环境配置
-│   ├── 02-数据库实例/           # 数据库配置
-│   └── 03-Schema管理/           # Schema 管理
-│
-├── docs/                        # 项目文档 (787 文件)
+├── docs/                            # 全生命周期文档（787 文件）
 │   ├── 00-YYC3-MusAI-项目总览索引/
 │   ├── 01-YYC3-MusAI-启动规划阶段/
 │   ├── 02-YYC3-MusAI-项目设计阶段/
 │   ├── 03-YYC3-MusAI-开发实施阶段/
-│   ├── 04-YYC3-MusAI-测试验证阶段/
-│   ├── 05-YYC3-MusAI-部署上线阶段/
-│   ├── 06-YYC3-MusAI-运维监控阶段/
-│   ├── 07-YYC3-MusAI-迭代优化阶段/
-│   ├── 08-YYC3-MusAI-项目管理/
+│   ├── 04-YYC3-MusAI-测试与审核阶段/
+│   ├── 05-YYC3-MusAI-交付与部署阶段/
+│   ├── 06-YYC3-MusAI-运营与维护阶段/
+│   ├── 07-YYC3-MusAI-合规与安全保障/
+│   ├── 08-YYC3-MusAI-资产与知识管理/
 │   ├── 09-YYC3-MusAI-演进与优化阶段/
-│   └── YYC3-团队通用-标规文档/     # 团队强制规范（五维/标准/命名/标头标尾）
+│   ├── YYC3-团队通用-标规文档/        # 团队强制规范
+│   └── assets/brand/                 # 品牌源图
 │
-├── scripts/                     # 脚本工具（初始化 / 校验 / 数据播种）
-├── config/                      # 配置文件
-├── database/                    # 数据库脚本
-├── supabase/                    # Supabase Edge Functions
-├── .env                         # 环境变量（本地）
-├── .env.example                 # 环境变量示例
-├── .gitignore                   # Git 忽略规则
-├── package.json                 # 项目配置
-├── tsconfig.json                # TypeScript 配置
-├── vite.config.ts               # Vite 配置
-└── README.md                    # 项目文档
+├── archive/baseline/                # v11.2 扁平化前的基线快照（只读追溯）
+├── data/  config/  database/        # 数据库治理与参数定义
+├── scripts/                         # 初始化 / 校验 / 数据播种脚本
+├── supabase/                        # 后端源（Edge Functions）
+│
+├── .github/workflows/               # ci-cd.yml + deploy-pages.yml
+├── .changeset/                      # 语义化发版
+├── eslint.config.js                 # ESLint 扁平配置
+├── turbo.json                       # Turborepo 任务编排
+├── vitest.config.ts                 # 单元测试与覆盖率门禁
+├── tsconfig.base.json               # TypeScript 基础配置
+├── pnpm-workspace.yaml              # workspace 定义
+├── package.json                     # 工作区根配置
+└── README.md
 ```
 
 ---
