@@ -1,0 +1,56 @@
+{
+  "name": "@yyc3/music-audio",
+  "version": "1.0.0",
+  "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "framer-motion": "^12.0.0",
+    "reactflow": "^11.11.4",
+    "react-syntax-highlighter": "^15.6.1"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "audio",
+    "sound",
+    "player"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@yyc3/music-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YYC³ D-Music Supabase Edge Functions 后端（22 文件 / 21 路由模块）— 独立部署单元，Deno 运行时，不参与 workspace 构建/发布流水线",
+  "type": "module",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "deploy": "supabase functions deploy make-server-f626b673 --project-ref $SUPABASE_PROJECT_REF"
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "supabase",
+    "edge-functions"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT"
+}

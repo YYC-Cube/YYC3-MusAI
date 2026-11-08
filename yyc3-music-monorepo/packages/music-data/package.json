@@ -1,0 +1,44 @@
+{
+  "name": "@yyc3/music-data",
+  "version": "1.0.0",
+  "description": "YYC³ D-Music 数据层 — 全局类型系统与演示歌单数据",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@yyc3/music-hooks": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "data",
+    "types"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT"
+}

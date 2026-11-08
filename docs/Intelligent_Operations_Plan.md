@@ -96,7 +96,7 @@
    - 可以进行压力测试
    - 可以模拟各种场景
 
-**脚本**: `/Users/yanyu/D-Music-B/scripts/seed-users.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/scripts/seed-users.js`
 
 #### 任务 1.2: 创建测试歌曲 (1h)
 
@@ -120,7 +120,7 @@
 - 情感标签
 - 歌词（部分）
 
-**脚本**: `/Users/yanyu/D-Music-B/scripts/seed-songs.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/scripts/seed-songs.js`
 
 #### 任务 1.3: 创建测试专辑 (30min)
 
@@ -133,7 +133,7 @@
 4. 古典音乐专辑 (1 个)
 5. 民谣专辑 (1 个)
 
-**脚本**: `/Users/yanyu/D-Music-B/scripts/seed-albums.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/scripts/seed-albums.js`
 
 #### 任务 1.4: 创建测试挑战赛 (30min)
 
@@ -155,7 +155,7 @@
    - 显示倒计时
    - 显示规则
 
-**脚本**: `/Users/yanyu/D-Music-B/scripts/seed-challenges.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/scripts/seed-challenges.js`
 
 #### 任务 1.5: 创建测试市场数据 (30min)
 
@@ -166,7 +166,7 @@
 - 市场交易记录 (5 个)
 - 星力商城商品 (15 个)
 
-**脚本**: `/Users/yanyu/D-Music-B/scripts/seed-market.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/scripts/seed-market.js`
 
 #### 任务 1.6: 创建测试 KV 数据 (30min)
 
@@ -192,31 +192,31 @@
 - `stt:*` - 语音转文字数据
 - `recommendation:*` - 推荐数据
 
-**脚本**: `/Users/yanyu/D-Music-B/scripts/seed-kv.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/scripts/seed-kv.js`
 
 ### 3.3 执行计划
 
 ```bash
 # 1. 创建测试用户
-node /Users/yanyu/D-Music-B/scripts/seed-users.js
+node /Users/yanyu/YYC3-MusAI/scripts/seed-users.js
 
 # 2. 创建测试歌曲
-node /Users/yanyu/D-Music-B/scripts/seed-songs.js
+node /Users/yanyu/YYC3-MusAI/scripts/seed-songs.js
 
 # 3. 创建测试专辑
-node /Users/yanyu/D-Music-B/scripts/seed-albums.js
+node /Users/yanyu/YYC3-MusAI/scripts/seed-albums.js
 
 # 4. 创建测试挑战赛
-node /Users/yanyu/D-Music-B/scripts/seed-challenges.js
+node /Users/yanyu/YYC3-MusAI/scripts/seed-challenges.js
 
 # 5. 创建测试市场数据
-node /Users/yanyu/D-Music-B/scripts/seed-market.js
+node /Users/yanyu/YYC3-MusAI/scripts/seed-market.js
 
 # 6. 创建测试 KV 数据
-node /Users/yanyu/D-Music-B/scripts/seed-kv.js
+node /Users/yanyu/YYC3-MusAI/scripts/seed-kv.js
 
 # 7. 验证数据
-node /Users/yanyu/D-Music-B/check-supabase.js
+node /Users/yanyu/YYC3-MusAI/check-supabase.js
 ```
 
 ### 3.4 验收标准
@@ -535,7 +535,7 @@ curl http://localhost:5173/diagnostics/kv-stats
 
 # 4. 配置告警
 # 编辑告警配置文件
-vim /Users/yanyu/D-Music-B/config/alerts.json
+vim /Users/yanyu/YYC3-MusAI/config/alerts.json
 ```
 
 ### 5.4 验收标准
@@ -683,16 +683,16 @@ LIMIT 20;
 
 ```bash
 # 1. 配置代码分割
-vim /Users/yanyu/D-Music-B/vite.config.ts
+vim /Users/yanyu/YYC3-MusAI/vite.config.ts
 
 # 2. 配置缓存策略
-vim /Users/yanyu/D-Music-B/src/app/lib/cache.ts
+vim /Users/yanyu/YYC3-MusAI/src/app/lib/cache.ts
 
 # 3. 配置图片优化
-vim /Users/yanyu/D-Music-B/vite.config.ts
+vim /Users/yanyu/YYC3-MusAI/vite.config.ts
 
 # 4. 优化数据库查询
-vim /Users/yanyu/D-Music-B/database/d_music_postgres.sql
+vim /Users/yanyu/YYC3-MusAI/database/d_music_postgres.sql
 
 # 5. 重新构建
 npm run build
@@ -775,16 +775,16 @@ npm run dev
 
 ```bash
 # 1. 审查认证机制
-vim /Users/yanyu/D-Music-B/supabase/functions/server/routes-auth.ts
+vim /Users/yanyu/YYC3-MusAI/supabase/functions/server/routes-auth.ts
 
 # 2. 审查权限控制
-vim /Users/yanyu/D-Music-B/supabase/functions/server/validation.ts
+vim /Users/yanyu/YYC3-MusAI/supabase/functions/server/validation.ts
 
 # 3. 审查输入验证
-vim /Users/yanyu/D-Music-B/supabase/functions/server/validation.ts
+vim /Users/yanyu/YYC3-MusAI/supabase/functions/server/validation.ts
 
 # 4. 审查速率限制
-vim /Users/yanyu/D-Music-B/supabase/functions/server/rate-limit.ts
+vim /Users/yanyu/YYC3-MusAI/supabase/functions/server/rate-limit.ts
 
 # 5. 运行安全测试
 npm run test:security
@@ -906,13 +906,13 @@ echo "Rolled back to v$VERSION"
 
 ```bash
 # 1. 配置环境变量
-vim /Users/yanyu/D-Music-B/.env.production
+vim /Users/yanyu/YYC3-MusAI/.env.production
 
 # 2. 配置 CI/CD 流水线
-vim /Users/yanyu/D-Music-B/.github/workflows/deploy.yml
+vim /Users/yanyu/YYC3-MusAI/.github/workflows/deploy.yml
 
 # 3. 配置回滚机制
-vim /Users/yanyu/D-Music-B/scripts/rollback.sh
+vim /Users/yanyu/YYC3-MusAI/scripts/rollback.sh
 
 # 4. 测试部署
 npm run deploy:staging

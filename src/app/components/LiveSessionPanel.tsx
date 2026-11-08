@@ -32,6 +32,7 @@ interface Listener {
   trackTitle: string;
   emotion: string;
   lastSeen: number;
+  isPlaying?: boolean;
 }
 
 interface LiveMessage {

@@ -1,0 +1,55 @@
+{
+  "name": "@yyc3/music-testing",
+  "version": "0.1.1",
+  "description": "YYC³ D-Music 测试套件 — 自研 TestSuite 运行器与单元/集成/E2E 三档测试（150+ 用例）",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@yyc3/music-data": "workspace:*",
+    "@yyc3/music-design-tokens": "workspace:*",
+    "@yyc3/music-hooks": "workspace:*",
+    "@yyc3/music-utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0",
+    "react": ">=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "testing"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT"
+}

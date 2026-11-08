@@ -381,7 +381,7 @@ async function deriveKeyFromPassphrase(
   return await crypto.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: new Uint8Array(salt),
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },

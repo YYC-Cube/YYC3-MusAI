@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useI18n } from '../hooks/useI18n';
-import type { Track } from '../playlistData';
+import type { Track, LyricLine } from '../playlistData';
 
 // ==========================================
 // MV Creator — Canvas-based Music Visualization
@@ -131,7 +131,7 @@ export const MVCreator: React.FC<MVCreatorProps> = ({
   const [intensity, setIntensity] = useState(0.7);
 
   // Build effective lyrics: use customLyrics (from "Create MV from this work") or track lyrics
-  const effectiveLyrics = customLyrics && customLyrics.length > 0
+  const effectiveLyrics: LyricLine[] = customLyrics && customLyrics.length > 0
     ? customLyrics.map((text, i) => ({
         time: i * (track.duration > 0 ? track.duration / customLyrics.length : 10),
         text,

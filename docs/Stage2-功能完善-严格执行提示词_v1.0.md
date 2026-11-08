@@ -1,6 +1,6 @@
 ---
 @file: Stage2-功能完善-严格执行提示词_v1.0.md
-@description: YYC³ D-Music-B 阶段 2 功能完善严格执行提示词
+@description: YYC³ YYC3-MusAI 阶段 2 功能完善严格执行提示词
 @author: YanYuCloudCube Team
 @version: v1.0
 @created: 2026-02-26

@@ -90,9 +90,18 @@ export function assertTruthy(val: any, msg?: string) {
   if (!val) throw new Error(msg || `Expected truthy, got ${val}`);
 }
 
-export function assertContains(str: string, sub: string, msg?: string) {
-  if (!str.includes(sub)) {
-    throw new Error(msg || `Expected "${str}" to contain "${sub}"`);
+export function assertContains(
+  haystack: string | readonly string[],
+  needle: string,
+  msg?: string
+) {
+  const ok = typeof haystack === 'string'
+    ? haystack.includes(needle)
+    : haystack.indexOf(needle) !== -1;
+  if (!ok) {
+    throw new Error(
+      msg || `Expected "${String(haystack)}" to contain "${needle}"`
+    );
   }
 }
 

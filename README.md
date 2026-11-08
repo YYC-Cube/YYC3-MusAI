@@ -20,8 +20,10 @@
 
 > ⚠️ **产品基线 · src 冻结声明**（2026-11-07，卷 11 P2）
 > 本仓库是 D-Music **v11.2 产品基线正身**：`src/` 前端源码已拆分至
-> `Downloads/YYC3-Music/yyc3-music-monorepo/`（16 包 + 1 应用，npm `@yyc3/music-*`）并**冻结为只读参照**。
-> **后续前端修改只发生在 monorepo，禁止在本仓库 src/ 演进**（防多副本漂移）。
+> `yyc3-music-monorepo/`（16 包 + 1 应用，npm `@yyc3/music-*`）并**冻结为只读参照**。
+> **后续前端修改只发生在 `yyc3-music-monorepo/`，禁止在本仓库 `src/` 演进**（防多副本漂移）。
+> monorepo 已升级至 React 19.3.1 / Vite 7.3.7 / TypeScript 5.9.3，与本仓工具链对齐；
+> 其历史已并入本仓（`mono/main`，7 个提交），全仓仅保留单一 `.git`。
 > 本仓库继续承载：`supabase/`（后端源，已镜像至 monorepo `@yyc3/music-server`）、
 > `public/` 品牌媒体源、docs 00-09 产品治理文档、data/ 数据库治理、.env 环境体系。
 
@@ -49,13 +51,13 @@
 
 ## 项目简介
 
-D-Music-B 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先进的 AI 功能和现代化的用户体验。项目采用前后端分离架构，支持多种部署方式，提供完整的开发、测试、预发布和生产环境配置。
+YYC3-MusAI 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先进的 AI 功能和现代化的用户体验。项目采用前后端分离架构，支持多种部署方式，提供完整的开发、测试、预发布和生产环境配置。
 
 ### 项目信息
 
 | 项目 | 版本 | 状态 | 最后更新 |
 |------|------|------|----------|
-| D-Music-B | v11.2 | 🟢 活跃 | 2026-02-26 |
+| YYC3-MusAI | v11.2 | 🟢 活跃 | 2026-02-26 |
 
 ### 项目统计
 
@@ -67,7 +69,7 @@ D-Music-B 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先�
 | E2E 测试套件 | 13 | ✅ 完整 |
 | 测试用例 | 150+ | ✅ 完整 |
 | Hooks | 9 | ✅ 完整 |
-| Guidelines 文档 | 12 | ✅ 完整 |
+| Guidelines 文档 | 13 | ✅ 完整 |
 | TypeScript 类型 | 2,010 行 | ✅ 统一 |
 
 ---
@@ -112,13 +114,15 @@ D-Music-B 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先�
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
-| React | 18.3.1 | UI 框架 |
-| TypeScript | 5.x | 类型安全 |
-| Vite | 6.3.5 | 构建工具 |
-| Tailwind CSS | 3.x | 样式框架 |
-| Framer Motion | latest | 动画库 |
-| Supabase | latest | 后端服务 |
-| Lucide React | latest | 图标库 |
+| React | 19.3.1 | UI 框架 |
+| TypeScript | 5.9.3 | 类型安全 |
+| Vite | 7.3.7 | 构建工具 |
+| Tailwind CSS | 4.3.5 | 样式框架 |
+| Radix UI | 1.x | 无障碍原子组件 |
+| Motion | 12.x | 动画库 |
+| Recharts | 2.15.x | 数据可视化 |
+| Supabase JS | 2.x | 后端服务 |
+| Lucide React | 0.577.x | 图标库 |
 
 ### 后端
 
@@ -133,8 +137,8 @@ D-Music-B 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先�
 
 | 工具 | 版本 | 用途 |
 |------|------|------|
-| pnpm | 10.28.2 | 包管理器 |
-| Node.js | 20.19.5 | 运行时 |
+| pnpm | 10.17.0 | 包管理器 |
+| Node.js | 22.22.3 | 运行时 |
 | Git | latest | 版本控制 |
 
 ---
@@ -142,7 +146,7 @@ D-Music-B 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先�
 ## 项目结构
 
 ```
-D-Music-B/
+YYC3-MusAI/
 ├── src/                          # 源代码目录
 │   ├── app/                       # 应用主目录
 │   │   ├── components/              # React 组件
@@ -167,34 +171,30 @@ D-Music-B/
 │   ├── 02-数据库实例/           # 数据库配置
 │   └── 03-Schema管理/           # Schema 管理
 │
-├── docs/                        # 项目文档 (760+ 文件)
-│   ├── 00-YYC3-Music-player-项目总览索引/
-│   ├── 01-YYC3-Music-player-启动规划阶段/
-│   ├── 02-YYC3-Music-player-项目设计阶段/
-│   ├── 03-YYC3-Music-player-开发实施阶段/
-│   ├── 04-YYC3-Music-player-测试验证阶段/
-│   ├── 05-YYC3-Music-player-部署上线阶段/
-│   ├── 06-YYC3-Music-player-运维监控阶段/
-│   ├── 07-YYC3-Music-player-迭代优化阶段/
-│   ├── 08-YYC3-Music-player-项目管理/
-│   └── 09-YYC3-Music-player-演进与优化阶段/
+├── docs/                        # 项目文档 (787 文件)
+│   ├── 00-YYC3-MusAI-项目总览索引/
+│   ├── 01-YYC3-MusAI-启动规划阶段/
+│   ├── 02-YYC3-MusAI-项目设计阶段/
+│   ├── 03-YYC3-MusAI-开发实施阶段/
+│   ├── 04-YYC3-MusAI-测试验证阶段/
+│   ├── 05-YYC3-MusAI-部署上线阶段/
+│   ├── 06-YYC3-MusAI-运维监控阶段/
+│   ├── 07-YYC3-MusAI-迭代优化阶段/
+│   ├── 08-YYC3-MusAI-项目管理/
+│   ├── 09-YYC3-MusAI-演进与优化阶段/
+│   └── YYC3-团队通用-标规文档/     # 团队强制规范（五维/标准/命名/标头标尾）
 │
-├── guidelines/                   # 开发指南
-│   ├── D-Music-Guidelines.md
-│   ├── FullAudit_v11.1_Snapshot.md
-│   ├── DeepAnalysis_PostgreSQL_Migration_v1.md
-│   └── Supabase_Database_Inventory.md
-│
-├── scripts/                     # 脚本工具
+├── scripts/                     # 脚本工具（初始化 / 校验 / 数据播种）
 ├── config/                      # 配置文件
 ├── database/                    # 数据库脚本
-├── .env                        # 环境变量（本地）
+├── supabase/                    # Supabase Edge Functions
+├── .env                         # 环境变量（本地）
 ├── .env.example                 # 环境变量示例
-├── .gitignore                  # Git 忽略规则
+├── .gitignore                   # Git 忽略规则
 ├── package.json                 # 项目配置
-├── vite.config.ts              # Vite 配置
-├── tsconfig.json              # TypeScript 配置
-└── README.md                  # 项目文档
+├── tsconfig.json                # TypeScript 配置
+├── vite.config.ts               # Vite 配置
+└── README.md                    # 项目文档
 ```
 
 ---
@@ -203,8 +203,8 @@ D-Music-B/
 
 ### 前置要求
 
-- Node.js >= 20.19.5
-- pnpm >= 10.28.2
+- Node.js >= 20.19.0
+- pnpm >= 10.0.0
 - Git
 
 ### 安装依赖
@@ -212,7 +212,7 @@ D-Music-B/
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd D-Music-B
+cd YYC3-MusAI
 
 # 安装依赖
 pnpm install
@@ -372,31 +372,20 @@ git push origin feature/your-feature-name
 
 ### 测试
 
-```bash
-# 运行所有测试
-pnpm test
+测试套件内置于应用运行时（`src/app/lib/core-tests.ts`、`full-test-suite.ts`、`e2e-specs.ts`），
+通过应用内的测试面板触发，不依赖外部测试框架。
 
-# 运行特定测试
-pnpm test -- <test-file>
-
-# 生成测试覆盖率
-pnpm test:coverage
-
-# 运行 E2E 测试
-pnpm test:e2e
-```
-
-### Linting
+### 类型检查与构建校验
 
 ```bash
-# 运行 ESLint
-pnpm lint
-
-# 自动修复问题
-pnpm lint:fix
-
-# 类型检查
+# TypeScript 类型检查
 pnpm typecheck
+
+# 生产构建
+pnpm build
+
+# 预览生产构建
+pnpm preview
 ```
 
 ---
@@ -407,14 +396,14 @@ pnpm typecheck
 
 ### 文档结构
 
-#### 00-YYC3-Music-player-项目总览索引
+#### 00-YYC3-MusAI-项目总览索引
 - 项目总览手册
 - 文档架构导航
 - 快速开始指南
 - 核心概念词典
 - 版本更新日志
 
-#### 01-YYC3-Music-player-启动规划阶段
+#### 01-YYC3-MusAI-启动规划阶段
 - 项目章程与愿景
 - 项目范围说明书
 - 项目里程碑计划
@@ -433,7 +422,7 @@ pnpm typecheck
 - 项目预算与成本控制
 - 项目成功标准定义
 
-#### 02-YYC3-Music-player-项目设计阶段
+#### 02-YYC3-MusAI-项目设计阶段
 - 系统架构总览图
 - 九层功能架构设计
 - 技术选型论证报告
@@ -470,7 +459,7 @@ pnpm typecheck
 - 负载均衡设计
 - 文档模板库
 
-#### 03-YYC3-Music-player-开发实施阶段
+#### 03-YYC3-MusAI-开发实施阶段
 - 开发环境配置
 - 多环境配置规范
 - 开发工具链说明
@@ -485,7 +474,7 @@ pnpm typecheck
 - 接口测试用例
 - 接口变更记录
 
-#### 04-YYC3-Music-player-测试验证阶段
+#### 04-YYC3-MusAI-测试验证阶段
 - 测试策略与计划
 - 单元测试规范
 - 集成测试规范
@@ -497,7 +486,7 @@ pnpm typecheck
 - 缺陷管理流程
 - 测试覆盖率要求
 
-#### 05-YYC3-Music-player-部署上线阶段
+#### 05-YYC3-MusAI-部署上线阶段
 - 部署架构设计
 - 部署流程文档
 - 环境配置指南
@@ -509,7 +498,7 @@ pnpm typecheck
 - 安全加固指南
 - 上线检查清单
 
-#### 06-YYC3-Music-player-运维监控阶段
+#### 06-YYC3-MusAI-运维监控阶段
 - 监控体系设计
 - 告警规则配置
 - 日志管理规范
@@ -521,7 +510,7 @@ pnpm typecheck
 - 运维自动化
 - 运维文档管理
 
-#### 07-YYC3-Music-player-迭代优化阶段
+#### 07-YYC3-MusAI-迭代优化阶段
 - 迭代规划流程
 - 需求优先级管理
 - 功能迭代计划
@@ -533,7 +522,7 @@ pnpm typecheck
 - A/B 测试指南
 - 发布计划管理
 
-#### 08-YYC3-Music-player-项目管理
+#### 08-YYC3-MusAI-项目管理
 - 项目管理流程
 - 团队协作指南
 - 代码审查流程
@@ -545,7 +534,7 @@ pnpm typecheck
 - 项目度量指标
 - 项目报告模板
 
-#### 09-YYC3-Music-player-演进与优化阶段
+#### 09-YYC3-MusAI-演进与优化阶段
 - AI 模型迭代规划
 - 技术演进路线图
 - 架构演进计划
@@ -559,10 +548,11 @@ pnpm typecheck
 
 ### 核心文档
 
-- [D-Music-Guidelines.md](guidelines/D-Music-Guidelines.md) - 开发指南
-- [FullAudit_v11.1_Snapshot.md](guidelines/FullAudit_v11.1_Snapshot.md) - 完整审核快照
-- [DeepAnalysis_PostgreSQL_Migration_v1.md](guidelines/DeepAnalysis_PostgreSQL_Migration_v1.md) - PostgreSQL 迁移方案
-- [Supabase_Database_Inventory.md](guidelines/Supabase_Database_Inventory.md) - 数据库风险清单
+- [D-Music-Guidelines.md](docs/D-Music-Guidelines.md) - 开发指南
+- [FullAudit_v11.1_Snapshot.md](docs/FullAudit_v11.1_Snapshot.md) - 完整审核快照
+- [DeepAnalysis_PostgreSQL_Migration_v1.md](docs/DeepAnalysis_PostgreSQL_Migration_v1.md) - PostgreSQL 迁移方案
+- [Supabase_Database_Inventory.md](docs/Supabase_Database_Inventory.md) - 数据库风险清单
+- [YYC3-团队通用-标规文档](docs/YYC3-团队通用-标规文档/README.md) - 团队强制规范索引
 
 ---
 
@@ -671,16 +661,16 @@ A: 参考 [部署指南](#部署指南) 部分，配置生产环境变量，构�
 
 ## 联系方式
 
-- **项目主页**: [https://github.com/YYC-Cube/YYC-Cube-D-Music-playe.git]
-- **问题反馈**: [Issues](#)
-- **功能建议**: [Feature Requests](#)
+- **项目主页**: [https://github.com/YYC-Cube/YYC3-MusAI](https://github.com/YYC-Cube/YYC3-MusAI)
+- **问题反馈**: [Issues](https://github.com/YYC-Cube/YYC3-MusAI/issues)
+- **功能建议**: [Feature Requests](https://github.com/YYC-Cube/YYC3-MusAI/issues)
 - **邮件**: <admin@0379.email>
 
 ---
 
 ## 致谢
 
-感谢所有为 D-Music-B 项目做出贡献的开发者！
+感谢所有为 YYC3-MusAI 项目做出贡献的开发者！
 
 ---
 

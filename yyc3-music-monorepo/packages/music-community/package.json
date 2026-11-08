@@ -1,0 +1,52 @@
+{
+  "name": "@yyc3/music-community",
+  "version": "1.0.0",
+  "description": "YYC³ D-Music 社区组件 — 动态/评论/时间线/Fork 树/挑战/直播/时空面板/上传/分享/E2E 加密",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@yyc3/music-data": "workspace:*",
+    "@yyc3/music-hooks": "workspace:*",
+    "@yyc3/music-utils": "workspace:*",
+    "clsx": "2.1.1",
+    "lucide-react": "0.577.0",
+    "motion": "12.43.0",
+    "recharts": "2.15.4"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "community"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT"
+}

@@ -537,7 +537,7 @@ import('/src/app/lib/full-test-suite.ts').then(m => m.runFullTests())
 1. **重新连接 Supabase**
    ```bash
    # 更新凭证
-   vim /Users/yanyu/D-Music-B/utils/supabase/info.tsx
+   vim /Users/yanyu/YYC3-MusAI/utils/supabase/info.tsx
    ```
 
 2. **运行 KV 数据统计**
@@ -546,7 +546,7 @@ import('/src/app/lib/full-test-suite.ts').then(m => m.runFullTests())
    export SUPABASE_SERVICE_KEY="your-service-role-key"
    
    # 运行统计
-   node /Users/yanyu/D-Music-B/scripts/export-kv-advanced.js --stats
+   node /Users/yanyu/YYC3-MusAI/scripts/export-kv-advanced.js --stats
    ```
 
 3. **运行全量测试**

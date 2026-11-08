@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"],
+  // TD-15: controllers 为 express 服务端代码，包内无 express 依赖，暂排除出 typecheck
+  "exclude": ["src/controllers"]
+}

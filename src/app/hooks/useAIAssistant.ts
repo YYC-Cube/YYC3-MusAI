@@ -305,7 +305,7 @@ export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
   const [voiceFeedback, setVoiceFeedback] = useState('');
   // recognitionRef stores { recognition, continuous, restartTimer } to avoid adding new hook calls
   const recognitionRef = useRef<any>(null);
-  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const voiceSupported = useMemo(() => {
     return typeof window !== 'undefined' &&

@@ -1,0 +1,13 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# 允许执行构建脚本的依赖（pnpm 12 安全策略）
+allowBuilds:
+  '@tailwindcss/oxide': true
+  esbuild: true
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - esbuild
+  - turbo

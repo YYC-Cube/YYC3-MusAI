@@ -118,7 +118,7 @@ CREATE TABLE kv_store_f626b673 (
 - ❌ 其他表不存在
 
 **生成文档**:
-- `/Users/yanyu/D-Music-B/docs/Supabase_Status_Report.md`
+- `/Users/yanyu/YYC3-MusAI/docs/Supabase_Status_Report.md`
 
 #### 任务 1.2: 智能运维计划制定 ✅
 
@@ -135,7 +135,7 @@ CREATE TABLE kv_store_f626b673 (
 - ✅ 设置了优先级和时间表
 
 **生成文档**:
-- `/Users/yanyu/D-Music-B/docs/Intelligent_Operations_Plan.md`
+- `/Users/yanyu/YYC3-MusAI/docs/Intelligent_Operations_Plan.md`
 
 #### 任务 1.3: 测试数据脚本创建 ✅
 
@@ -155,13 +155,13 @@ CREATE TABLE kv_store_f626b673 (
 - ⚠️ 由于 RLS 限制，无法直接插入
 
 **生成脚本**:
-- `/Users/yanyu/D-Music-B/scripts/seed-users.js`
-- `/Users/yanyu/D-Music-B/scripts/seed-songs.js`
-- `/Users/yanyu/D-Music-B/scripts/seed-albums.js`
-- `/Users/yanyu/D-Music-B/scripts/seed-challenges.js`
-- `/Users/yanyu/D-Music-B/scripts/seed-market.js`
-- `/Users/yanyu/D-Music-B/scripts/seed-kv.js`
-- `/Users/yanyu/D-Music-B/scripts/seed-kv-fixed.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-users.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-songs.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-albums.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-challenges.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-market.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-kv.js`
+- `/Users/yanyu/YYC3-MusAI/scripts/seed-kv-fixed.js`
 
 #### 任务 1.4: Figma 资源问题修复 ✅
 
@@ -178,9 +178,9 @@ CREATE TABLE kv_store_f626b673 (
 - ✅ Vite 构建成功
 
 **修复文件**:
-- `/Users/yanyu/D-Music-B/src/app/playlistData.ts`
-- `/Users/yanyu/D-Music-B/src/app/components/AuthModal.tsx`
-- `/Users/yanyu/D-Music-B/src/app/components/MediaDisplay.tsx`
+- `/Users/yanyu/YYC3-MusAI/src/app/playlistData.ts`
+- `/Users/yanyu/YYC3-MusAI/src/app/components/AuthModal.tsx`
+- `/Users/yanyu/YYC3-MusAI/src/app/components/MediaDisplay.tsx`
 
 #### 任务 1.5: 开发服务器启动 ✅
 

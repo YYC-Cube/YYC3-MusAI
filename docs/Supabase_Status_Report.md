@@ -330,7 +330,7 @@ import('/src/app/lib/full-test-suite.ts').then(m => m.runFullTests())
 
 ### A. 检查脚本
 
-**脚本**: `/Users/yanyu/D-Music-B/check-supabase.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/check-supabase.js`
 
 **功能**:
 - 检查 Supabase 连接状态
@@ -339,12 +339,12 @@ import('/src/app/lib/full-test-suite.ts').then(m => m.runFullTests())
 
 **使用方法**:
 ```bash
-node /Users/yanyu/D-Music-B/check-supabase.js
+node /Users/yanyu/YYC3-MusAI/check-supabase.js
 ```
 
 ### B. KV 导出工具
 
-**脚本**: `/Users/yanyu/D-Music-B/export-kv-advanced.js`
+**脚本**: `/Users/yanyu/YYC3-MusAI/export-kv-advanced.js`
 
 **功能**:
 - 自动分页（突破 Supabase 1000 行限制）
@@ -358,16 +358,16 @@ node /Users/yanyu/D-Music-B/check-supabase.js
 export SUPABASE_SERVICE_KEY="your-service-role-key"
 
 # 仅查看统计
-node /Users/yanyu/D-Music-B/export-kv-advanced.js --stats
+node /Users/yanyu/YYC3-MusAI/export-kv-advanced.js --stats
 
 # 导出所有数据
-node /Users/yanyu/D-Music-B/export-kv-advanced.js
+node /Users/yanyu/YYC3-MusAI/export-kv-advanced.js
 
 # 导出特定用户
-node /Users/yanyu/D-Music-B/export-kv-advanced.js --user user-123
+node /Users/yanyu/YYC3-MusAI/export-kv-advanced.js --user user-123
 
 # 导出特定前缀
-node /Users/yanyu/D-Music-B/export-kv-advanced.js --prefix "song:"
+node /Users/yanyu/YYC3-MusAI/export-kv-advanced.js --prefix "song:"
 ```
 
 ### C. 参考文档

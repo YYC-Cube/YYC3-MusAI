@@ -102,7 +102,7 @@ async function getAuthToken(): Promise<string> {
   } catch {
     // Fall back to anon key
   }
-  return publicAnonKey;
+  return SUPABASE_ANON_KEY;
 }
 
 function buildHeaders(token: string, extra?: Record<string, string>): Record<string, string> {

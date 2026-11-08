@@ -43,7 +43,7 @@ STATUS = "published"
 ENCODING = "utf-8"
 
 # ===================== 通用描述模板 =====================
-UNIVERSAL_TEMPLATE_PATH = "docs/YYC3-Music-player 通用描述模板.md"
+UNIVERSAL_TEMPLATE_PATH = "docs/YYC3-MusAI 通用描述模板.md"
 
 def load_universal_template():
     """加载通用描述模板"""
@@ -57,7 +57,7 @@ def load_universal_template():
 # ===================== 模板1：所有业务文档 通用标准主模板 =====================
 MAIN_MD_TEMPLATE = """---
 @file: {FILE_NAME}
-@description: YYC3-Music-player {DESCRIPTION}
+@description: YYC3-MusAI {DESCRIPTION}
 @author: YanYuCloudCube Team
 @version: {VERSION}
 @created: {CREATE_DATE}
@@ -184,7 +184,7 @@ YYC³（YanYuCloudCube）Music-player 是一个现代化的音乐创作与分享
 # ===================== 模板2：目录 README.md 专属索引模板 =====================
 README_MD_TEMPLATE = """---
 @file: {FILE_NAME}
-@description: YYC3-Music-player {DESCRIPTION}
+@description: YYC3-MusAI {DESCRIPTION}
 @author: YYC³
 @version: {VERSION}
 @created: {CREATE_DATE}
@@ -215,7 +215,7 @@ YYC³（YanYuCloudCube）Music-player 是一个现代化的音乐创作与分享
 # ===================== 模板3：根目录 README.md 专属索引模板 =====================
 ROOT_README_TEMPLATE = """---
 @file: README.md
-@description: YYC3-Music-player 文档架构总索引
+@description: YYC3-MusAI 文档架构总索引
 @author: YYC³
 @version: {VERSION}
 @created: {CREATE_DATE}
@@ -224,7 +224,7 @@ ROOT_README_TEMPLATE = """---
 @tags: [文档索引],[总览]
 ---
 
-# YYC3-Music-player 文档架构总索引
+# YYC3-MusAI 文档架构总索引
 
 ## 概述
 
@@ -247,14 +247,14 @@ YYC³（YanYuCloudCube）Music-player 是一个现代化的音乐创作与分享
 
 # ===================== 核心文档架构【完整版】 =====================
 PROJECT_STRUCT = {
-    "00-YYC3-Music-player-项目总览索引": [
+    "00-YYC3-MusAI-项目总览索引": [
         ("001", "项目总览手册", "项目立项核心依据，明确项目目标、范围、权责与立项审批标准", "[项目总览],[项目立项],[权责划分]"),
         ("002", "文档架构导航", "文档体系导航与索引，快速定位各类文档", "[项目总览],[文档导航],[索引]"),
         ("003", "快速开始指南", "项目快速启动与使用指南", "[项目总览],[快速开始],[使用指南]"),
         ("004", "核心概念词典", "项目核心概念与术语定义", "[项目总览],[核心概念],[术语词典]"),
         ("005", "版本更新日志", "项目版本迭代与变更记录", "[项目总览],[版本管理],[更新日志]"),
     ],
-    "01-YYC3-Music-player-启动规划阶段": {
+    "01-YYC3-MusAI-启动规划阶段": {
         "0101-Music-player-项目规划": [
             ("001", "项目章程与愿景", "项目立项核心依据，明确项目目标、范围、权责与立项审批标准", "[项目规划],[项目立项],[权责划分]"),
             ("002", "项目范围说明书", "明确项目范围、边界、交付物与验收标准", "[项目规划],[范围管理],[边界定义]"),
@@ -281,7 +281,7 @@ PROJECT_STRUCT = {
             ("004", "项目成功标准定义", "明确项目成功的标准与度量指标，为项目验收提供依据", "[风险管理],[成功标准],[度量指标]"),
         ],
     },
-    "02-YYC3-Music-player-项目设计阶段": {
+    "02-YYC3-MusAI-项目设计阶段": {
         "0201-Music-player-架构设计": [
             ("001", "系统架构总览图", "全系统整体架构设计，包含分层、分模块、部署架构的核心设计方案", "[架构设计],[系统架构],[整体设计]"),
             ("002", "九层功能架构设计", "YYC³ 九层功能架构设计，包含用户交互层、业务逻辑层、智能引擎层等", "[架构设计],[九层架构],[功能分层]"),
@@ -431,7 +431,7 @@ PROJECT_STRUCT = {
             ("006", "设计评审checklist", "设计评审检查清单", "[设计规范],[设计评审],[检查清单]"),
         ],
     },
-    "03-YYC3-Music-player-开发实施阶段": {
+    "03-YYC3-MusAI-开发实施阶段": {
         "0301-Music-player-开发环境": [
             ("001", "开发环境搭建手册", "开发环境搭建步骤与配置", "[开发环境],[环境搭建],[配置指南]"),
             ("002", "多环境配置规范", "多环境配置规范与管理", "[开发环境],[环境配置],[配置规范]"),
@@ -511,7 +511,7 @@ PROJECT_STRUCT = {
             ("005", "技术分享记录", "技术分享记录文档", "[开发进度],[技术分享],[分享记录]"),
         ],
     },
-    "04-YYC3-Music-player-测试与审核阶段": {
+    "04-YYC3-MusAI-测试与审核阶段": {
         "0401-Music-player-测试策略": [
             ("001", "测试总计划", "项目测试总计划文档", "[测试策略],[测试计划],[总计划]"),
             ("002", "测试策略文档", "测试策略文档", "[测试策略],[测试策略],[策略文档]"),
@@ -584,7 +584,7 @@ PROJECT_STRUCT = {
             ("006", "质量门禁标准", "质量门禁标准文档", "[质量审核],[质量门禁],[门禁标准]"),
         ],
     },
-    "05-YYC3-Music-player-交付与部署阶段": {
+    "05-YYC3-MusAI-交付与部署阶段": {
         "0501-Music-player-部署准备": [
             ("001", "部署环境规划", "部署环境规划文档", "[部署准备],[环境规划],[规划文档]"),
             ("002", "服务器配置清单", "服务器配置清单文档", "[部署准备],[服务器配置],[配置清单]"),
@@ -640,7 +640,7 @@ PROJECT_STRUCT = {
             ("006", "知识转移文档", "知识转移文档", "[交付物管理],[知识转移],[转移文档]"),
         ],
     },
-    "06-YYC3-Music-player-运营与维护阶段": {
+    "06-YYC3-MusAI-运营与维护阶段": {
         "0601-Music-player-监控告警": [
             ("001", "监控指标体系", "监控指标体系文档", "[监控告警],[监控指标],[指标体系]"),
             ("002", "告警规则配置", "告警规则配置文档", "[监控告警],[告警规则],[规则配置]"),
@@ -695,7 +695,7 @@ PROJECT_STRUCT = {
             ("006", "团队能力提升计划", "团队能力提升计划文档", "[持续改进],[能力提升],[提升计划]"),
         ],
     },
-    "07-YYC3-Music-player-合规与安全保障": {
+    "07-YYC3-MusAI-合规与安全保障": {
         "0701-Music-player-合规管理": [
             ("001", "数据合规政策", "数据合规政策文档", "[合规管理],[数据合规],[合规政策]"),
             ("002", "隐私保护协议", "隐私保护协议文档", "[合规管理],[隐私保护],[保护协议]"),
@@ -829,7 +829,7 @@ PROJECT_STRUCT = {
             ("010", "高级设置安全-合规管理", "系统维护、实验功能、开发者选项、系统信息、帮助与支持的安全合规管理", "[合规管理],[系统设置安全],[高级设置]"),
         ],
     },
-    "08-YYC3-Music-player-资产与知识管理": {
+    "08-YYC3-MusAI-资产与知识管理": {
         "0801-Music-player-技术资产": [
             ("001", "软件资产清单", "软件资产清单文档", "[技术资产],[软件资产],[资产清单]"),
             ("002", "开源组件清单", "开源组件清单文档", "[技术资产],[开源组件],[组件清单]"),
@@ -955,7 +955,7 @@ PROJECT_STRUCT = {
             ("010", "高级设置资产管理", "系统维护、实验功能、开发者选项、系统信息、帮助与支持的资产管理", "[技术资产],[系统设置资产],[高级设置]"),
         ],
     },
-    "09-YYC3-Music-player-演进与优化阶段": {
+    "09-YYC3-MusAI-演进与优化阶段": {
         "0901-Music-player-智能演进": [
             ("001", "AI模型迭代规划", "AI模型迭代规划文档", "[智能演进],[模型迭代],[迭代规划]"),
             ("002", "智能体能力提升", "智能体能力提升文档", "[智能演进],[能力提升],[提升文档]"),
@@ -1350,7 +1350,7 @@ def generate_project(document_root: str, version: str, creation_date: str, statu
     else:
         logger.info(f"✅ 目录 '{document_root}' 不存在，将创建新目录")
 
-    logger.info("🚀 开始生成 YYC3-Music-player 文档架构...")
+    logger.info("🚀 开始生成 YYC3-MusAI 文档架构...")
     logger.info(f"📁 文档根目录: {document_root}")
     logger.info(f"📅 创建日期: {creation_date}")
     logger.info(f"🏷️  版本号: {version}")
@@ -1449,16 +1449,16 @@ def generate_root_readme_content(document_root: str, version: str, creation_date
 
 | 目录 | 功能描述 |
 |------|----------|
-| 00-YYC3-Music-player-项目总览索引 | 项目总览和导航，提供项目整体视角 |
-| 01-YYC3-Music-player-启动规划阶段 | 项目启动和规划阶段，包含项目规划、需求规划、可行性分析等 |
-| 02-YYC3-Music-player-设计阶段 | 系统设计阶段，包含架构设计、详细设计、数据设计等 |
-| 03-YYC3-Music-player-开发实施阶段 | 开发实施阶段，包含开发规范、技术文档、API文档等 |
-| 04-YYC3-Music-player-测试与审核阶段 | 测试与审核阶段，包含测试策略、测试用例、测试报告等 |
-| 05-YYC3-Music-player-交付与部署阶段 | 交付与部署阶段，包含部署准备、部署手册、发布流程等 |
-| 06-YYC3-Music-player-运营与维护阶段 | 运营与维护阶段，包含监控告警、运维手册、问题管理等 |
-| 07-YYC3-Music-player-合规与安全 | 合规与安全管理，包含合规管理、安全管理、权限管理等 |
-| 08-YYC3-Music-player-资产与知识管理 | 资产与知识管理，包含技术资产、知识产权、知识库等 |
-| 09-YYC3-Music-player-演进与优化 | 演进与优化，包含智能演进、功能演进、架构演进等 |
+| 00-YYC3-MusAI-项目总览索引 | 项目总览和导航，提供项目整体视角 |
+| 01-YYC3-MusAI-启动规划阶段 | 项目启动和规划阶段，包含项目规划、需求规划、可行性分析等 |
+| 02-YYC3-MusAI-设计阶段 | 系统设计阶段，包含架构设计、详细设计、数据设计等 |
+| 03-YYC3-MusAI-开发实施阶段 | 开发实施阶段，包含开发规范、技术文档、API文档等 |
+| 04-YYC3-MusAI-测试与审核阶段 | 测试与审核阶段，包含测试策略、测试用例、测试报告等 |
+| 05-YYC3-MusAI-交付与部署阶段 | 交付与部署阶段，包含部署准备、部署手册、发布流程等 |
+| 06-YYC3-MusAI-运营与维护阶段 | 运营与维护阶段，包含监控告警、运维手册、问题管理等 |
+| 07-YYC3-MusAI-合规与安全 | 合规与安全管理，包含合规管理、安全管理、权限管理等 |
+| 08-YYC3-MusAI-资产与知识管理 | 资产与知识管理，包含技术资产、知识产权、知识库等 |
+| 09-YYC3-MusAI-演进与优化 | 演进与优化，包含智能演进、功能演进、架构演进等 |
 
 """
 
@@ -1467,7 +1467,7 @@ def generate_root_readme_content(document_root: str, version: str, creation_date
 ## 文档查阅指南
 
 ### 快速导航
-- **项目总览**：从 [00-YYC3-Music-player-项目总览索引](00-YYC3-Music-player-项目总览索引/README.md) 开始了解项目整体情况
+- **项目总览**：从 [00-YYC3-MusAI-项目总览索引](00-YYC3-MusAI-项目总览索引/README.md) 开始了解项目整体情况
 - **按阶段查阅**：根据项目所处阶段，选择对应的目录进行深入阅读
 - **按主题查阅**：使用搜索功能快速定位相关主题文档
 
@@ -1630,7 +1630,7 @@ def update_all_documents(args) -> None:
 # ===================== 主函数 =====================
 
 def main():
-    parser = argparse.ArgumentParser(description='YYC3-Music-player 文档架构一键生成脚本')
+    parser = argparse.ArgumentParser(description='YYC3-MusAI 文档架构一键生成脚本')
     parser.add_argument('--mode', type=str, default='generate',
                         choices=['generate', 'validate', 'update'],
                         help='运行模式: generate(生成文档), validate(验证文档), update(更新文档)')

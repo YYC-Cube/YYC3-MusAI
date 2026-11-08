@@ -1,6 +1,6 @@
 ---
 @file: Figma-对齐-修复审核提示词_v1.0.md
-@description: YYC³ D-Music-B Figma 设计对齐修复与审核提示词
+@description: YYC³ YYC3-MusAI Figma 设计对齐修复与审核提示词
 @author: YanYuCloudCube Team
 @version: v1.0
 @created: 2026-02-26

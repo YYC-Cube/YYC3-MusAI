@@ -1,0 +1,55 @@
+{
+  "name": "@yyc3/music-voice",
+  "version": "1.0.0",
+  "description": "YYC³ D-Music 语音交互系统 — 多语言 / 语音识别 / 语音合成 / 语音命令 / 上下文 五引擎与控制面板",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "0.577.0",
+    "tailwind-merge": "^3.3.1"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "voice",
+    "speech",
+    "multilingual"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT"
+}

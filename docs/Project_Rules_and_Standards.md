@@ -28,16 +28,16 @@ YYC³-Music-player 采用**九层文档架构**，确保文档的完整性、一
 
 ```
 docs/
-├── 00-YYC3-Music-player-项目总览索引/          # 项目总览
-├── 01-YYC3-Music-player-启动规划阶段/        # 启动规划
-├── 02-YYC3-Music-player-项目设计阶段/        # 项目设计
-├── 03-YYC3-Music-player-开发实施阶段/        # 开发实施
-├── 04-YYC3-Music-player-测试验收阶段/        # 测试验收
-├── 05-YYC3-Music-player-部署运维阶段/        # 部署运维
-├── 06-YYC3-Music-player-项目管理阶段/        # 项目管理
-├── 07-YYC3-Music-player-质量管理阶段/        # 质量管理
-├── 08-YYC3-Music-player-风险管理阶段/        # 风险管理
-├── 09-YYC3-Music-player-配置管理阶段/        # 配置管理
+├── 00-YYC3-MusAI-项目总览索引/          # 项目总览
+├── 01-YYC3-MusAI-启动规划阶段/        # 启动规划
+├── 02-YYC3-MusAI-项目设计阶段/        # 项目设计
+├── 03-YYC3-MusAI-开发实施阶段/        # 开发实施
+├── 04-YYC3-MusAI-测试验收阶段/        # 测试验收
+├── 05-YYC3-MusAI-部署运维阶段/        # 部署运维
+├── 06-YYC3-MusAI-项目管理阶段/        # 项目管理
+├── 07-YYC3-MusAI-质量管理阶段/        # 质量管理
+├── 08-YYC3-MusAI-风险管理阶段/        # 风险管理
+├── 09-YYC3-MusAI-配置管理阶段/        # 配置管理
 ├── guidelines/                                  # 提交给 Figma AI 的文档
 └── README.md                                   # 文档总索引
 ```
@@ -60,7 +60,7 @@ docs/
 
 ### 1.3 文档生成工具
 
-**工具**: `/Users/yanyu/D-Music-B/docs/YYC3-Musid-Document.py`
+**工具**: `/Users/yanyu/YYC3-MusAI/docs/YYC3-Musid-Document.py`
 
 **功能**:
 - ✅ 自动生成符合 YYC³ 标准的文档
@@ -70,7 +70,7 @@ docs/
 
 **使用方法**:
 ```bash
-cd /Users/yanyu/D-Music-B
+cd /Users/yanyu/YYC3-MusAI
 python3 docs/YYC3-Musid-Document.py --help
 ```
 
@@ -145,7 +145,7 @@ docs/
 ### 3.1 根目录结构
 
 ```
-/Users/yanyu/D-Music-B/
+/Users/yanyu/YYC3-MusAI/
 ├── src/                              # 源代码
 │   ├── app/                          # 应用代码
 │   │   ├── components/                # 组件
@@ -160,16 +160,16 @@ docs/
 │   ├── d_music_postgres.sql         # PostgreSQL Schema
 │   └── d_music_schema.sql.md       # Schema 文档
 ├── docs/                             # 文档
-│   ├── 00-YYC3-Music-player-项目总览索引/
-│   ├── 01-YYC3-Music-player-启动规划阶段/
-│   ├── 02-YYC3-Music-player-项目设计阶段/
-│   ├── 03-YYC3-Music-player-开发实施阶段/
-│   ├── 04-YYC3-Music-player-测试验收阶段/
-│   ├── 05-YYC3-Music-player-部署运维阶段/
-│   ├── 06-YYC3-Music-player-项目管理阶段/
-│   ├── 07-YYC3-Music-player-质量管理阶段/
-│   ├── 08-YYC3-Music-player-风险管理阶段/
-│   ├── 09-YYC3-Music-player-配置管理阶段/
+│   ├── 00-YYC3-MusAI-项目总览索引/
+│   ├── 01-YYC3-MusAI-启动规划阶段/
+│   ├── 02-YYC3-MusAI-项目设计阶段/
+│   ├── 03-YYC3-MusAI-开发实施阶段/
+│   ├── 04-YYC3-MusAI-测试验收阶段/
+│   ├── 05-YYC3-MusAI-部署运维阶段/
+│   ├── 06-YYC3-MusAI-项目管理阶段/
+│   ├── 07-YYC3-MusAI-质量管理阶段/
+│   ├── 08-YYC3-MusAI-风险管理阶段/
+│   ├── 09-YYC3-MusAI-配置管理阶段/
 │   ├── guidelines/                      # Figma AI 文档
 │   ├── DeepAssessment_v7.md
 │   ├── DesignSystem_AuditReport_v1.md
@@ -204,7 +204,7 @@ docs/
 
 ```
 docs/
-├── 00-YYC3-Music-player-项目总览索引/
+├── 00-YYC3-MusAI-项目总览索引/
 │   ├── 001-Music-player-项目总览索引-项目总览手册.md
 │   ├── 002-Music-player-项目总览索引-文档架构导航.md
 │   ├── 003-Music-player-项目总览索引-快速开始指南.md
@@ -212,7 +212,7 @@ docs/
 │   ├── 005-Music-player-项目总览索引-版本更新日志.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 01-YYC3-Music-player-启动规划阶段/
+├── 01-YYC3-MusAI-启动规划阶段/
 │   ├── 0101-Music-player-启动规划阶段-项目规划/
 │   │   ├── 001-Music-player-启动规划阶段-项目章程与愿景.md
 │   │   ├── 002-Music-player-启动规划阶段-项目范围说明书.md
@@ -243,7 +243,7 @@ docs/
 │   │   ├── Music-player-RES-DOC-001.md
 │   │   └── README.md
 │   └── README.md
-├── 02-YYC3-Music-player-项目设计阶段/
+├── 02-YYC3-MusAI-项目设计阶段/
 │   ├── 0201-Music-player-项目设计阶段-系统架构总览图.md
 │   ├── 0202-Music-player-项目设计阶段-详细设计/
 │   │   ├── 0202-01-基础设施层/
@@ -258,44 +258,44 @@ docs/
 │   │   └── README.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 03-YYC3-Music-player-开发实施阶段/
+├── 03-YYC3-MusAI-开发实施阶段/
 │   ├── 0301-Music-player-开发实施阶段-前端开发规范.md
 │   ├── 0302-Music-player-开发实施阶段-后端开发规范.md
 │   ├── 0303-Music-player-开发实施阶段-AI集成规范.md
 │   ├── 0304-Music-player-开发实施阶段-测试规范.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 04-YYC3-Music-player-测试验收阶段/
+├── 04-YYC3-MusAI-测试验收阶段/
 │   ├── 0401-Music-player-测试验收阶段-测试计划.md
 │   ├── 0402-Music-player-测试验收阶段-验收标准.md
 │   ├── 0403-Music-player-测试验收阶段-测试报告.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 05-YYC3-Music-player-部署运维阶段/
+├── 05-YYC3-MusAI-部署运维阶段/
 │   ├── 0501-Music-player-部署运维阶段-部署流程.md
 │   ├── 0502-Music-player-部署运维阶段-运维手册.md
 │   ├── 0503-Music-player-部署运维阶段-监控告警.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 06-YYC3-Music-player-项目管理阶段/
+├── 06-YYC3-MusAI-项目管理阶段/
 │   ├── 0601-Music-player-项目管理阶段-项目跟踪.md
 │   ├── 0602-Music-player-项目管理阶段-进度报告.md
 │   ├── 0603-Music-player-项目管理阶段-会议记录.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 07-YYC3-Music-player-质量管理阶段/
+├── 07-YYC3-MusAI-质量管理阶段/
 │   ├── 0701-Music-player-质量管理阶段-代码审查标准.md
 │   ├── 0702-Music-player-质量管理阶段-测试覆盖率.md
 │   ├── 0703-Music-player-质量管理阶段-性能标准.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 08-YYC3-Music-player-风险管理阶段/
+├── 08-YYC3-MusAI-风险管理阶段/
 │   ├── 0801-Music-player-风险管理阶段-风险应对预案.md
 │   ├── 0802-Music-player-风险管理阶段-问题跟踪.md
 │   ├── 0803-Music-player-风险管理阶段-变更管理.md
 │   ├── Music-player-RES-DOC-001.md
 │   └── README.md
-├── 09-YYC3-Music-player-配置管理阶段/
+├── 09-YYC3-MusAI-配置管理阶段/
 │   ├── 0901-Music-player-配置管理阶段-配置文件规范.md
 │   ├── 0902-Music-player-配置管理阶段-环境变量规范.md
 │   ├── 0903-Music-player-配置管理阶段-版本管理.md
@@ -354,7 +354,7 @@ guidelines/
 ```markdown
 ---
 @file: {FILE_NAME}
-@description: YYC3-Music-player {DESCRIPTION}
+@description: YYC3-MusAI {DESCRIPTION}
 @author: YanYuCloudCube Team
 @version: {VERSION}
 @created: {CREATE_DATE}
@@ -783,7 +783,7 @@ git push origin release/v1.0.0
 
 **使用方法**:
 ```bash
-cd /Users/yanyu/D-Music-B
+cd /Users/yanyu/YYC3-MusAI
 python3 docs/YYC3-Musid-Document.py --help
 ```
 
@@ -817,7 +817,7 @@ python3 docs/YYC3-Musid-Document.py --update
 
 **使用方法**:
 ```bash
-cd /Users/yanyu/D-Music-B
+cd /Users/yanyu/YYC3-MusAI
 ./scripts/init-git.sh
 ```
 
@@ -961,7 +961,7 @@ git push origin feature/new-feature
 **A**: 使用 init-git.sh 脚本
 
 ```bash
-cd /Users/yanyu/D-Music-B
+cd /Users/yanyu/YYC3-MusAI
 ./scripts/init-git.sh
 ```
 
@@ -1025,7 +1025,7 @@ node scripts/migrate-from-supabase.js
 
 ### A. 文档模板
 
-详见 `/Users/yanyu/D-Music-B/docs/YYC3-Musid-Document.py`
+详见 `/Users/yanyu/YYC3-MusAI/docs/YYC3-Musid-Document.py`
 
 ### B. 自动化脚本
 
