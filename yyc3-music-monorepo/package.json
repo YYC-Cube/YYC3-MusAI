@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "description": "YYC³ MusAI — 智能音乐平台组件与模块统一管理（拆分基线：YYC3-MusAI v11.2）",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git",
+    "directory": "yyc3-music-monorepo"
+  },
+  "homepage": "https://musai.yyc3.vip",
+  "bugs": {
+    "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",

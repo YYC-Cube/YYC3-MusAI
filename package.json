@@ -4,6 +4,14 @@
   "version": "11.2.0",
   "type": "module",
   "description": "YYC³ MusAI · AI 驱动的智能音乐平台",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git"
+  },
+  "homepage": "https://musai.yyc3.vip",
+  "bugs": {
+    "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
+  },
   "author": "YYC³ Team <admin@0379.email>",
   "license": "MIT",
   "scripts": {

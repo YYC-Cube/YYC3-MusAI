@@ -48,5 +48,14 @@
     "growth"
   ],
   "author": "YYC³ Team <admin@0379.email>",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git",
+    "directory": "packages/music-growth"
+  },
+  "homepage": "https://musai.yyc3.vip",
+  "bugs": {
+    "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
+  }
 }
