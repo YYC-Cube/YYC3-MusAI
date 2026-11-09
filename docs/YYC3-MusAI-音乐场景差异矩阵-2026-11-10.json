@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-11-09T16:57:56.311Z",
+  "generatedAt": "2026-11-09T17:04:38.055Z",
   "current": {
     "files": 187,
     "loc": 59879,
-    "components": 320,
+    "components": 319,
     "hooks": 11,
-    "services": 98,
+    "services": 88,
     "name": "yyc3-musai"
   },
   "stack": [
@@ -58,6 +58,26 @@
       "tailwind": "4.1.12",
       "typescript": "-",
       "test": "-"
+    },
+    {
+      "key": "lib-speech-ai",
+      "label": "迭代库 / speech-ai-music",
+      "name": "speech-ai-music",
+      "react": "^19",
+      "vite": "-",
+      "tailwind": "3.3.3",
+      "typescript": "^5",
+      "test": "vitest"
+    },
+    {
+      "key": "lib-d-music-135",
+      "label": "迭代库 / D-Music-135",
+      "name": "yyc3-ai-music",
+      "react": "-",
+      "vite": "6.3.5",
+      "tailwind": "4.1.12",
+      "typescript": "-",
+      "test": "-"
     }
   ],
   "matrix": [
@@ -68,7 +88,7 @@
       "loc": 12972,
       "components": 26,
       "hooks": 15,
-      "services": 42,
+      "services": 35,
       "overlap": {
         "components": {
           "overlap": 18,
@@ -81,9 +101,9 @@
           "ratio": 26.7
         },
         "services": {
-          "overlap": 20,
+          "overlap": 13,
           "unique": 22,
-          "ratio": 47.6
+          "ratio": 37.1
         }
       }
     },
@@ -120,7 +140,7 @@
       "loc": 8620,
       "components": 246,
       "hooks": 7,
-      "services": 13,
+      "services": 12,
       "overlap": {
         "components": {
           "overlap": 240,
@@ -134,8 +154,8 @@
         },
         "services": {
           "overlap": 1,
-          "unique": 12,
-          "ratio": 7.7
+          "unique": 11,
+          "ratio": 8.3
         }
       }
     },
@@ -144,14 +164,14 @@
       "label": "YYC3-Music-Player",
       "files": 83,
       "loc": 26483,
-      "components": 273,
+      "components": 271,
       "hooks": 4,
       "services": 12,
       "overlap": {
         "components": {
           "overlap": 244,
-          "unique": 29,
-          "ratio": 89.4
+          "unique": 27,
+          "ratio": 90
         },
         "hooks": {
           "overlap": 3,
@@ -162,6 +182,58 @@
           "overlap": 1,
           "unique": 11,
           "ratio": 8.3
+        }
+      }
+    },
+    {
+      "key": "lib-speech-ai",
+      "label": "迭代库 / speech-ai-music",
+      "files": 82,
+      "loc": 6986,
+      "components": 73,
+      "hooks": 1,
+      "services": 25,
+      "overlap": {
+        "components": {
+          "overlap": 18,
+          "unique": 55,
+          "ratio": 24.7
+        },
+        "hooks": {
+          "overlap": 0,
+          "unique": 1,
+          "ratio": 0
+        },
+        "services": {
+          "overlap": 1,
+          "unique": 24,
+          "ratio": 4
+        }
+      }
+    },
+    {
+      "key": "lib-d-music-135",
+      "label": "迭代库 / D-Music-135",
+      "files": 135,
+      "loc": 44330,
+      "components": 316,
+      "hooks": 11,
+      "services": 92,
+      "overlap": {
+        "components": {
+          "overlap": 315,
+          "unique": 1,
+          "ratio": 99.7
+        },
+        "hooks": {
+          "overlap": 11,
+          "unique": 0,
+          "ratio": 100
+        },
+        "services": {
+          "overlap": 43,
+          "unique": 49,
+          "ratio": 46.7
         }
       }
     }
@@ -178,8 +250,54 @@
         "dmusai",
         "music-ai"
       ],
+      "roles": {},
       "loc": 716,
       "score": 23
+    },
+    {
+      "kind": "components",
+      "name": "ThemeProvider",
+      "projects": [
+        "dmusai-mobile",
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "dmusai",
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 42,
+      "score": 23
+    },
+    {
+      "kind": "services",
+      "name": "projectId",
+      "projects": [
+        "dmusai-web",
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "dmusai",
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 7,
+      "score": 20
+    },
+    {
+      "kind": "services",
+      "name": "publicAnonKey",
+      "projects": [
+        "dmusai-web",
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "dmusai",
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 7,
+      "score": 20
     },
     {
       "kind": "hooks",
@@ -192,8 +310,827 @@
         "dmusai",
         "music-ai"
       ],
+      "roles": {},
       "loc": 86,
       "score": 20
+    }
+  ],
+  "libraryOnly": [
+    {
+      "kind": "services",
+      "name": "runE2ETests",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 1798
+    },
+    {
+      "kind": "services",
+      "name": "runAllTests",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 1397
+    },
+    {
+      "kind": "services",
+      "name": "runSmokeTests",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 1397
+    },
+    {
+      "kind": "services",
+      "name": "getLocalStats",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 824
+    },
+    {
+      "kind": "services",
+      "name": "isLocalMode",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 824
+    },
+    {
+      "kind": "services",
+      "name": "localApiFetch",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 824
+    },
+    {
+      "kind": "services",
+      "name": "applyTheme",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "getTheme",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "loadCustomTheme",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "saveCustomTheme",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 506
+    },
+    {
+      "kind": "components",
+      "name": "TapSyncEditor",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 506
+    },
+    {
+      "kind": "components",
+      "name": "HomePage",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 294
+    },
+    {
+      "kind": "components",
+      "name": "NavBar",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 262
+    },
+    {
+      "kind": "components",
+      "name": "RealTimeEditor",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 239
+    },
+    {
+      "kind": "services",
+      "name": "alignLyricsToAudio",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "autoTagEmotions",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "detectEmotion",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "lyricsToJSON",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "lyricsToLRC",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "parseLRC",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "parseLyricsJSON",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 223
+    },
+    {
+      "kind": "components",
+      "name": "MusicCommunityFeed",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 211
+    },
+    {
+      "kind": "services",
+      "name": "getAlbums",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getArtists",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getAudioStreamUrl",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getImageUrl",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getItem",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getLibrary",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getSimilarItems",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getSystemInfo",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "pingJellyfin",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "reportPlaybackProgress",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "reportPlaybackStart",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "reportPlaybackStopped",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "searchItems",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "setFavorite",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 210
+    },
+    {
+      "kind": "components",
+      "name": "RoleBasedUIExample",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 190
+    },
+    {
+      "kind": "components",
+      "name": "InnovativeInteractions",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 187
+    },
+    {
+      "kind": "components",
+      "name": "LoginPageWrapper",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 171
+    },
+    {
+      "kind": "services",
+      "name": "decrypt",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "encrypt",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "generateToken",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "hash",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "verifyHash",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 170
+    },
+    {
+      "kind": "components",
+      "name": "CollaborativePlaylist",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 164
+    },
+    {
+      "kind": "components",
+      "name": "GeoBroadcastSystem",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 150
+    },
+    {
+      "kind": "services",
+      "name": "closeAll",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "getPool",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "ping",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "pingAll",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "query",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "queryOne",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "components",
+      "name": "RegisterPage",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "transaction",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 138
+    },
+    {
+      "kind": "components",
+      "name": "EncryptedDataExample",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 135
+    },
+    {
+      "kind": "components",
+      "name": "MusicPassword",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 134
+    },
+    {
+      "kind": "services",
+      "name": "assert",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertContains",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertDeepEqual",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertEqual",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertInRange",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertThrows",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertTruthy",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "createSuite",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "components",
+      "name": "CreationWorkflow",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "printResults",
+      "projects": [
+        "lib-d-music-135"
+      ],
+      "groups": [
+        "lib-d-music-135"
+      ],
+      "roles": {},
+      "loc": 131
+    },
+    {
+      "kind": "components",
+      "name": "CyberpunkAvatar",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 126
+    },
+    {
+      "kind": "components",
+      "name": "AIMVGenerator",
+      "projects": [
+        "lib-speech-ai"
+      ],
+      "groups": [
+        "lib-speech-ai"
+      ],
+      "roles": {},
+      "loc": 120
     }
   ],
   "conflicts": [
@@ -205,24 +1142,6 @@
       "siblingLoc": 486,
       "currentFile": "packages/music-player/src/components/AudioVisualizer.tsx",
       "siblingFile": "src/components/AudioVisualizer.tsx"
-    },
-    {
-      "kind": "components",
-      "name": "App",
-      "project": "YYC3-Music-AI",
-      "currentLoc": 2048,
-      "siblingLoc": 197,
-      "currentFile": "apps/d-music/src/app/App.tsx",
-      "siblingFile": "src/app/App.tsx"
-    },
-    {
-      "kind": "components",
-      "name": "App",
-      "project": "YYC3-Music-Player",
-      "currentLoc": 2048,
-      "siblingLoc": 158,
-      "currentFile": "apps/d-music/src/app/App.tsx",
-      "siblingFile": "src/app/App.tsx"
     },
     {
       "kind": "components",
@@ -455,18 +1374,6 @@
       "loc": 113
     },
     {
-      "kind": "services",
-      "name": "projectId",
-      "project": "dmusai-web",
-      "loc": 3
-    },
-    {
-      "kind": "services",
-      "name": "publicAnonKey",
-      "project": "dmusai-web",
-      "loc": 3
-    },
-    {
       "kind": "components",
       "name": "BiometricAuth",
       "project": "dmusai-mobile",
@@ -483,12 +1390,6 @@
       "name": "PlayerProvider",
       "project": "dmusai-mobile",
       "loc": 26
-    },
-    {
-      "kind": "components",
-      "name": "ThemeProvider",
-      "project": "dmusai-mobile",
-      "loc": 30
     },
     {
       "kind": "components",
@@ -702,12 +1603,6 @@
     },
     {
       "kind": "services",
-      "name": "ALBUMS_DATABASE",
-      "project": "music-ai",
-      "loc": 423
-    },
-    {
-      "kind": "services",
       "name": "getAlbumById",
       "project": "music-ai",
       "loc": 423
@@ -918,18 +1813,6 @@
     },
     {
       "kind": "components",
-      "name": "DEFAULT_CONFIG",
-      "project": "music-player",
-      "loc": 1360
-    },
-    {
-      "kind": "components",
-      "name": "PLAYER_SKINS",
-      "project": "music-player",
-      "loc": 1360
-    },
-    {
-      "kind": "components",
       "name": "ThemeCustomizer",
       "project": "music-player",
       "loc": 1360
@@ -1017,6 +1900,762 @@
       "name": "getAPIConfig",
       "project": "music-player",
       "loc": 357
+    },
+    {
+      "kind": "components",
+      "name": "AuthPage",
+      "project": "lib-speech-ai",
+      "loc": 55
+    },
+    {
+      "kind": "components",
+      "name": "LowPolyButton",
+      "project": "lib-speech-ai",
+      "loc": 71
+    },
+    {
+      "kind": "components",
+      "name": "DataVisualization",
+      "project": "lib-speech-ai",
+      "loc": 71
+    },
+    {
+      "kind": "components",
+      "name": "CyberpunkAvatar",
+      "project": "lib-speech-ai",
+      "loc": 126
+    },
+    {
+      "kind": "components",
+      "name": "AdvancedMusicGenerator",
+      "project": "lib-speech-ai",
+      "loc": 119
+    },
+    {
+      "kind": "components",
+      "name": "AudioTrackBlocks",
+      "project": "lib-speech-ai",
+      "loc": 75
+    },
+    {
+      "kind": "components",
+      "name": "BackendManagement",
+      "project": "lib-speech-ai",
+      "loc": 69
+    },
+    {
+      "kind": "components",
+      "name": "GeoBroadcastSystem",
+      "project": "lib-speech-ai",
+      "loc": 150
+    },
+    {
+      "kind": "components",
+      "name": "BusinessValueAnalysis",
+      "project": "lib-speech-ai",
+      "loc": 78
+    },
+    {
+      "kind": "components",
+      "name": "CachedDataExample",
+      "project": "lib-speech-ai",
+      "loc": 62
+    },
+    {
+      "kind": "components",
+      "name": "RealTimeEditor",
+      "project": "lib-speech-ai",
+      "loc": 239
+    },
+    {
+      "kind": "components",
+      "name": "VideoCommunity",
+      "project": "lib-speech-ai",
+      "loc": 117
+    },
+    {
+      "kind": "components",
+      "name": "ComplianceRiskControl",
+      "project": "lib-speech-ai",
+      "loc": 74
+    },
+    {
+      "kind": "components",
+      "name": "AIMVGenerator",
+      "project": "lib-speech-ai",
+      "loc": 120
+    },
+    {
+      "kind": "components",
+      "name": "CreationWorkflow",
+      "project": "lib-speech-ai",
+      "loc": 131
+    },
+    {
+      "kind": "components",
+      "name": "MultimediaDIYWorkshop",
+      "project": "lib-speech-ai",
+      "loc": 99
+    },
+    {
+      "kind": "components",
+      "name": "CreativeSceneEmpowerment",
+      "project": "lib-speech-ai",
+      "loc": 73
+    },
+    {
+      "kind": "components",
+      "name": "CrossModalInteractive",
+      "project": "lib-speech-ai",
+      "loc": 71
+    },
+    {
+      "kind": "components",
+      "name": "DataValueFeedback",
+      "project": "lib-speech-ai",
+      "loc": 81
+    },
+    {
+      "kind": "components",
+      "name": "DistributedAINetwork",
+      "project": "lib-speech-ai",
+      "loc": 79
+    },
+    {
+      "kind": "components",
+      "name": "DynamicColorEngine",
+      "project": "lib-speech-ai",
+      "loc": 87
+    },
+    {
+      "kind": "components",
+      "name": "DynamicSkinSystem",
+      "project": "lib-speech-ai",
+      "loc": 8
+    },
+    {
+      "kind": "components",
+      "name": "EnhancedRiskControl",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "components",
+      "name": "GlitchMelodyGenerator",
+      "project": "lib-speech-ai",
+      "loc": 81
+    },
+    {
+      "kind": "components",
+      "name": "HolographicCapsule",
+      "project": "lib-speech-ai",
+      "loc": 92
+    },
+    {
+      "kind": "components",
+      "name": "RankingBoard",
+      "project": "lib-speech-ai",
+      "loc": 87
+    },
+    {
+      "kind": "components",
+      "name": "StarPowerInfo",
+      "project": "lib-speech-ai",
+      "loc": 73
+    },
+    {
+      "kind": "components",
+      "name": "InnovativeInteractions",
+      "project": "lib-speech-ai",
+      "loc": 187
+    },
+    {
+      "kind": "components",
+      "name": "LayeredMonetization",
+      "project": "lib-speech-ai",
+      "loc": 80
+    },
+    {
+      "kind": "components",
+      "name": "NavBar",
+      "project": "lib-speech-ai",
+      "loc": 262
+    },
+    {
+      "kind": "components",
+      "name": "LazyLoadingExample",
+      "project": "lib-speech-ai",
+      "loc": 52
+    },
+    {
+      "kind": "components",
+      "name": "Navbar",
+      "project": "lib-speech-ai",
+      "loc": 74
+    },
+    {
+      "kind": "components",
+      "name": "OptimizedThreeScene",
+      "project": "lib-speech-ai",
+      "loc": 83
+    },
+    {
+      "kind": "components",
+      "name": "QuantumAestheticsEngine",
+      "project": "lib-speech-ai",
+      "loc": 71
+    },
+    {
+      "kind": "components",
+      "name": "EnhancedRankingSystem",
+      "project": "lib-speech-ai",
+      "loc": 85
+    },
+    {
+      "kind": "components",
+      "name": "AntiCheatSystem",
+      "project": "lib-speech-ai",
+      "loc": 59
+    },
+    {
+      "kind": "components",
+      "name": "CsrfProtectedForm",
+      "project": "lib-speech-ai",
+      "loc": 111
+    },
+    {
+      "kind": "components",
+      "name": "EncryptedDataExample",
+      "project": "lib-speech-ai",
+      "loc": 135
+    },
+    {
+      "kind": "components",
+      "name": "PermissionGuard",
+      "project": "lib-speech-ai",
+      "loc": 40
+    },
+    {
+      "kind": "components",
+      "name": "RoleBasedUIExample",
+      "project": "lib-speech-ai",
+      "loc": 190
+    },
+    {
+      "kind": "components",
+      "name": "CollaborativePlaylist",
+      "project": "lib-speech-ai",
+      "loc": 164
+    },
+    {
+      "kind": "components",
+      "name": "MusicCommunityFeed",
+      "project": "lib-speech-ai",
+      "loc": 211
+    },
+    {
+      "kind": "components",
+      "name": "ICPVerify",
+      "project": "lib-speech-ai",
+      "loc": 20
+    },
+    {
+      "kind": "components",
+      "name": "RootLayout",
+      "project": "lib-speech-ai",
+      "loc": 30
+    },
+    {
+      "kind": "components",
+      "name": "FaceScanner",
+      "project": "lib-speech-ai",
+      "loc": 94
+    },
+    {
+      "kind": "components",
+      "name": "GalaxyVortex",
+      "project": "lib-speech-ai",
+      "loc": 51
+    },
+    {
+      "kind": "components",
+      "name": "MusicPassword",
+      "project": "lib-speech-ai",
+      "loc": 134
+    },
+    {
+      "kind": "components",
+      "name": "VoiceTunnel",
+      "project": "lib-speech-ai",
+      "loc": 91
+    },
+    {
+      "kind": "components",
+      "name": "LoginPageWrapper",
+      "project": "lib-speech-ai",
+      "loc": 171
+    },
+    {
+      "kind": "components",
+      "name": "HomePage",
+      "project": "lib-speech-ai",
+      "loc": 294
+    },
+    {
+      "kind": "components",
+      "name": "PrivacyPolicy",
+      "project": "lib-speech-ai",
+      "loc": 13
+    },
+    {
+      "kind": "components",
+      "name": "RegisterPage",
+      "project": "lib-speech-ai",
+      "loc": 138
+    },
+    {
+      "kind": "components",
+      "name": "TermsOfService",
+      "project": "lib-speech-ai",
+      "loc": 12
+    },
+    {
+      "kind": "hooks",
+      "name": "useDynamicColor",
+      "project": "lib-speech-ai",
+      "loc": 87
+    },
+    {
+      "kind": "services",
+      "name": "validateCsrfToken",
+      "project": "lib-speech-ai",
+      "loc": 35
+    },
+    {
+      "kind": "services",
+      "name": "rolePermissions",
+      "project": "lib-speech-ai",
+      "loc": 103
+    },
+    {
+      "kind": "services",
+      "name": "hasPermission",
+      "project": "lib-speech-ai",
+      "loc": 103
+    },
+    {
+      "kind": "services",
+      "name": "hasAnyPermission",
+      "project": "lib-speech-ai",
+      "loc": 103
+    },
+    {
+      "kind": "services",
+      "name": "hasAllPermissions",
+      "project": "lib-speech-ai",
+      "loc": 103
+    },
+    {
+      "kind": "services",
+      "name": "encrypt",
+      "project": "lib-speech-ai",
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "decrypt",
+      "project": "lib-speech-ai",
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "hash",
+      "project": "lib-speech-ai",
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "verifyHash",
+      "project": "lib-speech-ai",
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "generateToken",
+      "project": "lib-speech-ai",
+      "loc": 170
+    },
+    {
+      "kind": "services",
+      "name": "isAuthenticated",
+      "project": "lib-speech-ai",
+      "loc": 78
+    },
+    {
+      "kind": "services",
+      "name": "getUserId",
+      "project": "lib-speech-ai",
+      "loc": 78
+    },
+    {
+      "kind": "services",
+      "name": "checkRateLimit",
+      "project": "lib-speech-ai",
+      "loc": 78
+    },
+    {
+      "kind": "services",
+      "name": "cleanupRateLimitStore",
+      "project": "lib-speech-ai",
+      "loc": 78
+    },
+    {
+      "kind": "services",
+      "name": "getClientIp",
+      "project": "lib-speech-ai",
+      "loc": 78
+    },
+    {
+      "kind": "services",
+      "name": "emailSchema",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "passwordSchema",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "userIdSchema",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "musicParamsSchema",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "categorySchema",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "sanitizeForPrompt",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "validateEmail",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "validatePassword",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "services",
+      "name": "validate",
+      "project": "lib-speech-ai",
+      "loc": 67
+    },
+    {
+      "kind": "components",
+      "name": "TapSyncEditor",
+      "project": "lib-d-music-135",
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "runAllTests",
+      "project": "lib-d-music-135",
+      "loc": 1397
+    },
+    {
+      "kind": "services",
+      "name": "runSmokeTests",
+      "project": "lib-d-music-135",
+      "loc": 1397
+    },
+    {
+      "kind": "services",
+      "name": "runE2ETests",
+      "project": "lib-d-music-135",
+      "loc": 1798
+    },
+    {
+      "kind": "services",
+      "name": "getAudioStreamUrl",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getImageUrl",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getLibrary",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getAlbums",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getArtists",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "searchItems",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getItem",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getSimilarItems",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "reportPlaybackStart",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "reportPlaybackProgress",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "reportPlaybackStopped",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "setFavorite",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "pingJellyfin",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "getSystemInfo",
+      "project": "lib-d-music-135",
+      "loc": 210
+    },
+    {
+      "kind": "services",
+      "name": "localApiFetch",
+      "project": "lib-d-music-135",
+      "loc": 824
+    },
+    {
+      "kind": "services",
+      "name": "isLocalMode",
+      "project": "lib-d-music-135",
+      "loc": 824
+    },
+    {
+      "kind": "services",
+      "name": "getLocalStats",
+      "project": "lib-d-music-135",
+      "loc": 824
+    },
+    {
+      "kind": "services",
+      "name": "parseLRC",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "lyricsToLRC",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "lyricsToJSON",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "parseLyricsJSON",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "alignLyricsToAudio",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "detectEmotion",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "autoTagEmotions",
+      "project": "lib-d-music-135",
+      "loc": 223
+    },
+    {
+      "kind": "services",
+      "name": "getPool",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "query",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "queryOne",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "transaction",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "ping",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "pingAll",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "closeAll",
+      "project": "lib-d-music-135",
+      "loc": 138
+    },
+    {
+      "kind": "services",
+      "name": "createSuite",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assert",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertEqual",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertDeepEqual",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertThrows",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertTruthy",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertContains",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "assertInRange",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "printResults",
+      "project": "lib-d-music-135",
+      "loc": 131
+    },
+    {
+      "kind": "services",
+      "name": "loadCustomTheme",
+      "project": "lib-d-music-135",
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "saveCustomTheme",
+      "project": "lib-d-music-135",
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "applyTheme",
+      "project": "lib-d-music-135",
+      "loc": 506
+    },
+    {
+      "kind": "services",
+      "name": "getTheme",
+      "project": "lib-d-music-135",
+      "loc": 506
     }
   ],
   "uiDuplication": {
@@ -1043,8 +2682,20 @@
       {
         "key": "music-player",
         "total": 238,
-        "business": 35,
+        "business": 33,
         "businessOverlap": 6
+      },
+      {
+        "key": "lib-speech-ai",
+        "total": 18,
+        "business": 55,
+        "businessOverlap": 0
+      },
+      {
+        "key": "lib-d-music-135",
+        "total": 238,
+        "business": 78,
+        "businessOverlap": 77
       }
     ]
   },
@@ -1070,7 +2721,8 @@
     },
     "archive": {
       "path": "/Volumes/Development",
-      "reason": "进阶存档库，本地与远程同步仓已基本覆盖；仅追溯时只读抽查"
-    }
+      "reason": "迭代项目库（代码清洗、UI 组件、框架基座、开发文档知识库，最全），可作为抽取来源"
+    },
+    "dedupe": "同 package.json 内容哈希的多份副本只取一份代表，避免重复计数"
   }
 }

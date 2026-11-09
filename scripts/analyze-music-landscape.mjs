@@ -26,11 +26,14 @@ const IGNORE_DIRS = new Set([
 const IGNORE_FILE = /\.(test|spec|stories|d)\.(tsx?|jsx?)$|\.min\.(js|ts)$/;
 
 const PROJECTS = [
-  { key: 'current', group: 'current', label: 'YYC3-Music（当前源）', dir: CURRENT },
-  { key: 'dmusai-web', group: 'dmusai', label: 'YYC3-D-MusAI / frontend', dir: path.join(SIBLINGS_ROOT, 'YYC3-D-MusAI', 'frontend') },
-  { key: 'dmusai-mobile', group: 'dmusai', label: 'YYC3-D-MusAI / mobile-app', dir: path.join(SIBLINGS_ROOT, 'YYC3-D-MusAI', 'mobile-app') },
-  { key: 'music-ai', group: 'music-ai', label: 'YYC3-Music-AI', dir: path.join(SIBLINGS_ROOT, 'YYC3-Music-AI') },
-  { key: 'music-player', group: 'music-player', label: 'YYC3-Music-Player', dir: path.join(SIBLINGS_ROOT, 'YYC3-Music-Player') },
+  { key: 'current', group: 'current', role: 'source', label: 'YYC3-Music（当前源）', dir: CURRENT },
+  { key: 'dmusai-web', group: 'dmusai', role: 'active', label: 'YYC3-D-MusAI / frontend', dir: path.join(SIBLINGS_ROOT, 'YYC3-D-MusAI', 'frontend') },
+  { key: 'dmusai-mobile', group: 'dmusai', role: 'active', label: 'YYC3-D-MusAI / mobile-app', dir: path.join(SIBLINGS_ROOT, 'YYC3-D-MusAI', 'mobile-app') },
+  { key: 'music-ai', group: 'music-ai', role: 'active', label: 'YYC3-Music-AI', dir: path.join(SIBLINGS_ROOT, 'YYC3-Music-AI') },
+  { key: 'music-player', group: 'music-player', role: 'active', label: 'YYC3-Music-Player', dir: path.join(SIBLINGS_ROOT, 'YYC3-Music-Player') },
+  // 迭代项目库：代码清洗 / UI 组件 / 框架基座 / 文档知识库，可作为抽取来源
+  { key: 'lib-speech-ai', group: 'lib-speech-ai', role: 'iteration', label: '迭代库 / speech-ai-music', dir: '/Volumes/Development/YYC3-00/YYC3-Cube/yyc3-music' },
+  { key: 'lib-d-music-135', group: 'lib-d-music-135', role: 'iteration', label: '迭代库 / D-Music-135', dir: '/Volumes/Max/YYC3-55/D-Music-135' },
 ];
 
 /** 扫描范围裁决：与项目记忆保持一致，避免把素材/模型/存档误判为项目 */
@@ -42,7 +45,11 @@ const DISCOVERY_POLICY = {
     { path: '/Users/yanyu/YanYuCloudCube', reason: '指定不扫描' },
   ],
   primarySync: { path: '/Users/yanyu/YYC-Cube', reason: '本地同步远程仓库的主目录，副本不重复计入' },
-  archive: { path: '/Volumes/Development', reason: '进阶存档库，本地与远程同步仓已基本覆盖；仅追溯时只读抽查' },
+  archive: {
+    path: '/Volumes/Development',
+    reason: '迭代项目库（代码清洗、UI 组件、框架基座、开发文档知识库，最全），可作为抽取来源',
+  },
+  dedupe: '同 package.json 内容哈希的多份副本只取一份代表，避免重复计数',
 };
 
 /** 通用原语名：重名不代表重复实现，不进入抽取候选 */
@@ -51,7 +58,7 @@ const GENERIC = new Set([
   'Select', 'Switch', 'Slider', 'Progress', 'Skeleton', 'Spinner', 'Avatar', 'Table',
   'Textarea', 'Checkbox', 'Radio', 'Popover', 'DropdownMenu', 'Accordion', 'Alert',
   'Separator', 'ScrollArea', 'Toast', 'Toaster', 'Form', 'Menu', 'Header', 'Footer',
-  'Sidebar', 'Container', 'Section', 'Loading', 'EmptyState', 'ErrorBoundary',
+  'Sidebar', 'Container', 'Section', 'Loading', 'EmptyState', 'ErrorBoundary', 'App',
 ]);
 
 function walk(dir, out = []) {
@@ -115,8 +122,13 @@ function sourceRoots(project) {
 function classify(file, names) {
   const isTsx = file.endsWith('.tsx') || file.endsWith('.jsx');
   const dir = file.toLowerCase();
+  const base = path.basename(file).toLowerCase();
+  // 配置常量不是可复用能力，排除
+  const isConfig = /^(config|constants?|env|types|supabase|\.env)[.\-]/.test(base);
   const out = { components: [], hooks: [], services: [] };
   for (const name of names) {
+    if (/^[A-Z][A-Z0-9_]*$/.test(name)) continue;
+    if (isConfig) continue;
     if (/^use[A-Z]/.test(name)) out.hooks.push(name);
     else if (isTsx && /^[A-Z]/.test(name)) out.components.push(name);
     else if (/service|api|store|data|lib|util|engine|client|adapter/.test(dir)) out.services.push(name);
@@ -238,9 +250,10 @@ for (const kind of ['components', 'hooks', 'services']) {
       if (GENERIC.has(name)) continue;
       if (kind === 'components' && s.inv.components.get(name)?.layer === 'ui') continue;
       const id = `${kind}:${name}`;
-      const rec = candidates.get(id) || { kind, name, projects: new Set(), groups: new Set(), loc: 0 };
+      const rec = candidates.get(id) || { kind, name, projects: new Set(), groups: new Set(), roles: new Set(), loc: 0 };
       rec.projects.add(s.key);
       rec.groups.add(s.group);
+      rec.roles.add(s.role);
       rec.loc += s.inv[kind].get(name).loc;
       candidates.set(id, rec);
     }
@@ -255,6 +268,11 @@ const candidateList = [...candidates.values()]
     score: c.groups.size * 10 + (c.kind === 'components' ? 3 : 0),
   }))
   .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+
+const libraryOnly = [...candidates.values()]
+  .filter((c) => c.groups.size === 1 && c.roles.has('iteration') && c.loc >= 120)
+  .map((c) => ({ ...c, projects: [...c.projects], groups: [...c.groups] }))
+  .sort((a, b) => b.loc - a.loc || a.name.localeCompare(b.name));
 
 // 同名异实现：当前源与兄弟项目都有，且实现体量差异显著
 const conflicts = [];
@@ -295,7 +313,7 @@ for (const s of siblings) {
 const policyRows = [
   ...DISCOVERY_POLICY.excluded.map((e) => [e.path, '排除', e.reason]),
   [DISCOVERY_POLICY.primarySync.path, '主目录（不重复计数）', DISCOVERY_POLICY.primarySync.reason],
-  [DISCOVERY_POLICY.archive.path, '存档（仅追溯）', DISCOVERY_POLICY.archive.reason],
+  [DISCOVERY_POLICY.archive.path, '抽取源（迭代库）', DISCOVERY_POLICY.archive.reason],
 ];
 
 const report = {
@@ -309,6 +327,7 @@ const report = {
     overlap: m.shared,
   })),
   candidates: candidateList,
+  libraryOnly,
   conflicts,
   solo: soloList,
   uiDuplication: {
@@ -371,7 +390,7 @@ ${table(stackRows)}
 | --- | --- | --- |
 ${table(policyRows)}
 
-> 本矩阵为「活跃代码仓库」口径，不代表本机全盘覆盖。
+> 本矩阵为「活跃代码仓库 + 迭代项目库抽取源」口径，不代表本机全盘覆盖。
 
 ## 二、能力总览
 
@@ -395,6 +414,12 @@ ${table(matrix.map((m) => [m.label, m.ui.total, m.ui.business, m.ui.businessOver
 | --- | --- | --- | --- | --- |
 ${candRows.length ? table(candRows) : '| （无） | - | - | - | - |'}
 
+### 4.2 迭代库单源候补（仅出现在迭代项目库、体量 ≥120 行）
+
+| 名称 | 类型 | 来源 | 体量(行) |
+| --- | --- | --- | --- |
+${libraryOnly.length ? table(libraryOnly.slice(0, 25).map((c) => [c.name, c.kind, c.projects.join(', '), c.loc])) : '| （无） | - | - | - |'}
+
 ## 五、同名异实现（当前源与兄弟项目重名且体量差异 ≥1.8×）
 
 | 名称 | 类型 | 兄弟项目 | 当前源(行) | 兄弟(行) |
@@ -408,7 +433,7 @@ ${conflictRows.length ? table(conflictRows) : '| （无） | - | - | - | - |'}
 ## 七、结论
 
 - 原语层重复：${matrix.filter((m) => m.ui.total > 0).map((m) => `${m.label} ${m.ui.total}`).join('、') || '无'}（当前源 ${uiCount(current)} 个原语）。
-- 抽取候选 ${candidateList.length} 项，同名异实现 ${conflicts.length} 项，单项目独有 ${soloList.length} 项。
+- 抽取候选 ${candidateList.length} 项，迭代库单源候补 ${libraryOnly.length} 项，同名异实现 ${conflicts.length} 项，单项目独有 ${soloList.length} 项。
 - 处置顺序：先补当前源缺失的业务组件（候选），再对齐同名异实现的契约，原语层按项目触达时替换，独有项不迁。
 `;
 
