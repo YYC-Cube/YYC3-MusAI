@@ -14,6 +14,10 @@ import {
   dMusicLogo,
   dMusicRed,
   dMusicInstruments,
+  getFavoriteIds,
+  getSavedQueue,
+  saveQueue,
+  toggleFavorite,
 } from '@yyc3/music-data';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Starfield } from './components/Starfield';
@@ -147,6 +151,41 @@ export function AppInner() {
   const [shuffleEnabled, setShuffleEnabled] = useState(() => loadPref('shuffleEnabled'));
   const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>(() => loadPref('repeatMode'));
   const shouldAutoPlayRef = useRef(false);
+
+  /** 收藏曲目 id 集合，启动时从本地缓存恢复 */
+  const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set());
+  /** 队列快照恢复完成前不写回，避免 DEMO_PLAYLIST 覆盖已存数据 */
+  const queueHydratedRef = useRef(false);
+
+  // 启动时恢复播放队列；快照为空则保留演示歌单
+  useEffect(() => {
+    let cancelled = false;
+    void getSavedQueue<Track>().then((saved) => {
+      if (cancelled) return;
+      if (saved.length > 0) setPlaylist(saved);
+      queueHydratedRef.current = true;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 队列变化时落本地缓存（仅在 playlist 引用变化时触发）
+  useEffect(() => {
+    if (!queueHydratedRef.current) return;
+    void saveQueue(playlist);
+  }, [playlist]);
+
+  // 恢复收藏状态
+  useEffect(() => {
+    let cancelled = false;
+    void getFavoriteIds().then((ids) => {
+      if (!cancelled) setLikedIds(new Set(ids));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const currentTrack = playlist[currentTrackIndex];
 
@@ -538,6 +577,14 @@ export function AppInner() {
   const handleLike = useCallback(async () => {
     haptics.trigger('success');
     setMValue((prev) => prev + 1);
+    // 本地即真：先落收藏缓存，再尝试同步远端计数（无后端时静默失败）
+    const liked = await toggleFavorite(currentTrack.id);
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      if (liked) next.add(currentTrack.id);
+      else next.delete(currentTrack.id);
+      return next;
+    });
     try {
       const data = await apiFetch<{ likes?: number }>(`/likes/${currentTrack.id}`, {
         method: 'POST',
@@ -1667,6 +1714,7 @@ export function AppInner() {
           onToggleMode={() => setMode(mode === 'audio' ? 'video' : 'audio')}
           mValue={mValue}
           onLike={handleLike}
+          liked={likedIds.has(currentTrack.id)}
           volume={audio.volume}
           onVolumeChange={audio.setVolume}
           songTitle={currentTrack.title}
@@ -1936,6 +1984,7 @@ export function AppInner() {
         emotion={emotion}
         mValue={mValue}
         onLike={handleLike}
+        liked={likedIds.has(currentTrack.id)}
         onPrev={handlePrevTrack}
         onNext={handleNextTrack}
         shuffleEnabled={shuffleEnabled}

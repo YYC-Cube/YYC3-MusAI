@@ -12,3 +12,4 @@ export {
   ACHIEVEMENTS,
   DEMO_PLAYLIST,
 } from './playlistData';
+export * from './localLibrary';

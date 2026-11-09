@@ -42,6 +42,8 @@ interface PlayerControlsProps {
   onToggleMode: () => void;
   mValue: number;
   onLike: () => void;
+  /** 当前曲目是否已收藏；未传时按 mValue 推断，保持向后兼容 */
+  liked?: boolean;
   volume: number;
   onVolumeChange: (value: number) => void;
   songTitle: string;
@@ -93,6 +95,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
   onToggleMode,
   mValue,
   onLike,
+  liked = false,
   volume,
   onVolumeChange,
   songTitle,
@@ -277,7 +280,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
               onClick={handleLike}
               whileTap={{ scale: 0.9 }}
               className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/[0.08] transition-colors relative overflow-hidden flex-shrink-0"
-              aria-label={`M❤️值: ${mValue}, 点击喜欢 / Like`}
+              aria-label={`M❤️值: ${mValue}, ${liked ? '已收藏，点击取消 / Unlike' : '点击喜欢 / Like'}`}
+              aria-pressed={liked}
             >
               <motion.div
                 animate={
@@ -290,7 +294,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                 <Heart
                   className={clsx(
                     'w-4 h-4 transition-colors',
-                    mValue > 0 ? 'text-pink-500 fill-pink-500' : 'text-pink-400'
+                    liked || mValue > 0 ? 'text-pink-500 fill-pink-500' : 'text-pink-400'
                   )}
                 />
               </motion.div>

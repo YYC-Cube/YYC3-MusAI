@@ -15,7 +15,8 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@yyc3/music-hooks": "workspace:*"
+    "@yyc3/music-hooks": "workspace:*",
+    "@yyc3/music-utils": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

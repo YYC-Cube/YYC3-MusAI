@@ -31,6 +31,8 @@ interface MobilePlayerProps {
   emotion: Emotion;
   mValue: number;
   onLike: () => void;
+  /** 当前曲目是否已收藏 */
+  liked?: boolean;
   onPrev: () => void;
   onNext: () => void;
   shuffleEnabled: boolean;
@@ -85,6 +87,7 @@ export const MobilePlayer: React.FC<MobilePlayerProps> = ({
   emotion,
   mValue,
   onLike,
+  liked = false,
   onPrev,
   onNext,
   shuffleEnabled,
@@ -282,7 +285,7 @@ export const MobilePlayer: React.FC<MobilePlayerProps> = ({
                   animate={isLikeAnimating ? { scale: [1, 1.5, 1] } : {}}
                   transition={{ duration: 0.4 }}
                 >
-                  <Heart className={clsx('w-5 h-5', mValue > 0 ? 'text-pink-500 fill-pink-500' : 'text-pink-400')} />
+                  <Heart className={clsx('w-5 h-5', liked || mValue > 0 ? 'text-pink-500 fill-pink-500' : 'text-pink-400')} />
                 </motion.div>
                 <span className="text-pink-200 text-sm font-mono tabular-nums">{mValue}</span>
               </motion.button>
