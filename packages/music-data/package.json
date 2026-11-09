@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-data",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "YYC³ D-Music 数据层 — 全局类型系统与演示歌单数据",
   "type": "module",
   "main": "./src/index.ts",

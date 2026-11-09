@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-player",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "YYC³ D-Music 播放器核心组件 — 媒体展示/播放控制/移动端播放器/音频可视化",
   "type": "module",
   "main": "./src/index.ts",

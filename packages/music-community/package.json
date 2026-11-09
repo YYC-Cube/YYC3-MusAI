@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-community",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "YYC³ D-Music 社区组件 — 动态/评论/时间线/Fork 树/挑战/直播/时空面板/上传/分享/E2E 加密",
   "type": "module",
   "main": "./src/index.ts",

@@ -87,6 +87,6 @@ jobs:
             @yyc3/music-audio @yyc3/music-emotion @yyc3/music-voice @yyc3/music-testing; do
             npm install "$pkg" --no-audit --no-fund
           done
-          node -e "for (const p of ['music-data','music-design-tokens','music-utils','music-hooks','music-ui','music-player','music-lyrics','music-ai','music-community','music-commerce','music-growth','music-audio','music-emotion','music-voice','music-testing']) { require.resolve('@yyc3/' + p); } console.log('registry install smoke passed')"
+          node --input-type=module -e "for (const p of ['music-data','music-design-tokens','music-utils','music-hooks','music-ui','music-player','music-lyrics','music-ai','music-community','music-commerce','music-growth','music-audio','music-emotion','music-voice','music-testing']) { const url = import.meta.resolve('@yyc3/' + p); if (!url) throw new Error('unresolved: ' + p); } console.log('registry install smoke passed')"
         env:
           npm_config_registry: https://registry.npmjs.org

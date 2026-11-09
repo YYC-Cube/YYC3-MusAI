@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-lyrics",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "YYC³ D-Music 歌词组件 — 歌词展示与情感涟漪动效",
   "type": "module",
   "main": "./src/index.ts",

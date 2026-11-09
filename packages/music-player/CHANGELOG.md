@@ -1,5 +1,15 @@
 # @yyc3/music-player
 
+## 2.0.1
+
+### Patch Changes
+
+- 1d52925: 新增 LRC 解析、共享 AudioContext 与 AbortSignal 取消语义；补齐组件可访问性、日历依赖升级与具名导出。
+- Updated dependencies [1d52925]
+  - @yyc3/music-lyrics@2.1.0
+  - @yyc3/music-ui@2.0.1
+  - @yyc3/music-hooks@2.0.1
+
 ## 2.0.0
 
 ### Major Changes

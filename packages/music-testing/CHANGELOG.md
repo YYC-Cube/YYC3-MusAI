@@ -1,5 +1,14 @@
 # @yyc3/music-testing
 
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [1d52925]
+  - @yyc3/music-utils@2.1.0
+  - @yyc3/music-hooks@2.0.1
+  - @yyc3/music-data@2.0.1
+
 ## 1.0.0
 
 ### Major Changes

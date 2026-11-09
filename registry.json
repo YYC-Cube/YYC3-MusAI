@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-11-09T14:13:04.542Z",
+  "generatedAt": "2026-11-09T15:15:04.031Z",
   "totals": {
     "packages": 15,
     "components": 305,
@@ -9,7 +9,7 @@
   "packages": [
     {
       "name": "@yyc3/music-ai",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
       "componentCount": 4
     },
@@ -21,19 +21,19 @@
     },
     {
       "name": "@yyc3/music-commerce",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "二级市场、专辑商店与版权面板。",
       "componentCount": 3
     },
     {
       "name": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "componentCount": 11
     },
     {
       "name": "@yyc3/music-data",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "全局类型系统（Track / User / Emotion / Props 等 60+ 类型）与演示歌单运行时数据。",
       "componentCount": 0
     },
@@ -45,55 +45,55 @@
     },
     {
       "name": "@yyc3/music-emotion",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "小语角色、气泡、情绪映射与语音播放 Hook。",
       "componentCount": 2
     },
     {
       "name": "@yyc3/music-growth",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "星力面板、星力商城、排行榜、成就与 IP 矩阵。",
       "componentCount": 5
     },
     {
       "name": "@yyc3/music-hooks",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "音频引擎、离线作曲、AI 助手、触感、i18n、PWA、手势与虚拟列表等可复用逻辑。",
       "componentCount": 1
     },
     {
       "name": "@yyc3/music-lyrics",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "逐行歌词展示、点击跳转与情感涟漪可视化。",
       "componentCount": 2
     },
     {
       "name": "@yyc3/music-player",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
       "componentCount": 4
     },
     {
       "name": "@yyc3/music-testing",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "自研 TestSuite 运行器与单元/集成/E2E 三档测试定义（150+ 用例）。",
       "componentCount": 0
     },
     {
       "name": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "componentCount": 268
     },
     {
       "name": "@yyc3/music-utils",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "本地/远端 API 适配、Supabase 客户端、端到端加密、偏好同步、Canvas 性能注册表与监控。",
       "componentCount": 0
     },
     {
       "name": "@yyc3/music-voice",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "description": "多语言管理、语音识别、语音合成、命令解析与上下文五引擎 + 控制面板。",
       "componentCount": 1
     }
@@ -102,7 +102,7 @@
     {
       "name": "AIAssistant",
       "package": "@yyc3/music-ai",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "AI 创作",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
       "props": [
@@ -127,7 +127,7 @@
     {
       "name": "AILyricsGenerator",
       "package": "@yyc3/music-ai",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "AI 创作",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
       "props": [
@@ -142,7 +142,7 @@
     {
       "name": "CreationStudio",
       "package": "@yyc3/music-ai",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "AI 创作",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
       "props": [
@@ -165,7 +165,7 @@
     {
       "name": "MVCreator",
       "package": "@yyc3/music-ai",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "AI 创作",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
       "props": [
@@ -231,7 +231,7 @@
     {
       "name": "AlbumStore",
       "package": "@yyc3/music-commerce",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "商业",
       "description": "二级市场、专辑商店与版权面板。",
       "props": [
@@ -248,7 +248,7 @@
     {
       "name": "CopyrightPanel",
       "package": "@yyc3/music-commerce",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "商业",
       "description": "二级市场、专辑商店与版权面板。",
       "props": [
@@ -263,7 +263,7 @@
     {
       "name": "SecondaryMarket",
       "package": "@yyc3/music-commerce",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "商业",
       "description": "二级市场、专辑商店与版权面板。",
       "props": [
@@ -280,7 +280,7 @@
     {
       "name": "ChallengePanel",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -296,7 +296,7 @@
     {
       "name": "CommentSystem",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -314,7 +314,7 @@
     {
       "name": "CommunityFeed",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -331,7 +331,7 @@
     {
       "name": "E2EKeySetup",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -347,7 +347,7 @@
     {
       "name": "ForkTree",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -362,7 +362,7 @@
     {
       "name": "LiveSessionPanel",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -382,7 +382,7 @@
     {
       "name": "MHeartSystem",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -398,7 +398,7 @@
     {
       "name": "ShareWorkModal",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -416,7 +416,7 @@
     {
       "name": "SpaceTimePanel",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -433,7 +433,7 @@
     {
       "name": "TimelineComments",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -451,7 +451,7 @@
     {
       "name": "UploadPanel",
       "package": "@yyc3/music-community",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "社区",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
       "props": [
@@ -468,7 +468,7 @@
     {
       "name": "XiaoyuBubble",
       "package": "@yyc3/music-emotion",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "category": "情感角色",
       "description": "小语气泡，按情绪切换配色，可关闭。",
       "props": [
@@ -484,7 +484,7 @@
     {
       "name": "XiaoyuCharacter",
       "package": "@yyc3/music-emotion",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "category": "情感角色",
       "description": "小语角色组件，按情绪切换动画，支持拖拽与自定义动画数据。",
       "props": [
@@ -499,7 +499,7 @@
     {
       "name": "AchievementsPanel",
       "package": "@yyc3/music-growth",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "成长体系",
       "description": "星力面板、星力商城、排行榜、成就与 IP 矩阵。",
       "props": [
@@ -515,7 +515,7 @@
     {
       "name": "IPMatrixPanel",
       "package": "@yyc3/music-growth",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "成长体系",
       "description": "星力面板、星力商城、排行榜、成就与 IP 矩阵。",
       "props": [
@@ -533,7 +533,7 @@
     {
       "name": "LeaderboardPanel",
       "package": "@yyc3/music-growth",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "成长体系",
       "description": "星力面板、星力商城、排行榜、成就与 IP 矩阵。",
       "props": [
@@ -551,7 +551,7 @@
     {
       "name": "StarPowerPanel",
       "package": "@yyc3/music-growth",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "成长体系",
       "description": "星力面板、星力商城、排行榜、成就与 IP 矩阵。",
       "props": [
@@ -569,7 +569,7 @@
     {
       "name": "StarPowerShop",
       "package": "@yyc3/music-growth",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "成长体系",
       "description": "星力面板、星力商城、排行榜、成就与 IP 矩阵。",
       "props": [
@@ -586,7 +586,7 @@
     {
       "name": "I18nProvider",
       "package": "@yyc3/music-hooks",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "交互逻辑",
       "description": "音频引擎、离线作曲、AI 助手、触感、i18n、PWA、手势与虚拟列表等可复用逻辑。",
       "props": [],
@@ -597,7 +597,7 @@
     {
       "name": "EmotionRipple",
       "package": "@yyc3/music-lyrics",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "category": "歌词",
       "description": "情绪涟漪 Canvas 可视化，随音频能量变化。",
       "props": [
@@ -614,7 +614,7 @@
     {
       "name": "LyricsDisplay",
       "package": "@yyc3/music-lyrics",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "category": "歌词",
       "description": "逐行歌词展示，支持当前行高亮、点击跳转与双语翻译。",
       "props": [
@@ -632,7 +632,7 @@
     {
       "name": "AudioVisualizer",
       "package": "@yyc3/music-player",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "播放器",
       "description": "音频频谱可视化，支持圆形与柱状两种模式。",
       "props": [
@@ -649,7 +649,7 @@
     {
       "name": "MediaDisplay",
       "package": "@yyc3/music-player",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "播放器",
       "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
       "props": [
@@ -670,7 +670,7 @@
     {
       "name": "MobilePlayer",
       "package": "@yyc3/music-player",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "播放器",
       "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
       "props": [
@@ -716,7 +716,7 @@
     {
       "name": "PlayerControls",
       "package": "@yyc3/music-player",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "播放器",
       "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
       "props": [
@@ -760,7 +760,7 @@
     {
       "name": "Accordion",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -771,7 +771,7 @@
     {
       "name": "AccordionContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -782,7 +782,7 @@
     {
       "name": "AccordionItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -793,7 +793,7 @@
     {
       "name": "AccordionTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -804,7 +804,7 @@
     {
       "name": "AchievementGrid",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -819,7 +819,7 @@
     {
       "name": "AchievementRing",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "环形进度，用于成就完成度与专注计时。",
       "props": [
@@ -836,7 +836,7 @@
     {
       "name": "Alert",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -847,7 +847,7 @@
     {
       "name": "AlertDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -858,7 +858,7 @@
     {
       "name": "AlertDialog",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -869,7 +869,7 @@
     {
       "name": "AlertDialogAction",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -880,7 +880,7 @@
     {
       "name": "AlertDialogCancel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -891,7 +891,7 @@
     {
       "name": "AlertDialogContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -902,7 +902,7 @@
     {
       "name": "AlertDialogDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -913,7 +913,7 @@
     {
       "name": "AlertDialogFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -924,7 +924,7 @@
     {
       "name": "AlertDialogHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -935,7 +935,7 @@
     {
       "name": "AlertDialogOverlay",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -946,7 +946,7 @@
     {
       "name": "AlertDialogPortal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -957,7 +957,7 @@
     {
       "name": "AlertDialogTitle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -968,7 +968,7 @@
     {
       "name": "AlertDialogTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -979,7 +979,7 @@
     {
       "name": "AlertTitle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -990,7 +990,7 @@
     {
       "name": "AspectRatio",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1001,7 +1001,7 @@
     {
       "name": "Avatar",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1012,7 +1012,7 @@
     {
       "name": "AvatarFallback",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1023,7 +1023,7 @@
     {
       "name": "AvatarImage",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1034,7 +1034,7 @@
     {
       "name": "Badge",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1045,7 +1045,7 @@
     {
       "name": "Breadcrumb",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1056,7 +1056,7 @@
     {
       "name": "BreadcrumbEllipsis",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1067,7 +1067,7 @@
     {
       "name": "BreadcrumbItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1078,7 +1078,7 @@
     {
       "name": "BreadcrumbLink",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1089,7 +1089,7 @@
     {
       "name": "BreadcrumbList",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1100,7 +1100,7 @@
     {
       "name": "BreadcrumbPage",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1111,7 +1111,7 @@
     {
       "name": "BreadcrumbSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1122,7 +1122,7 @@
     {
       "name": "Button",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1133,7 +1133,7 @@
     {
       "name": "Calendar",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1144,7 +1144,7 @@
     {
       "name": "Card",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1155,7 +1155,7 @@
     {
       "name": "CardAction",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1166,7 +1166,7 @@
     {
       "name": "CardContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1177,7 +1177,7 @@
     {
       "name": "CardDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1188,7 +1188,7 @@
     {
       "name": "CardFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1199,7 +1199,7 @@
     {
       "name": "CardHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1210,7 +1210,7 @@
     {
       "name": "CardTitle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1221,7 +1221,7 @@
     {
       "name": "Carousel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1237,7 +1237,7 @@
     {
       "name": "CarouselApi",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1248,7 +1248,7 @@
     {
       "name": "CarouselContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1259,7 +1259,7 @@
     {
       "name": "CarouselItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1270,7 +1270,7 @@
     {
       "name": "CarouselNext",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1281,7 +1281,7 @@
     {
       "name": "CarouselPrevious",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1292,7 +1292,7 @@
     {
       "name": "ChartContainer",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1303,7 +1303,7 @@
     {
       "name": "ChartLegend",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1314,7 +1314,7 @@
     {
       "name": "ChartLegendContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1325,7 +1325,7 @@
     {
       "name": "ChartStyle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1336,7 +1336,7 @@
     {
       "name": "ChartTooltip",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1347,7 +1347,7 @@
     {
       "name": "ChartTooltipContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1358,7 +1358,7 @@
     {
       "name": "Checkbox",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1369,7 +1369,7 @@
     {
       "name": "Collapsible",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1380,7 +1380,7 @@
     {
       "name": "CollapsibleContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1391,7 +1391,7 @@
     {
       "name": "CollapsibleTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1402,7 +1402,7 @@
     {
       "name": "Command",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1413,7 +1413,7 @@
     {
       "name": "CommandDialog",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1424,7 +1424,7 @@
     {
       "name": "CommandEmpty",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1435,7 +1435,7 @@
     {
       "name": "CommandGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1446,7 +1446,7 @@
     {
       "name": "CommandInput",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1457,7 +1457,7 @@
     {
       "name": "CommandItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1468,7 +1468,7 @@
     {
       "name": "CommandList",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1479,7 +1479,7 @@
     {
       "name": "CommandSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1490,7 +1490,7 @@
     {
       "name": "CommandShortcut",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1501,7 +1501,7 @@
     {
       "name": "ContextMenu",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1512,7 +1512,7 @@
     {
       "name": "ContextMenuCheckboxItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1523,7 +1523,7 @@
     {
       "name": "ContextMenuContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1534,7 +1534,7 @@
     {
       "name": "ContextMenuGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1545,7 +1545,7 @@
     {
       "name": "ContextMenuItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1556,7 +1556,7 @@
     {
       "name": "ContextMenuLabel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1567,7 +1567,7 @@
     {
       "name": "ContextMenuPortal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1578,7 +1578,7 @@
     {
       "name": "ContextMenuRadioGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1589,7 +1589,7 @@
     {
       "name": "ContextMenuRadioItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1600,7 +1600,7 @@
     {
       "name": "ContextMenuSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1611,7 +1611,7 @@
     {
       "name": "ContextMenuShortcut",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1622,7 +1622,7 @@
     {
       "name": "ContextMenuSub",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1633,7 +1633,7 @@
     {
       "name": "ContextMenuSubContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1644,7 +1644,7 @@
     {
       "name": "ContextMenuSubTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1655,7 +1655,7 @@
     {
       "name": "ContextMenuTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1666,7 +1666,7 @@
     {
       "name": "DAchievementCard",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "成就卡片，展示稀有度、进度与解锁状态。",
       "props": [
@@ -1684,7 +1684,7 @@
     {
       "name": "DataExportButton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1701,7 +1701,7 @@
     {
       "name": "DBadge",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "状态徽标，用于情绪、等级与标签展示。",
       "props": [
@@ -1716,7 +1716,7 @@
     {
       "name": "DBreadcrumb",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1731,7 +1731,7 @@
     {
       "name": "DButton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "主操作按钮，支持 primary / secondary / ghost / danger 与加载态、图标和全宽。",
       "props": [
@@ -1751,7 +1751,7 @@
     {
       "name": "DCard",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "玻璃拟态卡片容器，支持 interactive、glowColor 与三档内边距。",
       "props": [
@@ -1769,7 +1769,7 @@
     {
       "name": "DFeedback",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1786,7 +1786,7 @@
     {
       "name": "Dialog",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1797,7 +1797,7 @@
     {
       "name": "DialogClose",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1808,7 +1808,7 @@
     {
       "name": "DialogContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1819,7 +1819,7 @@
     {
       "name": "DialogDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1830,7 +1830,7 @@
     {
       "name": "DialogFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1841,7 +1841,7 @@
     {
       "name": "DialogHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1852,7 +1852,7 @@
     {
       "name": "DialogOverlay",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1863,7 +1863,7 @@
     {
       "name": "DialogPortal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1874,7 +1874,7 @@
     {
       "name": "DialogTitle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1885,7 +1885,7 @@
     {
       "name": "DialogTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1896,7 +1896,7 @@
     {
       "name": "DInput",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "带标签、提示与错误态的输入框，支持前后缀图标与密码可见切换。",
       "props": [
@@ -1914,7 +1914,7 @@
     {
       "name": "DList",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1930,7 +1930,7 @@
     {
       "name": "DListItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1946,7 +1946,7 @@
     {
       "name": "DModal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1967,7 +1967,7 @@
     {
       "name": "DMusicCard",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -1987,7 +1987,7 @@
     {
       "name": "DMusicShowcase",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -1998,7 +1998,7 @@
     {
       "name": "DPanel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2023,7 +2023,7 @@
     {
       "name": "DProgress",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "进度条，支持渐变/成功/警告变体与百分比标签。",
       "props": [
@@ -2039,7 +2039,7 @@
     {
       "name": "Drawer",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2050,7 +2050,7 @@
     {
       "name": "DrawerClose",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2061,7 +2061,7 @@
     {
       "name": "DrawerContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2072,7 +2072,7 @@
     {
       "name": "DrawerDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2083,7 +2083,7 @@
     {
       "name": "DrawerFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2094,7 +2094,7 @@
     {
       "name": "DrawerHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2105,7 +2105,7 @@
     {
       "name": "DrawerOverlay",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2116,7 +2116,7 @@
     {
       "name": "DrawerPortal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2127,7 +2127,7 @@
     {
       "name": "DrawerTitle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2138,7 +2138,7 @@
     {
       "name": "DrawerTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2149,7 +2149,7 @@
     {
       "name": "DropdownMenu",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2160,7 +2160,7 @@
     {
       "name": "DropdownMenuCheckboxItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2171,7 +2171,7 @@
     {
       "name": "DropdownMenuContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2182,7 +2182,7 @@
     {
       "name": "DropdownMenuGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2193,7 +2193,7 @@
     {
       "name": "DropdownMenuItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2204,7 +2204,7 @@
     {
       "name": "DropdownMenuLabel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2215,7 +2215,7 @@
     {
       "name": "DropdownMenuPortal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2226,7 +2226,7 @@
     {
       "name": "DropdownMenuRadioGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2237,7 +2237,7 @@
     {
       "name": "DropdownMenuRadioItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2248,7 +2248,7 @@
     {
       "name": "DropdownMenuSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2259,7 +2259,7 @@
     {
       "name": "DropdownMenuShortcut",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2270,7 +2270,7 @@
     {
       "name": "DropdownMenuSub",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2281,7 +2281,7 @@
     {
       "name": "DropdownMenuSubContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2292,7 +2292,7 @@
     {
       "name": "DropdownMenuSubTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2303,7 +2303,7 @@
     {
       "name": "DropdownMenuTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2314,7 +2314,7 @@
     {
       "name": "DSpinner",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "加载指示器，三档尺寸。",
       "props": [
@@ -2327,7 +2327,7 @@
     {
       "name": "DTabBar",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2346,7 +2346,7 @@
     {
       "name": "DTag",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2364,7 +2364,7 @@
     {
       "name": "DToast",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2382,7 +2382,7 @@
     {
       "name": "DUserCard",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2400,7 +2400,7 @@
     {
       "name": "EmotionPieChart",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2416,7 +2416,7 @@
     {
       "name": "Form",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2427,7 +2427,7 @@
     {
       "name": "FormControl",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2438,7 +2438,7 @@
     {
       "name": "FormDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2449,7 +2449,7 @@
     {
       "name": "FormField",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2460,7 +2460,7 @@
     {
       "name": "FormItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2471,7 +2471,7 @@
     {
       "name": "FormLabel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2482,7 +2482,7 @@
     {
       "name": "FormMessage",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2493,7 +2493,7 @@
     {
       "name": "HoverCard",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2504,7 +2504,7 @@
     {
       "name": "HoverCardContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2515,7 +2515,7 @@
     {
       "name": "HoverCardTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2526,7 +2526,7 @@
     {
       "name": "ImageWithFallback",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2537,7 +2537,7 @@
     {
       "name": "Input",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2548,7 +2548,7 @@
     {
       "name": "InputOTP",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2559,7 +2559,7 @@
     {
       "name": "InputOTPGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2570,7 +2570,7 @@
     {
       "name": "InputOTPSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2581,7 +2581,7 @@
     {
       "name": "InputOTPSlot",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2592,7 +2592,7 @@
     {
       "name": "Label",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2603,7 +2603,7 @@
     {
       "name": "Menubar",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2614,7 +2614,7 @@
     {
       "name": "MenubarCheckboxItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2625,7 +2625,7 @@
     {
       "name": "MenubarContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2636,7 +2636,7 @@
     {
       "name": "MenubarGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2647,7 +2647,7 @@
     {
       "name": "MenubarItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2658,7 +2658,7 @@
     {
       "name": "MenubarLabel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2669,7 +2669,7 @@
     {
       "name": "MenubarMenu",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2680,7 +2680,7 @@
     {
       "name": "MenubarPortal",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2691,7 +2691,7 @@
     {
       "name": "MenubarRadioGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2702,7 +2702,7 @@
     {
       "name": "MenubarRadioItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2713,7 +2713,7 @@
     {
       "name": "MenubarSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2724,7 +2724,7 @@
     {
       "name": "MenubarShortcut",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2735,7 +2735,7 @@
     {
       "name": "MenubarSub",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2746,7 +2746,7 @@
     {
       "name": "MenubarSubContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2757,7 +2757,7 @@
     {
       "name": "MenubarSubTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2768,7 +2768,7 @@
     {
       "name": "MenubarTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2779,7 +2779,7 @@
     {
       "name": "NavigationMenu",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2790,7 +2790,7 @@
     {
       "name": "NavigationMenuContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2801,7 +2801,7 @@
     {
       "name": "NavigationMenuIndicator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2812,7 +2812,7 @@
     {
       "name": "NavigationMenuItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2823,7 +2823,7 @@
     {
       "name": "NavigationMenuLink",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2834,7 +2834,7 @@
     {
       "name": "NavigationMenuList",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2845,7 +2845,7 @@
     {
       "name": "NavigationMenuTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2856,7 +2856,7 @@
     {
       "name": "NavigationMenuViewport",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2867,7 +2867,7 @@
     {
       "name": "Pagination",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2878,7 +2878,7 @@
     {
       "name": "PaginationContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2889,7 +2889,7 @@
     {
       "name": "PaginationEllipsis",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2900,7 +2900,7 @@
     {
       "name": "PaginationItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2911,7 +2911,7 @@
     {
       "name": "PaginationLink",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2924,7 +2924,7 @@
     {
       "name": "PaginationNext",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2935,7 +2935,7 @@
     {
       "name": "PaginationPrevious",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2946,7 +2946,7 @@
     {
       "name": "PlayStatsChart",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -2962,7 +2962,7 @@
     {
       "name": "Popover",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2973,7 +2973,7 @@
     {
       "name": "PopoverAnchor",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2984,7 +2984,7 @@
     {
       "name": "PopoverContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -2995,7 +2995,7 @@
     {
       "name": "PopoverTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3006,7 +3006,7 @@
     {
       "name": "Progress",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3017,7 +3017,7 @@
     {
       "name": "RadioGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3028,7 +3028,7 @@
     {
       "name": "RadioGroupItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3039,7 +3039,7 @@
     {
       "name": "RankingList",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [
@@ -3057,7 +3057,7 @@
     {
       "name": "ResizableHandle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3068,7 +3068,7 @@
     {
       "name": "ResizablePanel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3079,7 +3079,7 @@
     {
       "name": "ResizablePanelGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3090,7 +3090,7 @@
     {
       "name": "ScrollArea",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3101,7 +3101,7 @@
     {
       "name": "ScrollBar",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3112,7 +3112,7 @@
     {
       "name": "Select",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3123,7 +3123,7 @@
     {
       "name": "SelectContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3134,7 +3134,7 @@
     {
       "name": "SelectGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3145,7 +3145,7 @@
     {
       "name": "SelectItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3156,7 +3156,7 @@
     {
       "name": "SelectLabel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3167,7 +3167,7 @@
     {
       "name": "SelectScrollDownButton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3178,7 +3178,7 @@
     {
       "name": "SelectScrollUpButton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3189,7 +3189,7 @@
     {
       "name": "SelectSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3200,7 +3200,7 @@
     {
       "name": "SelectTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3211,7 +3211,7 @@
     {
       "name": "SelectValue",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3222,7 +3222,7 @@
     {
       "name": "Separator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3233,7 +3233,7 @@
     {
       "name": "Sheet",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3244,7 +3244,7 @@
     {
       "name": "SheetClose",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3255,7 +3255,7 @@
     {
       "name": "SheetContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3266,7 +3266,7 @@
     {
       "name": "SheetDescription",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3277,7 +3277,7 @@
     {
       "name": "SheetFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3288,7 +3288,7 @@
     {
       "name": "SheetHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3299,7 +3299,7 @@
     {
       "name": "SheetTitle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3310,7 +3310,7 @@
     {
       "name": "SheetTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3321,7 +3321,7 @@
     {
       "name": "Sidebar",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3332,7 +3332,7 @@
     {
       "name": "SidebarContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3343,7 +3343,7 @@
     {
       "name": "SidebarFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3354,7 +3354,7 @@
     {
       "name": "SidebarGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3365,7 +3365,7 @@
     {
       "name": "SidebarGroupAction",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3376,7 +3376,7 @@
     {
       "name": "SidebarGroupContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3387,7 +3387,7 @@
     {
       "name": "SidebarGroupLabel",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3398,7 +3398,7 @@
     {
       "name": "SidebarHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3409,7 +3409,7 @@
     {
       "name": "SidebarInput",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3420,7 +3420,7 @@
     {
       "name": "SidebarInset",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3431,7 +3431,7 @@
     {
       "name": "SidebarMenu",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3442,7 +3442,7 @@
     {
       "name": "SidebarMenuAction",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3453,7 +3453,7 @@
     {
       "name": "SidebarMenuBadge",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3464,7 +3464,7 @@
     {
       "name": "SidebarMenuButton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3475,7 +3475,7 @@
     {
       "name": "SidebarMenuItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3486,7 +3486,7 @@
     {
       "name": "SidebarMenuSkeleton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3497,7 +3497,7 @@
     {
       "name": "SidebarMenuSub",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3508,7 +3508,7 @@
     {
       "name": "SidebarMenuSubButton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3519,7 +3519,7 @@
     {
       "name": "SidebarMenuSubItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3530,7 +3530,7 @@
     {
       "name": "SidebarProvider",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3541,7 +3541,7 @@
     {
       "name": "SidebarRail",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3552,7 +3552,7 @@
     {
       "name": "SidebarSeparator",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3563,7 +3563,7 @@
     {
       "name": "SidebarTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3574,7 +3574,7 @@
     {
       "name": "Skeleton",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3585,7 +3585,7 @@
     {
       "name": "Slider",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3596,7 +3596,7 @@
     {
       "name": "SparklineChart",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "迷你趋势折线，适合表格与指标卡内嵌。",
       "props": [
@@ -3613,7 +3613,7 @@
     {
       "name": "StarPowerChart",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "星力趋势图，基于 Recharts，接收 name/value 序列。",
       "props": [
@@ -3626,7 +3626,7 @@
     {
       "name": "StatCard",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "指标卡，展示数值、环比与趋势线。",
       "props": [
@@ -3643,7 +3643,7 @@
     {
       "name": "Switch",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3654,7 +3654,7 @@
     {
       "name": "Table",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3665,7 +3665,7 @@
     {
       "name": "TableBody",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3676,7 +3676,7 @@
     {
       "name": "TableCaption",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3687,7 +3687,7 @@
     {
       "name": "TableCell",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3698,7 +3698,7 @@
     {
       "name": "TableFooter",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3709,7 +3709,7 @@
     {
       "name": "TableHead",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3720,7 +3720,7 @@
     {
       "name": "TableHeader",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3731,7 +3731,7 @@
     {
       "name": "TableRow",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3742,7 +3742,7 @@
     {
       "name": "Tabs",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3753,7 +3753,7 @@
     {
       "name": "TabsContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3764,7 +3764,7 @@
     {
       "name": "TabsList",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3775,7 +3775,7 @@
     {
       "name": "TabsTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3786,7 +3786,7 @@
     {
       "name": "Textarea",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3797,7 +3797,7 @@
     {
       "name": "Toaster",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3808,7 +3808,7 @@
     {
       "name": "Toggle",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3819,7 +3819,7 @@
     {
       "name": "ToggleGroup",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3830,7 +3830,7 @@
     {
       "name": "ToggleGroupItem",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3841,7 +3841,7 @@
     {
       "name": "Tooltip",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3852,7 +3852,7 @@
     {
       "name": "TooltipContent",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3863,7 +3863,7 @@
     {
       "name": "TooltipProvider",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3874,7 +3874,7 @@
     {
       "name": "TooltipTrigger",
       "package": "@yyc3/music-ui",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "category": "UI 基础",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
@@ -3885,7 +3885,7 @@
     {
       "name": "VoiceControlPanel",
       "package": "@yyc3/music-voice",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "category": "语音交互",
       "description": "多语言管理、语音识别、语音合成、命令解析与上下文五引擎 + 控制面板。",
       "props": [],
