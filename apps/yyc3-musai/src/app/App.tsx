@@ -195,6 +195,21 @@ export function AppInner() {
     await savePlaylist('当前队列', playlist.map((track) => track.id));
   }, [playlist]);
 
+  // 加载已保存歌单：优先用当前队列中的曲目，其次回退演示曲库；
+  // 用户本地导入的音频（blob URL）刷新后无法还原，会被跳过
+  const handleLoadSavedPlaylist = useCallback(
+    (trackIds: string[]) => {
+      const byId = new Map(playlist.map((track) => [track.id, track]));
+      const resolved = trackIds
+        .map((id) => byId.get(id) ?? DEMO_PLAYLIST.find((track) => track.id === id))
+        .filter((track): track is Track => Boolean(track));
+      if (resolved.length === 0) return;
+      setPlaylist(resolved);
+      setCurrentTrackIndex(0);
+    },
+    [playlist]
+  );
+
   // ==========================================
   // Track Navigation
   // ==========================================
@@ -1002,6 +1017,7 @@ export function AppInner() {
         onAddTrackFromFile={handleAddTrackFromFile}
         onAddTrackFromUrl={handleAddTrackFromUrl}
         onSaveQueue={handleSaveQueue}
+        onLoadPlaylist={handleLoadSavedPlaylist}
         audioMode={audio.audioMode}
       />
 

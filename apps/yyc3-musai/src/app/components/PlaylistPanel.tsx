@@ -12,10 +12,13 @@ import {
   Disc3,
   Sparkles,
   Save,
+  ChevronDown,
+  Trash2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ImageWithFallback } from '@yyc3/music-ui';
-import type { Track } from '@yyc3/music-data';
+import type { Track, SavedPlaylist } from '@yyc3/music-data';
+import { deletePlaylist, getSavedPlaylists } from '@yyc3/music-data';
 import { useI18n } from '@yyc3/music-hooks';
 import { useVirtualList } from '@yyc3/music-hooks';
 
@@ -30,6 +33,8 @@ interface PlaylistPanelProps {
   onAddTrackFromUrl: (url: string, title?: string) => void;
   /** 保存当前队列为本地歌单；未传时不显示保存入口 */
   onSaveQueue?: () => void | Promise<void>;
+  /** 加载已保存歌单；未传时不显示已保存列表 */
+  onLoadPlaylist?: (trackIds: string[]) => void;
   audioMode: 'file' | 'demo';
 }
 
@@ -43,11 +48,14 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
   onAddTrackFromFile,
   onAddTrackFromUrl,
   onSaveQueue,
+  onLoadPlaylist,
   audioMode,
 }) => {
   const { t } = useI18n();
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+  const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
   const [urlInput, setUrlInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -105,8 +113,36 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
 
   const handleSaveQueue = useCallback(() => {
     if (!onSaveQueue) return;
-    void Promise.resolve(onSaveQueue()).then(() => setJustSaved(true));
-  }, [onSaveQueue]);
+    void Promise.resolve(onSaveQueue()).then(() => {
+      setJustSaved(true);
+      if (onLoadPlaylist) void getSavedPlaylists().then(setSavedPlaylists);
+    });
+  }, [onSaveQueue, onLoadPlaylist]);
+
+  // 打开面板时刷新已保存歌单
+  useEffect(() => {
+    if (!isOpen || !onLoadPlaylist) return;
+    let cancelled = false;
+    void getSavedPlaylists().then((list) => {
+      if (!cancelled) setSavedPlaylists(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, onLoadPlaylist]);
+
+  const handleDeleteSaved = useCallback(async (id: string) => {
+    await deletePlaylist(id);
+    setSavedPlaylists(await getSavedPlaylists());
+  }, []);
+
+  const handleLoadSaved = useCallback(
+    (item: SavedPlaylist) => {
+      onLoadPlaylist?.(item.trackIds);
+      setShowSaved(false);
+    },
+    [onLoadPlaylist]
+  );
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -270,6 +306,70 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* 已保存歌单 */}
+            {onLoadPlaylist && (
+              <div className="border-b border-white/[0.06]">
+                <button
+                  onClick={() => setShowSaved((value) => !value)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-white/50 hover:text-white/80 transition-colors"
+                  aria-expanded={showSaved}
+                  aria-label="已保存歌单 / Saved playlists"
+                  data-testid="toggle-saved-playlists"
+                >
+                  <span className="text-xs font-medium uppercase tracking-wider">
+                    已保存 / Saved（{savedPlaylists.length}）
+                  </span>
+                  <ChevronDown
+                    className={clsx('w-4 h-4 transition-transform', showSaved && 'rotate-180')}
+                    aria-hidden="true"
+                  />
+                </button>
+                <AnimatePresence>
+                  {showSaved && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-3 space-y-2">
+                        {savedPlaylists.length === 0 ? (
+                          <p className="text-xs text-white/25">暂无已保存歌单 / No saved playlists</p>
+                        ) : (
+                          savedPlaylists.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/[0.06]"
+                            >
+                              <button
+                                onClick={() => handleLoadSaved(item)}
+                                className="flex-1 min-w-0 text-left"
+                                aria-label={`加载 ${item.name}`}
+                                data-testid={`load-playlist-${item.id}`}
+                              >
+                                <p className="text-sm text-white/80 truncate">{item.name}</p>
+                                <p className="text-xs text-white/30">
+                                  {item.trackIds.length} {t('playlist.tracks')}
+                                </p>
+                              </button>
+                              <button
+                                onClick={() => void handleDeleteSaved(item.id)}
+                                className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-white/10 transition-colors"
+                                aria-label={`删除 ${item.name}`}
+                                data-testid={`delete-playlist-${item.id}`}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Drag & Drop Overlay */}
             <AnimatePresence>

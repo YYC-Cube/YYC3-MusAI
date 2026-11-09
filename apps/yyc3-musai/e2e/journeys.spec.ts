@@ -64,7 +64,7 @@ test.describe('关键旅程 · 桌面端', () => {
     await expect(dialog).toBeHidden()
   })
 
-  test('播放列表：保存当前队列到本地', async ({ page }) => {
+  test('播放列表：保存、加载与删除本地歌单', async ({ page }) => {
     await page.locator('button[title="播放列表"]').first().click()
     const dialog = page.getByRole('dialog', { name: '播放列表' })
     await expect(dialog).toBeVisible()
@@ -75,6 +75,18 @@ test.describe('关键旅程 · 桌面端', () => {
     // 存储键对路径做了 encodeURIComponent，如 yyc3:music:local:%2Flibrary%2Fplaylists
     const keys = await page.evaluate(() => Object.keys(localStorage))
     expect(keys.some((key) => key.includes('playlists'))).toBe(true)
+
+    // 已保存列表可见并可加载
+    await dialog.getByTestId('toggle-saved-playlists').click()
+    await expect(dialog.getByText('当前队列')).toBeVisible()
+    await dialog.getByTestId(/^load-playlist-/).click()
+    await expect(dialog.getByTestId('toggle-saved-playlists')).toHaveAttribute('aria-expanded', 'false')
+    expect(await dialog.locator('button[aria-label*="—"]').count()).toBeGreaterThan(0)
+
+    // 删除后列表回到空态
+    await dialog.getByTestId('toggle-saved-playlists').click()
+    await dialog.getByTestId(/^delete-playlist-/).click()
+    await expect(dialog.getByText('暂无已保存歌单 / No saved playlists')).toBeVisible()
   })
 
   test('评论面板：可从播放器工具条打开', async ({ page }) => {
