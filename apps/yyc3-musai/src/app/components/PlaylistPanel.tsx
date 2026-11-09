@@ -35,6 +35,8 @@ interface PlaylistPanelProps {
   onSaveQueue?: () => void | Promise<void>;
   /** 加载已保存歌单；未传时不显示已保存列表 */
   onLoadPlaylist?: (trackIds: string[]) => void | Promise<void>;
+  /** 从队列移除单条曲目；未传时不显示移除按钮 */
+  onRemoveTrack?: (index: number) => void;
   audioMode: 'file' | 'demo';
 }
 
@@ -49,6 +51,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
   onAddTrackFromUrl,
   onSaveQueue,
   onLoadPlaylist,
+  onRemoveTrack,
   audioMode,
 }) => {
   const { t } = useI18n();
@@ -403,11 +406,10 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                 const isCurrentPlaying = isCurrent && isPlaying;
 
                 return (
-                  <motion.button
+                  <motion.div
                     key={track.id}
-                    onClick={() => onSelectTrack(index)}
                     className={clsx(
-                      'w-full flex items-center gap-3 px-4 py-3 transition-all relative group',
+                      'w-full flex items-center gap-2 px-4 py-3 transition-all relative group',
                       isCurrent
                         ? 'bg-white/[0.06]'
                         : 'hover:bg-white/[0.03]'
@@ -415,9 +417,14 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                     whileHover={{ x: 4 }}
                     transition={{ duration: 0.15 }}
                     role="listitem"
-                    aria-label={`${track.title} — ${track.artist}, ${formatDuration(track.duration)}`}
                     aria-current={isCurrent ? 'true' : undefined}
                   >
+                    <button
+                      type="button"
+                      onClick={() => onSelectTrack(index)}
+                      className="flex flex-1 items-center gap-3 min-w-0 text-left"
+                      aria-label={`${track.title} — ${track.artist}, ${formatDuration(track.duration)}`}
+                    >
                     {/* Active indicator */}
                     {isCurrent && (
                       <motion.div
@@ -499,7 +506,19 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                         {formatDuration(track.duration)}
                       </span>
                     </div>
-                  </motion.button>
+                    </button>
+                    {onRemoveTrack && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveTrack(index)}
+                        className="p-1.5 rounded-md text-white/20 hover:text-red-400 hover:bg-white/10 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                        aria-label={`从队列移除 ${track.title}`}
+                        data-testid={`remove-track-${track.id}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
+                    )}
+                  </motion.div>
                 );
               })}
 

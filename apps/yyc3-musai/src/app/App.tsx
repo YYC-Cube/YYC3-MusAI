@@ -18,6 +18,7 @@ import {
   getLocalAudio,
   getSavedPlaylists,
   getSavedQueue,
+  deleteLocalAudio,
   pruneLocalAudio,
   saveLocalAudio,
   savePlaylist,
@@ -80,9 +81,6 @@ const AlbumStore = lazy(() => import('@yyc3/music-commerce').then(m => ({ defaul
 const E2EKeySetup = lazy(() => import('@yyc3/music-community').then(m => ({ default: m.E2EKeySetup })));
 const SecondaryMarket = lazy(() => import('@yyc3/music-commerce').then(m => ({ default: m.SecondaryMarket })));
 const UploadPanel = lazy(() => import('@yyc3/music-community').then(m => ({ default: m.UploadPanel })));
-
-// Type-only import (erased at compile time, no runtime cost)
-import type { AILyricsTheme } from '@yyc3/music-ai';
 
 // ==========================================
 // §7.x — Global unhandled error/rejection reporting (outside component tree)
@@ -171,6 +169,8 @@ export function AppInner() {
 
   /** 收藏曲目 id 集合，启动时从本地缓存恢复 */
   const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set());
+  /** 全局提示：当前用于本地存储配额不足等不可静默的失败 */
+  const [notice, setNotice] = useState<string | null>(null);
   /** 队列快照恢复完成前不写回，避免 DEMO_PLAYLIST 覆盖已存数据 */
   const queueHydratedRef = useRef(false);
 
@@ -214,6 +214,13 @@ export function AppInner() {
     };
   }, []);
 
+  // 全局提示自动消失
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   const currentTrack = playlist[currentTrackIndex];
 
   // 保存当前队列为本地歌单：同名覆盖，重复保存不会产生副本
@@ -244,6 +251,27 @@ export function AppInner() {
       if (playable.length === 0) return;
       setPlaylist(playable);
       setCurrentTrackIndex(0);
+    },
+    [playlist]
+  );
+
+  // 从队列移除曲目；本地导入的文件在无人引用时一并删除
+  const handleRemoveTrack = useCallback(
+    async (index: number) => {
+      const removed = playlist[index];
+      if (!removed) return;
+      const next = playlist.filter((_, position) => position !== index);
+      setPlaylist(next);
+      setCurrentTrackIndex((prev) => {
+        const adjusted = prev > index ? prev - 1 : prev;
+        return Math.min(adjusted, Math.max(next.length - 1, 0));
+      });
+      if (!removed.id.startsWith('custom-')) return;
+      const playlists = await getSavedPlaylists();
+      const stillUsed =
+        next.some((track) => track.id === removed.id) ||
+        playlists.some((item) => item.trackIds.includes(removed.id));
+      if (!stillUsed) await deleteLocalAudio(removed.id);
     },
     [playlist]
   );
@@ -756,7 +784,9 @@ export function AppInner() {
       setPlaylist((prev) => [...prev, newTrack]);
       // 原始文件入 IndexedDB：blob URL 刷新后失效，恢复时用它重建
       const { audioUrl: _blobUrl, ...trackMeta } = newTrack;
-      void saveLocalAudio(newTrack.id, file, trackMeta as Record<string, unknown>);
+      void saveLocalAudio(newTrack.id, file, trackMeta as Record<string, unknown>).then((saved) => {
+        if (!saved) setNotice('本地存储空间不足，导入的音频刷新后将无法恢复');
+      });
       shouldAutoPlayRef.current = true;
       setCurrentTrackIndex(playlist.length);
       // §8.1: Register new song in dynamic index
@@ -1059,8 +1089,18 @@ export function AppInner() {
         onAddTrackFromUrl={handleAddTrackFromUrl}
         onSaveQueue={handleSaveQueue}
         onLoadPlaylist={handleLoadSavedPlaylist}
+        onRemoveTrack={handleRemoveTrack}
         audioMode={audio.audioMode}
       />
+
+      {notice && (
+        <div
+          role="alert"
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[80] max-w-[92vw] rounded-xl border border-amber-400/30 bg-[#2a1d0a]/95 px-4 py-3 text-sm text-amber-200 shadow-xl backdrop-blur"
+        >
+          {notice}
+        </div>
+      )}
 
       {/* User Profile (Center Modal) */}
       <UserProfile

@@ -133,7 +133,8 @@ test.describe('关键旅程 · 桌面端', () => {
     await dialog.getByRole('button', { name: '关闭播放列表 / Close playlist' }).click()
     await expect(dialog).toBeHidden()
 
-    await page.reload()
+    // 用 goto 而非 reload：面板状态由 URL 承载，reload 会把面板重新打开
+    await page.goto('/')
     const queueSnapshot = await page.evaluate(() => {
       const key = Object.keys(localStorage).find((item) => item.includes('queue'))
       return key ? localStorage.getItem(key) : null
@@ -143,6 +144,21 @@ test.describe('关键旅程 · 桌面端', () => {
     await page.locator('button[title="播放列表"]').first().click()
     const restored = page.getByRole('dialog', { name: '播放列表' })
     await expect(restored.getByText('local-demo')).toBeVisible()
+  })
+
+  test('播放列表：移除单条曲目并持久化', async ({ page }) => {
+    await page.locator('button[title="播放列表"]').first().click()
+    const dialog = page.getByRole('dialog', { name: '播放列表' })
+    await expect(dialog).toBeVisible()
+
+    const items = dialog.locator('[role="listitem"]')
+    const before = await items.count()
+    await dialog.getByTestId(/^remove-track-/).first().click()
+    await expect(items).toHaveCount(before - 1)
+
+    await page.goto('/')
+    await page.locator('button[title="播放列表"]').first().click()
+    await expect(page.getByRole('dialog', { name: '播放列表' }).locator('[role="listitem"]')).toHaveCount(before - 1)
   })
 
   test('评论面板：可从播放器工具条打开', async ({ page }) => {

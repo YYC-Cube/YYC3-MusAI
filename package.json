@@ -96,12 +96,6 @@
       "@tailwindcss/oxide",
       "esbuild",
       "turbo"
-    ],
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "react-day-picker@8>react": "19",
-        "react-day-picker@8>react-dom": "19"
-      }
-    }
+    ]
   }
 }

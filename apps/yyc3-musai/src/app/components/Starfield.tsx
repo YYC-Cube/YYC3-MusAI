@@ -215,7 +215,7 @@ export const Starfield: React.FC<StarfieldProps> = ({
     const nebulae: Nebula[] = Array.from({ length: 6 }, () => new Nebula());
 
     // Smooth color interpolation
-    let currentRgb: [number, number, number] = [...(EMOTION_RGB[emotion] || EMOTION_RGB.neutral)];
+    const currentRgb: [number, number, number] = [...(EMOTION_RGB[emotion] || EMOTION_RGB.neutral)];
     let targetRgb: [number, number, number] = [...currentRgb];
 
     let time = 0;
