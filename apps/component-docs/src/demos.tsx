@@ -5,12 +5,25 @@ import {
 } from '@yyc3/music-ui';
 import { XiaoyuCharacter, XiaoyuBubble } from '@yyc3/music-emotion';
 import { LyricsDisplay, EmotionRipple } from '@yyc3/music-lyrics';
-import { AudioVisualizer } from '@yyc3/music-player';
+import { AudioVisualizer, CoverFlow } from '@yyc3/music-player';
 
 const lyrics = [
   { time: 0, text: '前奏', translation: 'Intro' },
   { time: 5, text: '等待星辰对齐', translation: 'Wait for the stars to align' },
   { time: 9, text: '漂流在无尽的夜', translation: 'Drifting through the endless night' }
+];
+
+const coverArt = (from: string, to: string) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><circle cx="150" cy="150" r="54" fill="rgba(255,255,255,0.16)"/><circle cx="150" cy="150" r="10" fill="rgba(255,255,255,0.5)"/></svg>`
+  )}`;
+
+const coverFlowTracks = [
+  { id: 'track-1', title: '星轨', artist: 'YYC³', cover: coverArt('#4C1D95', '#0A0E2F') },
+  { id: 'track-2', title: '夜航', artist: 'YYC³', cover: coverArt('#1E3A8A', '#0A0E2F') },
+  { id: 'track-3', title: '回声', artist: 'YYC³' },
+  { id: 'track-4', title: '潮汐', artist: 'YYC³', cover: coverArt('#0F766E', '#0A0E2F') },
+  { id: 'track-5', title: '尘埃', artist: 'YYC³', cover: coverArt('#7C2D12', '#0A0E2F') }
 ];
 
 export const demos: Record<string, () => ReactNode> = {
@@ -72,6 +85,11 @@ export const demos: Record<string, () => ReactNode> = {
         size={180}
         mode="circular"
       />
+    </div>
+  ),
+  CoverFlow: () => (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] px-2 py-4">
+      <CoverFlow tracks={coverFlowTracks} defaultSelectedIndex={1} itemSize={140} spacing={100} height={300} />
     </div>
   ),
   DProgress: () => (

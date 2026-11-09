@@ -7,7 +7,7 @@
  * @status stable
  */
 
-/** @typedef {{ name: string, package: string, description: string, props?: string[], example?: string, demo?: string }} CuratedEntry */
+/** @typedef {{ name: string, package: string, description: string, props?: string[], example?: string, demo?: string, category?: string }} CuratedEntry */
 
 /** @type {CuratedEntry[]} */
 export const curatedComponents = [
@@ -97,6 +97,28 @@ export const curatedComponents = [
   isPlaying
   size={180}
   mode="circular"
+/>`
+  },
+  {
+    name: 'CoverFlow',
+    package: '@yyc3/music-player',
+    category: '播放器',
+    description: '3D 封面流：拖拽惯性、键盘导航、封面倒影与高光，支持受控/非受控选中。',
+    props: [
+      'tracks', 'onSelect', 'selectedId', 'selectedIndex', 'defaultSelectedIndex',
+      'getCover', 'isLoading', 'itemSize', 'spacing', 'height', 'showReflection',
+      'showGloss', 'showFloorGlow', 'enableKeyboard', 'enableDrag', 'emptyText',
+      'className', 'style'
+    ],
+    demo: 'CoverFlow',
+    example: `<CoverFlow
+  tracks={[
+    { id: '1', title: '星轨', artist: 'YYC³', cover: '/covers/1.jpg' },
+    { id: '2', title: '夜航', artist: 'YYC³', cover: '/covers/2.jpg' },
+    { id: '3', title: '回声', artist: 'YYC³' },
+  ]}
+  defaultSelectedIndex={1}
+  onSelect={(track, index) => console.log(index, track.title)}
 />`
   },
   {

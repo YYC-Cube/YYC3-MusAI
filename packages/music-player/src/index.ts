@@ -3,3 +3,4 @@ export * from './components/MediaDisplay';
 export * from './components/PlayerControls';
 export * from './components/MobilePlayer';
 export * from './components/AudioVisualizer';
+export * from './components/CoverFlow';

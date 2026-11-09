@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-11-09T15:15:04.031Z",
+  "generatedAt": "2026-11-09T17:12:15.483Z",
   "totals": {
     "packages": 15,
-    "components": 305,
-    "curated": 16
+    "components": 306,
+    "curated": 17
   },
   "packages": [
     {
@@ -71,7 +71,7 @@
       "name": "@yyc3/music-player",
       "version": "2.0.1",
       "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
-      "componentCount": 4
+      "componentCount": 5
     },
     {
       "name": "@yyc3/music-testing",
@@ -645,6 +645,36 @@
       "source": "packages/music-player/src/components/AudioVisualizer.tsx",
       "demo": "AudioVisualizer",
       "example": "<AudioVisualizer\n  frequencyData={new Uint8Array(32).fill(80)}\n  emotion=\"calm\"\n  isPlaying\n  size={180}\n  mode=\"circular\"\n/>"
+    },
+    {
+      "name": "CoverFlow",
+      "package": "@yyc3/music-player",
+      "version": "2.0.1",
+      "category": "播放器",
+      "description": "3D 封面流：拖拽惯性、键盘导航、封面倒影与高光，支持受控/非受控选中。",
+      "props": [
+        "tracks",
+        "onSelect",
+        "selectedId",
+        "selectedIndex",
+        "defaultSelectedIndex",
+        "getCover",
+        "isLoading",
+        "itemSize",
+        "spacing",
+        "height",
+        "showReflection",
+        "showGloss",
+        "showFloorGlow",
+        "enableKeyboard",
+        "enableDrag",
+        "emptyText",
+        "className",
+        "style"
+      ],
+      "source": "packages/music-player/src/components/CoverFlow.tsx",
+      "demo": "CoverFlow",
+      "example": "<CoverFlow\n  tracks={[\n    { id: '1', title: '星轨', artist: 'YYC³', cover: '/covers/1.jpg' },\n    { id: '2', title: '夜航', artist: 'YYC³', cover: '/covers/2.jpg' },\n    { id: '3', title: '回声', artist: 'YYC³' },\n  ]}\n  defaultSelectedIndex={1}\n  onSelect={(track, index) => console.log(index, track.title)}\n/>"
     },
     {
       "name": "MediaDisplay",
