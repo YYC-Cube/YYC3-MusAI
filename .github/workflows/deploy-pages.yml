@@ -24,8 +24,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,6 +42,14 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Build component docs
+        run: pnpm --filter @yyc3/component-docs build
+        env:
+          DOCS_BASE: /docs/
+
+      - name: Bundle docs into app artifact
+        run: node -e "require('node:fs').cpSync('apps/component-docs/dist', 'apps/d-music/dist/docs', { recursive: true })"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
