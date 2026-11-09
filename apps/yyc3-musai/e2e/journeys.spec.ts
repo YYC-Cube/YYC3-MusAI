@@ -64,6 +64,19 @@ test.describe('关键旅程 · 桌面端', () => {
     await expect(dialog).toBeHidden()
   })
 
+  test('播放列表：保存当前队列到本地', async ({ page }) => {
+    await page.locator('button[title="播放列表"]').first().click()
+    const dialog = page.getByRole('dialog', { name: '播放列表' })
+    await expect(dialog).toBeVisible()
+
+    await dialog.getByTestId('save-queue').click()
+    await expect(dialog.getByRole('status')).toContainText('已保存')
+
+    // 存储键对路径做了 encodeURIComponent，如 yyc3:music:local:%2Flibrary%2Fplaylists
+    const keys = await page.evaluate(() => Object.keys(localStorage))
+    expect(keys.some((key) => key.includes('playlists'))).toBe(true)
+  })
+
   test('评论面板：可从播放器工具条打开', async ({ page }) => {
     await page.locator('button[title="评论"]').first().click()
     await expect(page.getByRole('dialog', { name: '评论' })).toBeVisible()

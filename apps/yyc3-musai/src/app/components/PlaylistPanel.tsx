@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -11,6 +11,7 @@ import {
   GripVertical,
   Disc3,
   Sparkles,
+  Save,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ImageWithFallback } from '@yyc3/music-ui';
@@ -27,6 +28,8 @@ interface PlaylistPanelProps {
   onSelectTrack: (index: number) => void;
   onAddTrackFromFile: (file: File) => void;
   onAddTrackFromUrl: (url: string, title?: string) => void;
+  /** 保存当前队列为本地歌单；未传时不显示保存入口 */
+  onSaveQueue?: () => void | Promise<void>;
   audioMode: 'file' | 'demo';
 }
 
@@ -39,10 +42,12 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
   onSelectTrack,
   onAddTrackFromFile,
   onAddTrackFromUrl,
+  onSaveQueue,
   audioMode,
 }) => {
   const { t } = useI18n();
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -90,6 +95,18 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
       setShowAddMenu(false);
     }
   }, [urlInput, titleInput, onAddTrackFromUrl]);
+
+  // 保存成功后的短暂提示，避免新增弹窗
+  useEffect(() => {
+    if (!justSaved) return;
+    const timer = setTimeout(() => setJustSaved(false), 1600);
+    return () => clearTimeout(timer);
+  }, [justSaved]);
+
+  const handleSaveQueue = useCallback(() => {
+    if (!onSaveQueue) return;
+    void Promise.resolve(onSaveQueue()).then(() => setJustSaved(true));
+  }, [onSaveQueue]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -140,6 +157,26 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {onSaveQueue && (
+                  <>
+                    <button
+                      onClick={handleSaveQueue}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/[0.08] text-white/60 hover:text-white transition-colors"
+                      aria-label={justSaved ? '已保存到本地 / Saved locally' : '保存当前队列 / Save current queue'}
+                      data-testid="save-queue"
+                    >
+                      <Save
+                        className={clsx('w-4 h-4', justSaved && 'text-emerald-400')}
+                        aria-hidden="true"
+                      />
+                    </button>
+                    {justSaved && (
+                      <span role="status" className="text-[11px] text-emerald-400">
+                        已保存 / Saved
+                      </span>
+                    )}
+                  </>
+                )}
                 <button
                   onClick={() => setShowAddMenu(!showAddMenu)}
                   className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/[0.08] text-white/60 hover:text-white transition-colors"

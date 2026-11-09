@@ -16,6 +16,7 @@ import {
   dMusicInstruments,
   getFavoriteIds,
   getSavedQueue,
+  savePlaylist,
   saveQueue,
   toggleFavorite,
 } from '@yyc3/music-data';
@@ -188,6 +189,11 @@ export function AppInner() {
   }, []);
 
   const currentTrack = playlist[currentTrackIndex];
+
+  // 保存当前队列为本地歌单：同名覆盖，重复保存不会产生副本
+  const handleSaveQueue = useCallback(async () => {
+    await savePlaylist('当前队列', playlist.map((track) => track.id));
+  }, [playlist]);
 
   // ==========================================
   // Track Navigation
@@ -995,6 +1001,7 @@ export function AppInner() {
         onSelectTrack={handleSelectTrack}
         onAddTrackFromFile={handleAddTrackFromFile}
         onAddTrackFromUrl={handleAddTrackFromUrl}
+        onSaveQueue={handleSaveQueue}
         audioMode={audio.audioMode}
       />
 
