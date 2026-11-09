@@ -20,6 +20,18 @@ complexity: simple
 
 ## [Unreleased]
 
+### 新增
+
+- `@yyc3/music-lyrics`：`parseLrc()` 标准 LRC 解析（元数据、offset、多时间标签、乱序排序）。
+- `@yyc3/music-utils`：共享 AudioContext 管理器（`getSharedAudioContext` / `resume` / `dispose` / `stats`）。
+- `@yyc3/music-utils`：`apiFetch` / `apiFetchStrict` 支持 `AbortSignal`，`aiApi` / `sttApi` / `voiceApi` 写操作透传 `signal`。
+- `@yyc3/music-voice`：`SpeechRecognitionEngine.start(signal)`，中止即停止识别。
+
+### 变更
+
+- `useAudioEngine`、`SpeechRecognitionEngine`、`SpaceTimePanel` 改用共享 AudioContext，避免上下文耗尽。
+- `useXiaoyuVoice` 移除无用的 AudioContext 创建，cleanup 停止当前音频并防止叠加播放。
+
 ### 安全
 
 - 升级 vitest / @vitest/coverage-v8 至 4.1.12，消除 tinypool、@vitest/mocker 漏洞。

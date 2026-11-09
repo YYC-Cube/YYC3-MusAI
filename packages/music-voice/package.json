@@ -15,6 +15,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@yyc3/music-utils": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "0.577.0",
     "tailwind-merge": "^3.3.1"

@@ -39,7 +39,7 @@ export function VoiceBar() {
 
 | 名称 | 说明 |
 | --- | --- |
-| `SpeechRecognitionEngine` | SpeechRecognitionConfig（lang、continuous、interimResults 等）、start/stop/onResult |
+| `SpeechRecognitionEngine` | `start(signal?: AbortSignal)`、`stop()`、`SpeechRecognitionConfig`；abort 时自动停止识别 |
 | `SpeechSynthesisEngine` | SpeechSynthesisConfig（voice、rate、pitch、volume）与 speak/cancel |
 | `VoiceCommandProcessor` | 意图模式匹配与命令分发 |
 | `VoiceContextManager` | 多轮对话上下文与规则 |

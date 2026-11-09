@@ -1,6 +1,7 @@
 // YYC³ music-hooks — useAudioEngine 播放引擎测试（demo 振荡器 / 文件模式 / 可视化分析）
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import { disposeSharedAudioContext } from '@yyc3/music-utils'
 import { useAudioEngine } from '../src/useAudioEngine'
 
 class ParamMock {
@@ -124,6 +125,7 @@ function flushFrames(times = 1) {
 describe('useAudioEngine', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    void disposeSharedAudioContext()
     AudioContextMock.instances = []
     FakeAudio.instances = []
     rafCbs = []
@@ -160,6 +162,20 @@ describe('useAudioEngine', () => {
     expect(result.current.frequencyData).toHaveLength(64)
     expect(result.current.waveformData).toHaveLength(64)
     expect(result.current.audioEnergy).toBe(0)
+  })
+
+  it('多个 Hook 实例共享同一个 AudioContext', () => {
+    const first = renderHook(() => useAudioEngine({ trackKey: 'share-a' }))
+    act(() => {
+      first.result.current.play()
+    })
+
+    const second = renderHook(() => useAudioEngine({ trackKey: 'share-b' }))
+    act(() => {
+      second.result.current.play()
+    })
+
+    expect(AudioContextMock.instances).toHaveLength(1)
   })
 
   it('demo 模式播放：创建音频上下文、振荡器与定时器并推进时间', () => {

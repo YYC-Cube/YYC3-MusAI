@@ -328,19 +328,21 @@ export const recommendationApi = {
 
 export const aiApi = {
   /** Generate lyrics */
-  generateLyrics: (theme: string, mood: string, keywords: string[], lang: string) =>
+  generateLyrics: (theme: string, mood: string, keywords: string[], lang: string, signal?: AbortSignal) =>
     apiFetch<{ lyrics?: string[] }>('/ai/lyrics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ theme, mood, keywords, lang }),
+      signal,
     }),
 
   /** Generate composition params */
-  compose: (theme: string, mood: string, lang: string) =>
+  compose: (theme: string, mood: string, lang: string, signal?: AbortSignal) =>
     apiFetch<{ composition?: any }>('/ai/compose', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ theme, mood, lang }),
+      signal,
     }),
 };
 
@@ -459,16 +461,17 @@ export const spaceTimeApi = {
 
 export const voiceApi = {
   /** Upload voice to Supabase Storage */
-  upload: (userId: string, audioBase64: string, mimeType: string) =>
+  upload: (userId: string, audioBase64: string, mimeType: string, signal?: AbortSignal) =>
     apiFetch<{ success: boolean; filePath: string; signedUrl: string }>('/voice/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, audioBase64, mimeType }),
+      signal,
     }),
 
   /** Get signed URL for voice playback */
-  getUrl: (path: string) =>
-    apiFetch<{ signedUrl?: string }>(`/voice/url?path=${encodeURIComponent(path)}`),
+  getUrl: (path: string, signal?: AbortSignal) =>
+    apiFetch<{ signedUrl?: string }>(`/voice/url?path=${encodeURIComponent(path)}`, { signal }),
 };
 
 // ============================================================
@@ -521,15 +524,16 @@ export const themeApi = {
 
 export const sttApi = {
   /** Transcribe audio via Whisper (or template fallback) */
-  transcribe: (audio: string, language: string, mimeType?: string) =>
+  transcribe: (audio: string, language: string, mimeType?: string, signal?: AbortSignal) =>
     apiFetch<{ text?: string; fallback?: string; provider?: string; available?: boolean; duration?: number }>('/stt/transcribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ audio, language, mimeType }),
+      signal,
     }),
 
   /** Stream-transcribe multiple audio chunks (progressive STT) */
-  stream: (chunks: Array<{ audioBase64: string; index: number }>, language: string, mimeType?: string, sessionId?: string) =>
+  stream: (chunks: Array<{ audioBase64: string; index: number }>, language: string, mimeType?: string, sessionId?: string, signal?: AbortSignal) =>
     apiFetch<{
       chunks: Array<{ index: number; text: string; isFinal: boolean; language?: string; provider: string }>;
       fullText: string;
@@ -541,6 +545,7 @@ export const sttApi = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chunks, language, mimeType, sessionId }),
+      signal,
     }),
 };
 

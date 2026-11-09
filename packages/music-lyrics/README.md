@@ -18,10 +18,16 @@ pnpm add @yyc3/music-lyrics react
 ## 快速开始
 
 ```tsx
-import { LyricsDisplay, EmotionRipple } from '@yyc3/music-lyrics'
-import type { LyricLine } from '@yyc3/music-data'
+import { LyricsDisplay, EmotionRipple, parseLrc } from '@yyc3/music-lyrics'
 
-export function Lyrics({ lines, time }: { lines: LyricLine[]; time: number }) {
+const { lines, metadata } = parseLrc(`
+[ti:夜航]
+[ar:YYC³]
+[00:01.00]第一句
+[00:05.50]第二句
+`)
+
+export function Lyrics({ time }: { time: number }) {
   return (
     <>
       <LyricsDisplay currentTime={time} lyrics={lines} isPlaying onLineClick={(t) => console.log(t)} />
@@ -35,6 +41,7 @@ export function Lyrics({ lines, time }: { lines: LyricLine[]; time: number }) {
 
 - LyricsDisplay
 - EmotionRipple
+- parseLrc（标准 LRC 解析）
 
 ## 关键 API
 
@@ -42,6 +49,7 @@ export function Lyrics({ lines, time }: { lines: LyricLine[]; time: number }) {
 | --- | --- |
 | `LyricsDisplay` | currentTime、lyrics、onLineClick、annotations、onAnnotate、isPlaying |
 | `EmotionRipple` | emotion、audioEnergy(0–1)、isPlaying、frequencyData、className |
+| `parseLrc(input, options?)` | 解析 `[mm:ss.xx]`、`[ti/ar/al/by/offset]` 与多时间标签；返回 `{ metadata, lines }`，时间单位秒 |
 
 ## 说明
 

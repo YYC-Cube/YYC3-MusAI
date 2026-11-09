@@ -298,7 +298,7 @@ describe('VoiceControlPanel', () => {
       unmount()
 
       expect(mic.track.stop).toHaveBeenCalledTimes(1)
-      expect(mic.audioContext.close).toHaveBeenCalledTimes(1)
+      expect(mic.audioContext.close).not.toHaveBeenCalled()
     })
   })
 })

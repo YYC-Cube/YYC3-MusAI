@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { getSharedAudioContext } from '@yyc3/music-utils';
 
 export type Emotion = 'happy' | 'sad' | 'energetic' | 'calm' | 'neutral';
 
@@ -169,7 +170,9 @@ export function useAudioEngine(config: AudioEngineConfig = {}): AudioEngineRetur
   const initAudio = useCallback(() => {
     if (isInitRef.current) return;
 
-    const ctx = new AudioContext();
+    // 全应用共享 AudioContext，避免每个 Hook 实例各建一个导致上下文耗尽
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
     analyser.smoothingTimeConstant = 0.82;

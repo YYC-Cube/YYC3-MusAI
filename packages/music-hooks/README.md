@@ -44,7 +44,7 @@ function Player() {
 
 | 名称 | 说明 |
 | --- | --- |
-| `useAudioEngine(config)` | 返回 isPlaying/currentTime/duration/volume/frequencyData/audioEnergy 与 play/pause/seek/setVolume/loadAudioFile |
+| `useAudioEngine(config)` | 返回 isPlaying/currentTime/duration/volume/frequencyData/audioEnergy 与 play/pause/seek/setVolume/loadAudioFile；AudioContext 由 `@yyc3/music-utils` 全应用共享 |
 | `useAudioComposer()` | compose(params) 离线渲染并返回 WAV Blob URL；含 progress / error 状态 |
 | `useAIAssistant(config)` | 返回提示列表、会话洞察与语音命令执行入口 |
 | `useHaptics()` | trigger(pattern)、vibrate(ms)、cancel()，不支持时自动降级为 no-op |

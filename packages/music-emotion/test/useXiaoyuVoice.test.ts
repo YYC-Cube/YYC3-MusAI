@@ -3,23 +3,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import useXiaoyuVoice from '../src/hooks/useXiaoyuVoice'
 
-class FakeAudioContext {
-  static instances: FakeAudioContext[] = []
-  close = vi.fn()
-  constructor() {
-    FakeAudioContext.instances.push(this)
-  }
-}
-
 class FakeAudio {
   static instances: FakeAudio[] = []
+  initialSrc: string
   src: string
   volume = 1
   onended: (() => void) | null = null
   play = vi.fn(() => Promise.resolve())
+  pause = vi.fn()
 
   constructor(src: string) {
     this.src = src
+    this.initialSrc = src
     FakeAudio.instances.push(this)
   }
 }
@@ -27,10 +22,7 @@ class FakeAudio {
 describe('useXiaoyuVoice', () => {
   beforeEach(() => {
     FakeAudio.instances = []
-    FakeAudioContext.instances = []
-    vi.stubGlobal('AudioContext', FakeAudioContext as any)
     vi.stubGlobal('Audio', FakeAudio as any)
-    delete (window as any).webkitAudioContext
   })
 
   afterEach(() => {
@@ -86,7 +78,7 @@ describe('useXiaoyuVoice', () => {
       await result.current.playVoiceWithEmotion('一起听歌吧', 'neutral')
     })
 
-    expect(FakeAudio.instances.map((a) => a.src)).toEqual([
+    expect(FakeAudio.instances.map((a) => a.initialSrc)).toEqual([
       '/assets/sounds/click.wav',
       '/assets/sounds/ya-neutral.wav',
     ])
@@ -101,30 +93,20 @@ describe('useXiaoyuVoice', () => {
     expect(FakeAudio.instances[0].src).toBeUndefined()
   })
 
-  it('复用同一个 AudioContext', async () => {
-    class TrackedAudioContext extends FakeAudioContext {}
-    vi.stubGlobal('AudioContext', TrackedAudioContext as any)
-    const { result } = renderHook(() => useXiaoyuVoice())
-
-    await act(async () => {
-      await result.current.playEmotionSound('happy')
-      await result.current.playVoice('hi', 'happy')
-    })
-
-    expect(FakeAudioContext.instances).toHaveLength(1)
-  })
-
-  it('cleanup 关闭 AudioContext 且可重复调用', async () => {
+  it('cleanup 停止当前音频并可重复调用', async () => {
     const { result } = renderHook(() => useXiaoyuVoice())
 
     await act(async () => {
       await result.current.playEmotionSound('happy')
     })
+    const audio = FakeAudio.instances[0]
 
     act(() => {
       result.current.cleanup()
     })
-    expect(FakeAudioContext.instances[0].close).toHaveBeenCalledTimes(1)
+    expect(audio.pause).toHaveBeenCalledTimes(1)
+    expect(audio.src).toBe('')
+    expect(result.current.isPlaying).toBe(false)
 
     expect(() => {
       act(() => {
@@ -133,17 +115,20 @@ describe('useXiaoyuVoice', () => {
     }).not.toThrow()
   })
 
-  it('webkitAudioContext 回退可用', async () => {
-    delete (globalThis as any).AudioContext
-    class TrackedAudioContext extends FakeAudioContext {}
-    ;(window as any).webkitAudioContext = TrackedAudioContext
-
+  it('播放新音频时停止上一条，避免叠加播放', async () => {
     const { result } = renderHook(() => useXiaoyuVoice())
+
     await act(async () => {
       await result.current.playEmotionSound('happy')
     })
-    expect(FakeAudioContext.instances).toHaveLength(1)
-    delete (window as any).webkitAudioContext
+    const first = FakeAudio.instances[0]
+
+    await act(async () => {
+      await result.current.playVoice('hi', 'happy')
+    })
+
+    expect(first.pause).toHaveBeenCalledTimes(1)
+    expect(result.current.isPlaying).toBe(true)
   })
 
   it('播放失败时 Promise 拒绝', async () => {

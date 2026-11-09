@@ -3,6 +3,8 @@
  * @description 语音识别引擎 - 支持多语言实时语音识别
  */
 
+import { getSharedAudioContext } from '@yyc3/music-utils';
+
 export interface SpeechRecognitionConfig {
   language: string
   continuous: boolean
@@ -40,6 +42,7 @@ export class SpeechRecognitionEngine {
   private isListening: boolean = false
   private isInitialized: boolean = false
   private audioContext: AudioContext | null = null
+  private abortCleanup: (() => void) | null = null
   private mediaStream: MediaStream | null = null
   private speechBuffer: Float32Array[] = []
   private lastResultTime: number = 0
@@ -149,9 +152,14 @@ export class SpeechRecognitionEngine {
         }
       })
       
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
-        sampleRate: this.SAMPLE_RATE
-      })
+      const sharedContext = getSharedAudioContext()
+      if (!sharedContext) {
+        throw new Error('当前环境不支持 WebAudio')
+      }
+      this.audioContext = sharedContext
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume().catch(() => undefined)
+      }
       
     } catch (error) {
       throw new Error(`麦克风权限获取失败: ${error.message}`)
@@ -262,12 +270,17 @@ export class SpeechRecognitionEngine {
 
   /**
    * 开始语音识别
+   * @param signal 可选中止信号；触发时自动停止识别
    */
-  async start(): Promise<boolean> {
+  async start(signal?: AbortSignal): Promise<boolean> {
+    if (signal?.aborted) return false
+
     if (!this.isInitialized) {
       const initialized = await this.initialize()
       if (!initialized) return false
     }
+
+    if (signal?.aborted) return false
 
     if (this.isListening) {
       console.warn('语音识别已经在进行中')
@@ -276,6 +289,7 @@ export class SpeechRecognitionEngine {
 
     try {
       this.recognition.start()
+      this.bindAbortSignal(signal)
       return true
     } catch (error) {
       console.error('启动语音识别失败:', error)
@@ -288,10 +302,24 @@ export class SpeechRecognitionEngine {
     }
   }
 
+  private bindAbortSignal(signal?: AbortSignal): void {
+    this.unbindAbortSignal()
+    if (!signal) return
+    const onAbort = () => this.stop()
+    signal.addEventListener('abort', onAbort, { once: true })
+    this.abortCleanup = () => signal.removeEventListener('abort', onAbort)
+  }
+
+  private unbindAbortSignal(): void {
+    this.abortCleanup?.()
+    this.abortCleanup = null
+  }
+
   /**
    * 停止语音识别
    */
   stop(): void {
+    this.unbindAbortSignal()
     if (!this.isListening || !this.recognition) return
 
     try {
@@ -472,10 +500,8 @@ export class SpeechRecognitionEngine {
       this.mediaStream = null
     }
     
-    if (this.audioContext) {
-      this.audioContext.close()
-      this.audioContext = null
-    }
+    // AudioContext 由全应用共享管理，销毁引擎时不关闭，避免影响其他音频消费者
+    this.audioContext = null
     
     this.listeners.clear()
     this.resultHistory = []

@@ -208,6 +208,79 @@ describe('网络模式 · 请求构造与鉴权', () => {
   })
 })
 
+describe('网络模式 · AbortSignal 取消', () => {
+  it('已中止的 signal 不发起请求，apiFetch 返回 null', async () => {
+    const mod = await loadRemote()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+    controller.abort()
+
+    await expect(mod.apiFetch('/x', { signal: controller.signal })).resolves.toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('已中止的 signal 让 apiFetchStrict 抛出 AbortError', async () => {
+    const mod = await loadRemote()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+    controller.abort()
+
+    const error = await mod.apiFetchStrict('/x', { signal: controller.signal }).catch((e) => e)
+    expect(mod.isAbortError(error)).toBe(true)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('fetch 以 AbortError 拒绝时不重试、不告警', async () => {
+    const mod = await loadRemote()
+    const abortError = Object.assign(new Error('aborted'), { name: 'AbortError' })
+    const fetchMock = vi.fn().mockRejectedValue(abortError)
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+
+    await expect(mod.apiFetch('/x', { signal: controller.signal })).resolves.toBeNull()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+
+  it('网络失败后的重试等待期间中止：不再发起第二次请求', async () => {
+    vi.useFakeTimers()
+    const mod = await loadRemote()
+    const fetchMock = vi.fn().mockRejectedValue(new Error('offline'))
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+
+    const promise = mod.apiFetch('/x', { signal: controller.signal })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    controller.abort()
+    await expect(promise).resolves.toBeNull()
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('429 退避等待期间中止：不再发起重试请求', async () => {
+    vi.useFakeTimers()
+    const mod = await loadRemote()
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeResponse({ ok: false, status: 429, statusText: 'Too Many Requests' })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const controller = new AbortController()
+
+    const promise = mod.apiFetch('/x', { signal: controller.signal })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    controller.abort()
+    await expect(promise).resolves.toBeNull()
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('网络模式 · 错误与非 JSON 响应', () => {
   it('非 2xx 响应返回 null 并记录警告', async () => {
     const mod = await loadRemote()

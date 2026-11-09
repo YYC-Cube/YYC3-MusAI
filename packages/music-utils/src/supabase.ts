@@ -114,6 +114,40 @@ export class ApiError extends Error {
 // Shared: auth token + fetch helpers
 // =============================================
 
+/** 判断是否为请求中止错误（兼容 DOMException 与普通 Error） */
+export function isAbortError(error: unknown): boolean {
+  return !!error && typeof error === 'object' && (error as { name?: string }).name === 'AbortError';
+}
+
+function createAbortError(): Error {
+  const error = new Error('The operation was aborted');
+  error.name = 'AbortError';
+  return error;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw createAbortError();
+}
+
+/** 可中止的延时；中止时立即 reject，并移除监听避免泄漏 */
+function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(createAbortError());
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(createAbortError());
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
 async function getAuthToken(): Promise<string> {
   if (LOCAL_MODE) return '';
   try {
@@ -140,17 +174,23 @@ async function doFetchWithRetry(
   headers: Record<string, string>,
   path: string
 ): Promise<Response> {
-  const doFetch = () => fetch(url, { ...options, headers });
+  const doFetch = () => {
+    throwIfAborted(options?.signal);
+    return fetch(url, { ...options, headers });
+  };
 
   let res: Response;
   try {
     res = await doFetch();
   } catch (firstErr) {
+    // 主动中止不重试、不包装
+    if (isAbortError(firstErr)) throw firstErr;
     // Retry once (covers cold-start / transient network errors)
     try {
-      await new Promise((r) => setTimeout(r, 1500));
+      await abortableSleep(1500, options?.signal);
       res = await doFetch();
     } catch (retryErr) {
+      if (isAbortError(retryErr)) throw retryErr;
       throw new ApiError({
         message: `[apiFetch] ${path} network error after retry: ${retryErr}`,
         path,
@@ -167,10 +207,11 @@ async function doFetchWithRetry(
     console.warn(
       `[apiFetch] ${path} rate-limited (429). Retrying after ${waitMs}ms...`
     );
-    await new Promise((r) => setTimeout(r, waitMs));
+    await abortableSleep(waitMs, options?.signal);
     try {
       res = await doFetch();
     } catch (retryErr) {
+      if (isAbortError(retryErr)) throw retryErr;
       throw new ApiError({
         message: `[apiFetch] ${path} network error during 429 retry: ${retryErr}`,
         path,
@@ -239,6 +280,8 @@ export async function apiFetch<T = any>(
       return null;
     }
   } catch (err) {
+    // 主动中止属于预期控制流：静默返回 null，不打印告警
+    if (isAbortError(err)) return null;
     if (err instanceof ApiError) {
       console.warn(`[apiFetch] ${err.message}`);
     } else {
@@ -279,6 +322,8 @@ export async function apiFetchStrict<T = any>(
       isNetworkError: true,
     });
   }
+
+  throwIfAborted(options?.signal);
 
   const token = await getAuthToken();
   const headers = buildHeaders(token, options?.headers as Record<string, string> | undefined);

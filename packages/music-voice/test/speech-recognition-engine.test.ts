@@ -4,6 +4,7 @@
  *              结果与事件、语言切换、静音检测、错误处理、历史与销毁。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { disposeSharedAudioContext } from '@yyc3/music-utils'
 import { SpeechRecognitionEngine } from '../src/SpeechRecognitionEngine'
 import {
   createAudioContextMock,
@@ -27,6 +28,7 @@ describe('SpeechRecognitionEngine', () => {
 
   beforeEach(() => {
     localStorage.clear()
+    void disposeSharedAudioContext()
     vi.spyOn(console, 'log').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -175,6 +177,24 @@ describe('SpeechRecognitionEngine', () => {
     it('初始化失败时 start 返回 false', async () => {
       env.restore()
       await expect(engine.start()).resolves.toBe(false)
+    })
+
+    it('signal 已中止时 start 直接返回 false 且不调用识别器', async () => {
+      const controller = new AbortController()
+      controller.abort()
+
+      await expect(engine.start(controller.signal)).resolves.toBe(false)
+      expect(env.instances).toHaveLength(0)
+    })
+
+    it('监听中触发 abort 会自动停止识别', async () => {
+      const controller = new AbortController()
+      await engine.start(controller.signal)
+      env.latest().onstart!()
+      expect(engine.getStatus().isListening).toBe(true)
+
+      controller.abort()
+      expect(env.latest().stop).toHaveBeenCalledTimes(1)
     })
 
     it('识别器 start 抛错时返回 false 并派发 start 错误', async () => {
@@ -408,14 +428,14 @@ describe('SpeechRecognitionEngine', () => {
   })
 
   describe('销毁', () => {
-    it('销毁时停止媒体流、关闭音频上下文并清空状态与监听器', async () => {
+    it('销毁时停止媒体流、保留共享音频上下文并清空状态与监听器', async () => {
       await engine.initialize()
       env.latest().onstart!()
 
       engine.destroy()
 
       expect(mic.track.stop).toHaveBeenCalledTimes(1)
-      expect(mic.audioContext.close).toHaveBeenCalledTimes(1)
+      expect(mic.audioContext.close).not.toHaveBeenCalled()
       expect(engine.getStatus()).toMatchObject({
         isInitialized: false,
         isListening: false,

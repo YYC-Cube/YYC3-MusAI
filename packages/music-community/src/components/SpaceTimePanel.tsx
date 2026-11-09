@@ -7,7 +7,7 @@ import {
   MapPin, Navigation, Compass, Type, Shield, ShieldCheck, KeyRound,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { apiFetch } from '@yyc3/music-utils';
+import { apiFetch, getSharedAudioContext } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';
 import { DEMO_PLAYLIST } from '@yyc3/music-data';
 
@@ -446,7 +446,9 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
 
   const generateWaveform = async (blob: Blob) => {
     try {
-      const audioCtx = new AudioContext();
+      // 复用全应用共享 AudioContext，仅做解码，不创建/关闭独立上下文
+      const audioCtx = getSharedAudioContext();
+      if (!audioCtx) throw new Error('WebAudio 不可用');
       const buf = await blob.arrayBuffer();
       const decoded = await audioCtx.decodeAudioData(buf);
       const raw = decoded.getChannelData(0);
@@ -460,7 +462,6 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
       }
       const max = Math.max(...wf, 0.001);
       setAudioWaveform(wf.map(v => v / max));
-      audioCtx.close();
     } catch { setAudioWaveform(Array(40).fill(0.3)); }
   };
 

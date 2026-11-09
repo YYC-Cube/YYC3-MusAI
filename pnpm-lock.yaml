@@ -624,6 +624,9 @@ importers:
 
   packages/music-voice:
     dependencies:
+      '@yyc3/music-utils':
+        specifier: workspace:*
+        version: link:../music-utils
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
