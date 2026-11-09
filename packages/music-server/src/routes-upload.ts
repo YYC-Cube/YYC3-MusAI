@@ -535,7 +535,7 @@ export function registerUploadRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/upload/media/:mediaId`, async (c: any) => {
     const mediaId = c.req.param('mediaId');
     // Exclude lyrics sub-routes
-    if (mediaId === 'lyrics') return;
+    if (mediaId === 'lyrics') return c.json({ error: 'Media not found' }, 404);
     try {
       const raw = await kv.get(`media:${mediaId}`);
       if (!raw) {

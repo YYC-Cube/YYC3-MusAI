@@ -259,7 +259,7 @@ class PlayerUI {
                 function formatTime(seconds) {
                     const mins = Math.floor(seconds / 60);
                     const secs = Math.floor(seconds % 60);
-                    return {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')};
+                    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
                 }
 
                 // 更新播放器状态
@@ -526,7 +526,7 @@ class PlayerUI {
                 function formatTime(seconds) {
                     const mins = Math.floor(seconds / 60);
                     const secs = Math.floor(seconds % 60);
-                    return {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')};
+                    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
                 }
 
                 // 更新播放器状态
@@ -788,7 +788,7 @@ class PlayerUI {
                 function formatTime(seconds) {
                     const mins = Math.floor(seconds / 60);
                     const secs = Math.floor(seconds % 60);
-                    return {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')};
+                    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
                 }
 
                 // 更新播放器状态

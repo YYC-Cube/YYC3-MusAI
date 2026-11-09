@@ -34,45 +34,50 @@ const XiaoyuWrapper = styled(motion.div)<{ isDragging: boolean }>`
   height: auto;
 `;
 
+const ANIMATION_PATHS: Record<XiaoyuEmotionType, string> = {
+  happy: '/assets/animations/xiaoyu-happy.json',
+  anxious: '/assets/animations/xiaoyu-anxious.json',
+  surprised: '/assets/animations/xiaoyu-surprised.json',
+  neutral: '/assets/animations/xiaoyu-neutral.json'
+};
+
 const XiaoyuCharacter: React.FC<XiaoyuCharacterProps> = ({ userEmotion = 'neutral' }) => {
   const [animData, setAnimData] = useState<any>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 'right: 20px', y: 'bottom: 20px' });
+  const [position, setPosition] = useState({ right: 20, bottom: 20 });
 
   useEffect(() => {
+    let cancelled = false;
     const loadAnim = async () => {
-      switch (userEmotion) {
-        case 'happy':
-          setAnimData(await import('@/public/assets/animations/xiaoyu-happy.json'));
-          break;
-        case 'anxious':
-          setAnimData(await import('@/public/assets/animations/xiaoyu-anxious.json'));
-          break;
-        case 'surprised':
-          setAnimData(await import('@/public/assets/animations/xiaoyu-surprised.json'));
-          break;
-        default:
-          setAnimData(await import('@/public/assets/animations/xiaoyu-neutral.json'));
+      try {
+        // 动画资源随应用 public 目录发布，避免包内无法解析应用别名
+        const response = await fetch(ANIMATION_PATHS[userEmotion] || ANIMATION_PATHS.neutral);
+        const data = await response.json();
+        if (!cancelled) setAnimData(data);
+      } catch {
+        if (!cancelled) setAnimData(null);
       }
     };
     loadAnim();
+    return () => {
+      cancelled = true;
+    };
   }, [userEmotion]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     const startX = e.clientX;
     const startY = e.clientY;
-    const wrapper = document.querySelector('.xiaoyu-character') as HTMLElement;
-    const initialRight = parseInt(wrapper.style.right || '20');
-    const initialBottom = parseInt(wrapper.style.bottom || '20');
+    const wrapper = document.querySelector('.xiaoyu-character') as HTMLElement | null;
+    const initialRight = parseInt(wrapper?.style.right || '20', 10);
+    const initialBottom = parseInt(wrapper?.style.bottom || '20', 10);
 
     const handleMouseMove = (moveE: MouseEvent) => {
-      if (!isDragging) return;
       const deltaX = startX - moveE.clientX;
       const deltaY = startY - moveE.clientY;
       setPosition({
-        x: `right: ${initialRight + deltaX}px`,
-        y: `bottom: ${initialBottom + deltaY}px`
+        right: initialRight + deltaX,
+        bottom: initialBottom + deltaY
       });
     };
 
@@ -91,7 +96,7 @@ const XiaoyuCharacter: React.FC<XiaoyuCharacterProps> = ({ userEmotion = 'neutra
   return (
     <XiaoyuWrapper
       className="xiaoyu-character"
-      style={{ ...position }}
+      style={{ right: `${position.right}px`, bottom: `${position.bottom}px` }}
       isDragging={isDragging}
       onMouseDown={handleMouseDown}
       initial={{ opacity: 0, scale: 0.8 }}

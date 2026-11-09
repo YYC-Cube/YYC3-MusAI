@@ -300,8 +300,8 @@ export const achievementTrackSchema = z.object({
 // Helper: validate and return parsed data or error response
 // ============================================================
 
-export function validate<T>(schema: z.ZodSchema<T>, data: unknown):
-  { success: true; data: T } | { success: false; error: string } {
+export function validate<T extends z.ZodTypeAny>(schema: T, data: unknown):
+  { success: true; data: z.infer<T> } | { success: false; error: string } {
   const result = schema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };

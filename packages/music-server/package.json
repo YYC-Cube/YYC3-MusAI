@@ -8,7 +8,9 @@
     "src"
   ],
   "scripts": {
-    "deploy": "supabase functions deploy make-server-f626b673 --project-ref $SUPABASE_PROJECT_REF"
+    "deploy": "supabase functions deploy make-server-f626b673 --project-ref $SUPABASE_PROJECT_REF",
+    "test:deno": "env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno test --allow-all test-deno",
+    "test:deno:coverage": "rm -rf /tmp/deno-cov && env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno test --allow-all --coverage=/tmp/deno-cov test-deno && env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno coverage /tmp/deno-cov --exclude=test-deno --exclude=src/index.tsx --lcov --output=/tmp/deno-src.lcov"
   },
   "keywords": [
     "yyc3",

@@ -149,9 +149,10 @@ export class VoiceContextManager {
       
       // 匹配时间格式
       const timePatterns = [
-        { pattern: /(\d{1,2}):(\d{2})/, type: 'time' },
-        { pattern: /(\d+)\s*(分钟|小时|天|周|月)/, type: 'duration' },
-        { pattern: /(现在|马上|立即)/, type: 'immediate' }
+        // matchAll 要求正则带 g 标志，否则运行时抛 TypeError
+        { pattern: /(\d{1,2}):(\d{2})/g, type: 'time' },
+        { pattern: /(\d+)\s*(分钟|小时|天|周|月)/g, type: 'duration' },
+        { pattern: /(现在|马上|立即)/g, type: 'immediate' }
       ]
       
       timePatterns.forEach(({ pattern, type }) => {
@@ -175,9 +176,10 @@ export class VoiceContextManager {
       const entities = []
       
       const datePatterns = [
-        { pattern: /(今天|明天|后天|昨天)/, type: 'relative_date' },
-        { pattern: /(\d{4})年(\d{1,2})月(\d{1,2})日/, type: 'absolute_date' },
-        { pattern: /(\d{1,2})月(\d{1,2})日/, type: 'month_day' }
+        // matchAll 要求正则带 g 标志，否则运行时抛 TypeError
+        { pattern: /(今天|明天|后天|昨天)/g, type: 'relative_date' },
+        { pattern: /(\d{4})年(\d{1,2})月(\d{1,2})日/g, type: 'absolute_date' },
+        { pattern: /(\d{1,2})月(\d{1,2})日/g, type: 'month_day' }
       ]
       
       datePatterns.forEach(({ pattern, type }) => {

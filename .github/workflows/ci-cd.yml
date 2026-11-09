@@ -38,8 +38,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Unit tests
-        run: pnpm test
+      - name: Unit tests + coverage gate (>=80%)
+        run: pnpm test:coverage
 
       - name: Build
         run: pnpm build
@@ -50,6 +50,30 @@ jobs:
           name: d-music-dist
           path: apps/d-music/dist
           retention-days: 7
+
+  server-integration:
+    name: Deno Integration (music-server)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run Deno integration tests
+        working-directory: packages/music-server
+        run: deno test --allow-all test-deno
+
+      - name: Deno coverage gate (>=80%)
+        working-directory: packages/music-server
+        run: |
+          rm -rf /tmp/deno-cov
+          deno test --allow-all --coverage=/tmp/deno-cov test-deno
+          deno coverage /tmp/deno-cov --exclude=test-deno --exclude=src/index.tsx --lcov --output=/tmp/deno-src.lcov
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END {pct=lh/lf*100; printf "Deno src coverage: %.2f%% (%d/%d)\n", pct, lh, lf; exit (pct>=80?0:1)}' /tmp/deno-src.lcov
 
   security:
     name: Security Scan

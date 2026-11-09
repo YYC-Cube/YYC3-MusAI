@@ -83,7 +83,8 @@ export function registerChallengeRoutes(app: any) {
         }
         const theme = CHALLENGE_THEMES[Math.floor(Math.random() * CHALLENGE_THEMES.length)];
         challenge = {
-          id: `challenge-${Date.now()}`, ...theme,
+          ...theme,
+          id: `challenge-${Date.now()}`,
           startsAt: now, endsAt: now + 7 * 86400000,
           week: Math.floor(now / (7 * 86400000)),
           judgeWeight: 0.7, communityWeight: 0.3,
