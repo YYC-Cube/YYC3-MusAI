@@ -4,6 +4,8 @@
 // 如需接入新后端，仅需配置 VITE_API_BASE（形如 https://api.example.com/functions/v1/xxx）。
 // =============================================
 
+import { isLocalMode, localApiFetch } from './localMode';
+
 const API_ORIGIN = ((import.meta.env.VITE_API_BASE as string | undefined) ?? '').trim();
 
 /** 后端基地址；为空表示本地模式，所有 API 调用直接短路，不发起网络请求 */
@@ -119,13 +121,13 @@ export function isAbortError(error: unknown): boolean {
   return !!error && typeof error === 'object' && (error as { name?: string }).name === 'AbortError';
 }
 
-function createAbortError(): Error {
+export function createAbortError(): Error {
   const error = new Error('The operation was aborted');
   error.name = 'AbortError';
   return error;
 }
 
-function throwIfAborted(signal?: AbortSignal): void {
+export function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw createAbortError();
 }
 
@@ -240,6 +242,11 @@ async function doFetchWithRetry(
 // apiFetch (backward-compatible, returns T | null)
 // =============================================
 
+/** 非中止失败后的缓存回退：读该 path 的本地快照，未命中仍返回 null */
+function fallbackToLocal<T>(path: string): Promise<T | null> {
+  return localApiFetch<T>(path);
+}
+
 /**
  * Resilient fetch wrapper — retries once on network failure,
  * handles 429 rate-limit with Retry-After back-off,
@@ -250,6 +257,11 @@ async function doFetchWithRetry(
  * Returns `null` on any error (backward-compatible behavior).
  * For strict error handling, use `apiFetchStrict` instead.
  *
+ * 降级规则：
+ * - isLocalMode() 开启时完全走本地缓存，不发网络请求；
+ * - 远程请求失败（非中止）时优先返回该 path 的本地缓存，否则维持 null；
+ * - 主动中止不降级，仍按既有控制流返回 null。
+ *
  * §5.4 — 429 Too Many Requests 友好处理
  * §L-3 — Enhanced error context logging
  */
@@ -257,7 +269,10 @@ export async function apiFetch<T = any>(
   path: string,
   options?: RequestInit
 ): Promise<T | null> {
-  // 本地模式：不发起任何网络请求，直接返回 null（与原错误分支行为一致）
+  // 本地模式：读写本地缓存，不发起任何网络请求
+  if (isLocalMode()) return localApiFetch<T>(path, options);
+
+  // 未配置后端：保持原有短路语义，直接返回 null
   if (LOCAL_MODE) return null;
 
   try {
@@ -270,24 +285,26 @@ export async function apiFetch<T = any>(
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       console.warn(`[apiFetch] ${path} responded ${res.status} ${res.statusText}: ${text.slice(0, 200)}`);
-      return null;
+      // 4xx 是确定性客户端错误（鉴权/参数），用缓存冒充成功会掩盖问题；
+      // 仅 5xx 与 429 视为可用性故障并降级
+      return res.status >= 500 || res.status === 429 ? fallbackToLocal<T>(path) : null;
     }
 
     try {
       return (await res.json()) as T;
     } catch {
       console.warn(`[apiFetch] ${path} returned non-JSON response`);
-      return null;
+      return fallbackToLocal<T>(path);
     }
   } catch (err) {
-    // 主动中止属于预期控制流：静默返回 null，不打印告警
+    // 主动中止属于预期控制流：静默返回 null，不打印告警，也不降级
     if (isAbortError(err)) return null;
     if (err instanceof ApiError) {
       console.warn(`[apiFetch] ${err.message}`);
     } else {
       console.warn(`[apiFetch] ${path} unexpected error:`, err);
     }
-    return null;
+    return fallbackToLocal<T>(path);
   }
 }
 
@@ -315,6 +332,8 @@ export async function apiFetchStrict<T = any>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
+  // 严格模式不参与本地降级：调用方需要真实的远端结果（如扣费、写库），
+  // 静默返回缓存会把网络故障伪装成成功，因此失败照旧抛 ApiError。
   if (LOCAL_MODE) {
     throw new ApiError({
       message: `[apiFetchStrict] ${path} 本地模式未配置后端（VITE_API_BASE 为空）`,
