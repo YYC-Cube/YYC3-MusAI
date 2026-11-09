@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-09T16:34:46.302Z",
+  "generatedAt": "2026-11-09T16:57:56.311Z",
   "current": {
     "files": 187,
     "loc": 59879,
@@ -1047,5 +1047,30 @@
         "businessOverlap": 6
       }
     ]
+  },
+  "policy": {
+    "includeRule": "存在 package.json 或 .git，且含 src/**/*.tsx 才定级为项目",
+    "excluded": [
+      {
+        "path": "/Volumes/YYC3-OPS",
+        "reason": "非项目路径，无需扫描"
+      },
+      {
+        "path": "/Users/yanyu/Models",
+        "reason": "模型与数据集，不含应用代码"
+      },
+      {
+        "path": "/Users/yanyu/YanYuCloudCube",
+        "reason": "指定不扫描"
+      }
+    ],
+    "primarySync": {
+      "path": "/Users/yanyu/YYC-Cube",
+      "reason": "本地同步远程仓库的主目录，副本不重复计入"
+    },
+    "archive": {
+      "path": "/Volumes/Development",
+      "reason": "进阶存档库，本地与远程同步仓已基本覆盖；仅追溯时只读抽查"
+    }
   }
 }

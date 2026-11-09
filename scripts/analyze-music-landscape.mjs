@@ -33,6 +33,18 @@ const PROJECTS = [
   { key: 'music-player', group: 'music-player', label: 'YYC3-Music-Player', dir: path.join(SIBLINGS_ROOT, 'YYC3-Music-Player') },
 ];
 
+/** 扫描范围裁决：与项目记忆保持一致，避免把素材/模型/存档误判为项目 */
+const DISCOVERY_POLICY = {
+  includeRule: '存在 package.json 或 .git，且含 src/**/*.tsx 才定级为项目',
+  excluded: [
+    { path: '/Volumes/YYC3-OPS', reason: '非项目路径，无需扫描' },
+    { path: '/Users/yanyu/Models', reason: '模型与数据集，不含应用代码' },
+    { path: '/Users/yanyu/YanYuCloudCube', reason: '指定不扫描' },
+  ],
+  primarySync: { path: '/Users/yanyu/YYC-Cube', reason: '本地同步远程仓库的主目录，副本不重复计入' },
+  archive: { path: '/Volumes/Development', reason: '进阶存档库，本地与远程同步仓已基本覆盖；仅追溯时只读抽查' },
+};
+
 /** 通用原语名：重名不代表重复实现，不进入抽取候选 */
 const GENERIC = new Set([
   'Button', 'Card', 'Input', 'Label', 'Badge', 'Dialog', 'Sheet', 'Tabs', 'Tooltip',
@@ -280,6 +292,12 @@ for (const s of siblings) {
   }
 }
 
+const policyRows = [
+  ...DISCOVERY_POLICY.excluded.map((e) => [e.path, '排除', e.reason]),
+  [DISCOVERY_POLICY.primarySync.path, '主目录（不重复计数）', DISCOVERY_POLICY.primarySync.reason],
+  [DISCOVERY_POLICY.archive.path, '存档（仅追溯）', DISCOVERY_POLICY.archive.reason],
+];
+
 const report = {
   generatedAt: new Date().toISOString(),
   current: { ...toRows(current), name: currentPkg.name },
@@ -297,6 +315,7 @@ const report = {
     current: uiCount(current),
     siblings: matrix.map((m) => ({ key: m.key, total: m.ui.total, business: m.ui.business, businessOverlap: m.ui.businessOverlap })),
   },
+  policy: DISCOVERY_POLICY,
 };
 const OUT_DIR = path.join(CURRENT, 'docs');
 const jsonPath = path.join(OUT_DIR, 'YYC3-MusAI-音乐场景差异矩阵-2026-11-10.json');
@@ -343,6 +362,16 @@ complexity: intermediate
 | 项目 | 名称 | React | Vite | Tailwind | 测试栈 |
 | --- | --- | --- | --- | --- | --- |
 ${table(stackRows)}
+
+### 1.2 扫描范围裁决
+
+仅收纳代码仓库（${DISCOVERY_POLICY.includeRule}）；下列范围不纳入统计：
+
+| 范围 | 处置 | 理由 |
+| --- | --- | --- |
+${table(policyRows)}
+
+> 本矩阵为「活跃代码仓库」口径，不代表本机全盘覆盖。
 
 ## 二、能力总览
 
