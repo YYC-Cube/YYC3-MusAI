@@ -11,6 +11,32 @@
   "bugs": {
     "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
   },
+  "keywords": [
+    "yyc3",
+    "musai",
+    "yyc3-musai",
+    "music",
+    "ai-music",
+    "music-player",
+    "music-generation",
+    "audio-visualizer",
+    "lyrics",
+    "emotion-analysis",
+    "react",
+    "react19",
+    "vite",
+    "typescript",
+    "monorepo",
+    "turborepo",
+    "pnpm-workspace",
+    "tailwindcss",
+    "shadcn-ui",
+    "radix-ui",
+    "pwa",
+    "web-audio",
+    "canvas",
+    "recharts"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
