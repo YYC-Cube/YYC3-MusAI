@@ -51,6 +51,7 @@
     "verify:packs": "node scripts/verify-packs.mjs",
     "smoke:packs": "node scripts/smoke-pack-install.mjs",
     "registry:build": "node scripts/generate-registry.mjs",
+    "analyze:landscape": "node scripts/analyze-music-landscape.mjs",
     "docs:dev": "pnpm --filter @yyc3/component-docs dev",
     "docs:build": "pnpm --filter @yyc3/component-docs build",
     "check:supabase": "node scripts/check-supabase-health.mjs",

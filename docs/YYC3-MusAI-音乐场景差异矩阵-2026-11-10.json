@@ -1,0 +1,1051 @@
+{
+  "generatedAt": "2026-11-09T16:34:46.302Z",
+  "current": {
+    "files": 187,
+    "loc": 59879,
+    "components": 320,
+    "hooks": 11,
+    "services": 98,
+    "name": "yyc3-musai"
+  },
+  "stack": [
+    {
+      "key": "current",
+      "label": "YYC3-Music（当前源）",
+      "name": "yyc3-musai",
+      "react": "-",
+      "vite": "7.3.7",
+      "tailwind": "-",
+      "typescript": "^5.9.3",
+      "test": "vitest/playwright"
+    },
+    {
+      "key": "dmusai-web",
+      "label": "YYC3-D-MusAI / frontend",
+      "name": "musai-frontend",
+      "react": "^18.3.1",
+      "vite": "^6.4.5",
+      "tailwind": "^4.0.0",
+      "typescript": "^5.6.3",
+      "test": "vitest/playwright"
+    },
+    {
+      "key": "dmusai-mobile",
+      "label": "YYC3-D-MusAI / mobile-app",
+      "name": "musai-mobile",
+      "react": "19.2.3",
+      "vite": "-",
+      "tailwind": "-",
+      "typescript": "^5.3.3",
+      "test": "jest"
+    },
+    {
+      "key": "music-ai",
+      "label": "YYC3-Music-AI",
+      "name": "yyc3-music-ai",
+      "react": "18.3.1",
+      "vite": "8.3.3",
+      "tailwind": "4.1.12",
+      "typescript": "-",
+      "test": "-"
+    },
+    {
+      "key": "music-player",
+      "label": "YYC3-Music-Player",
+      "name": "@yyc3/music-player",
+      "react": "-",
+      "vite": "8.3.2",
+      "tailwind": "4.1.12",
+      "typescript": "-",
+      "test": "-"
+    }
+  ],
+  "matrix": [
+    {
+      "key": "dmusai-web",
+      "label": "YYC3-D-MusAI / frontend",
+      "files": 64,
+      "loc": 12972,
+      "components": 26,
+      "hooks": 15,
+      "services": 42,
+      "overlap": {
+        "components": {
+          "overlap": 18,
+          "unique": 8,
+          "ratio": 69.2
+        },
+        "hooks": {
+          "overlap": 4,
+          "unique": 11,
+          "ratio": 26.7
+        },
+        "services": {
+          "overlap": 20,
+          "unique": 22,
+          "ratio": 47.6
+        }
+      }
+    },
+    {
+      "key": "dmusai-mobile",
+      "label": "YYC3-D-MusAI / mobile-app",
+      "files": 47,
+      "loc": 11406,
+      "components": 16,
+      "hooks": 7,
+      "services": 10,
+      "overlap": {
+        "components": {
+          "overlap": 0,
+          "unique": 16,
+          "ratio": 0
+        },
+        "hooks": {
+          "overlap": 0,
+          "unique": 7,
+          "ratio": 0
+        },
+        "services": {
+          "overlap": 0,
+          "unique": 10,
+          "ratio": 0
+        }
+      }
+    },
+    {
+      "key": "music-ai",
+      "label": "YYC3-Music-AI",
+      "files": 69,
+      "loc": 8620,
+      "components": 246,
+      "hooks": 7,
+      "services": 13,
+      "overlap": {
+        "components": {
+          "overlap": 240,
+          "unique": 6,
+          "ratio": 97.6
+        },
+        "hooks": {
+          "overlap": 3,
+          "unique": 4,
+          "ratio": 42.9
+        },
+        "services": {
+          "overlap": 1,
+          "unique": 12,
+          "ratio": 7.7
+        }
+      }
+    },
+    {
+      "key": "music-player",
+      "label": "YYC3-Music-Player",
+      "files": 83,
+      "loc": 26483,
+      "components": 273,
+      "hooks": 4,
+      "services": 12,
+      "overlap": {
+        "components": {
+          "overlap": 244,
+          "unique": 29,
+          "ratio": 89.4
+        },
+        "hooks": {
+          "overlap": 3,
+          "unique": 1,
+          "ratio": 75
+        },
+        "services": {
+          "overlap": 1,
+          "unique": 11,
+          "ratio": 8.3
+        }
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "kind": "components",
+      "name": "CoverFlow",
+      "projects": [
+        "dmusai-web",
+        "music-ai"
+      ],
+      "groups": [
+        "dmusai",
+        "music-ai"
+      ],
+      "loc": 716,
+      "score": 23
+    },
+    {
+      "kind": "hooks",
+      "name": "useResponsive",
+      "projects": [
+        "dmusai-web",
+        "music-ai"
+      ],
+      "groups": [
+        "dmusai",
+        "music-ai"
+      ],
+      "loc": 86,
+      "score": 20
+    }
+  ],
+  "conflicts": [
+    {
+      "kind": "components",
+      "name": "AudioVisualizer",
+      "project": "YYC3-D-MusAI / frontend",
+      "currentLoc": 206,
+      "siblingLoc": 486,
+      "currentFile": "packages/music-player/src/components/AudioVisualizer.tsx",
+      "siblingFile": "src/components/AudioVisualizer.tsx"
+    },
+    {
+      "kind": "components",
+      "name": "App",
+      "project": "YYC3-Music-AI",
+      "currentLoc": 2048,
+      "siblingLoc": 197,
+      "currentFile": "apps/d-music/src/app/App.tsx",
+      "siblingFile": "src/app/App.tsx"
+    },
+    {
+      "kind": "components",
+      "name": "App",
+      "project": "YYC3-Music-Player",
+      "currentLoc": 2048,
+      "siblingLoc": 158,
+      "currentFile": "apps/d-music/src/app/App.tsx",
+      "siblingFile": "src/app/App.tsx"
+    },
+    {
+      "kind": "components",
+      "name": "AIAssistant",
+      "project": "YYC3-Music-Player",
+      "currentLoc": 576,
+      "siblingLoc": 1700,
+      "currentFile": "packages/music-ai/src/components/AIAssistant.tsx",
+      "siblingFile": "src/app/components/AIAssistant.tsx"
+    },
+    {
+      "kind": "components",
+      "name": "OfflineIndicator",
+      "project": "YYC3-Music-Player",
+      "currentLoc": 101,
+      "siblingLoc": 296,
+      "currentFile": "apps/d-music/src/app/components/OfflineIndicator.tsx",
+      "siblingFile": "src/app/components/MobileNavBar.tsx"
+    }
+  ],
+  "solo": [
+    {
+      "kind": "components",
+      "name": "ChatRoom",
+      "project": "dmusai-web",
+      "loc": 265
+    },
+    {
+      "kind": "components",
+      "name": "AuroraBackground",
+      "project": "dmusai-web",
+      "loc": 143
+    },
+    {
+      "kind": "components",
+      "name": "CRTOverlay",
+      "project": "dmusai-web",
+      "loc": 143
+    },
+    {
+      "kind": "components",
+      "name": "TiltCover",
+      "project": "dmusai-web",
+      "loc": 143
+    },
+    {
+      "kind": "components",
+      "name": "GlassCard",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "components",
+      "name": "GlitchText",
+      "project": "dmusai-web",
+      "loc": 89
+    },
+    {
+      "kind": "components",
+      "name": "ParticleCanvas",
+      "project": "dmusai-web",
+      "loc": 227
+    },
+    {
+      "kind": "hooks",
+      "name": "useSongs",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useSong",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useHotSongs",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useCreateSong",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useUpdateSong",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useDeleteSong",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useToggleLike",
+      "project": "dmusai-web",
+      "loc": 83
+    },
+    {
+      "kind": "hooks",
+      "name": "useYouTubeAPI",
+      "project": "dmusai-web",
+      "loc": 59
+    },
+    {
+      "kind": "services",
+      "name": "coverImages",
+      "project": "dmusai-web",
+      "loc": 174
+    },
+    {
+      "kind": "services",
+      "name": "posterImages",
+      "project": "dmusai-web",
+      "loc": 174
+    },
+    {
+      "kind": "services",
+      "name": "artistCover",
+      "project": "dmusai-web",
+      "loc": 174
+    },
+    {
+      "kind": "services",
+      "name": "mockTracks",
+      "project": "dmusai-web",
+      "loc": 174
+    },
+    {
+      "kind": "services",
+      "name": "mockPlaylists",
+      "project": "dmusai-web",
+      "loc": 174
+    },
+    {
+      "kind": "services",
+      "name": "AudioEngine",
+      "project": "dmusai-web",
+      "loc": 371
+    },
+    {
+      "kind": "services",
+      "name": "removeCanvasPerf",
+      "project": "dmusai-web",
+      "loc": 37
+    },
+    {
+      "kind": "services",
+      "name": "queryClient",
+      "project": "dmusai-web",
+      "loc": 18
+    },
+    {
+      "kind": "services",
+      "name": "registerServiceWorker",
+      "project": "dmusai-web",
+      "loc": 105
+    },
+    {
+      "kind": "services",
+      "name": "unregisterServiceWorker",
+      "project": "dmusai-web",
+      "loc": 105
+    },
+    {
+      "kind": "services",
+      "name": "default",
+      "project": "dmusai-web",
+      "loc": 3
+    },
+    {
+      "kind": "services",
+      "name": "api",
+      "project": "dmusai-web",
+      "loc": 3
+    },
+    {
+      "kind": "services",
+      "name": "login",
+      "project": "dmusai-web",
+      "loc": 64
+    },
+    {
+      "kind": "services",
+      "name": "register",
+      "project": "dmusai-web",
+      "loc": 64
+    },
+    {
+      "kind": "services",
+      "name": "refreshToken",
+      "project": "dmusai-web",
+      "loc": 64
+    },
+    {
+      "kind": "services",
+      "name": "getProfile",
+      "project": "dmusai-web",
+      "loc": 64
+    },
+    {
+      "kind": "services",
+      "name": "updateProfile",
+      "project": "dmusai-web",
+      "loc": 64
+    },
+    {
+      "kind": "services",
+      "name": "changePassword",
+      "project": "dmusai-web",
+      "loc": 64
+    },
+    {
+      "kind": "services",
+      "name": "chatService",
+      "project": "dmusai-web",
+      "loc": 165
+    },
+    {
+      "kind": "services",
+      "name": "songService",
+      "project": "dmusai-web",
+      "loc": 113
+    },
+    {
+      "kind": "services",
+      "name": "projectId",
+      "project": "dmusai-web",
+      "loc": 3
+    },
+    {
+      "kind": "services",
+      "name": "publicAnonKey",
+      "project": "dmusai-web",
+      "loc": 3
+    },
+    {
+      "kind": "components",
+      "name": "BiometricAuth",
+      "project": "dmusai-mobile",
+      "loc": 178
+    },
+    {
+      "kind": "components",
+      "name": "AuthProvider",
+      "project": "dmusai-mobile",
+      "loc": 30
+    },
+    {
+      "kind": "components",
+      "name": "PlayerProvider",
+      "project": "dmusai-mobile",
+      "loc": 26
+    },
+    {
+      "kind": "components",
+      "name": "ThemeProvider",
+      "project": "dmusai-mobile",
+      "loc": 30
+    },
+    {
+      "kind": "components",
+      "name": "AppNavigator",
+      "project": "dmusai-mobile",
+      "loc": 184
+    },
+    {
+      "kind": "components",
+      "name": "BiometricSetupScreen",
+      "project": "dmusai-mobile",
+      "loc": 341
+    },
+    {
+      "kind": "components",
+      "name": "LoginScreen",
+      "project": "dmusai-mobile",
+      "loc": 282
+    },
+    {
+      "kind": "components",
+      "name": "RegisterScreen",
+      "project": "dmusai-mobile",
+      "loc": 399
+    },
+    {
+      "kind": "components",
+      "name": "ChatRoomScreen",
+      "project": "dmusai-mobile",
+      "loc": 562
+    },
+    {
+      "kind": "components",
+      "name": "DiscoverScreen",
+      "project": "dmusai-mobile",
+      "loc": 441
+    },
+    {
+      "kind": "components",
+      "name": "HomeScreen",
+      "project": "dmusai-mobile",
+      "loc": 443
+    },
+    {
+      "kind": "components",
+      "name": "SongDetailScreen",
+      "project": "dmusai-mobile",
+      "loc": 488
+    },
+    {
+      "kind": "components",
+      "name": "LibraryScreen",
+      "project": "dmusai-mobile",
+      "loc": 465
+    },
+    {
+      "kind": "components",
+      "name": "PlayerScreen",
+      "project": "dmusai-mobile",
+      "loc": 459
+    },
+    {
+      "kind": "components",
+      "name": "ProfileEditScreen",
+      "project": "dmusai-mobile",
+      "loc": 491
+    },
+    {
+      "kind": "components",
+      "name": "SettingsScreen",
+      "project": "dmusai-mobile",
+      "loc": 350
+    },
+    {
+      "kind": "hooks",
+      "name": "useAuthContext",
+      "project": "dmusai-mobile",
+      "loc": 30
+    },
+    {
+      "kind": "hooks",
+      "name": "usePlayerContext",
+      "project": "dmusai-mobile",
+      "loc": 26
+    },
+    {
+      "kind": "hooks",
+      "name": "useTheme",
+      "project": "dmusai-mobile",
+      "loc": 30
+    },
+    {
+      "kind": "hooks",
+      "name": "useAudioPlayer",
+      "project": "dmusai-mobile",
+      "loc": 122
+    },
+    {
+      "kind": "hooks",
+      "name": "useNavigation",
+      "project": "dmusai-mobile",
+      "loc": 7
+    },
+    {
+      "kind": "services",
+      "name": "apiService",
+      "project": "dmusai-mobile",
+      "loc": 195
+    },
+    {
+      "kind": "services",
+      "name": "authService",
+      "project": "dmusai-mobile",
+      "loc": 121
+    },
+    {
+      "kind": "services",
+      "name": "musicService",
+      "project": "dmusai-mobile",
+      "loc": 232
+    },
+    {
+      "kind": "services",
+      "name": "userService",
+      "project": "dmusai-mobile",
+      "loc": 198
+    },
+    {
+      "kind": "services",
+      "name": "socketService",
+      "project": "dmusai-mobile",
+      "loc": 157
+    },
+    {
+      "kind": "services",
+      "name": "initializeAuth",
+      "project": "dmusai-mobile",
+      "loc": 259
+    },
+    {
+      "kind": "services",
+      "name": "secureStorage",
+      "project": "dmusai-mobile",
+      "loc": 85
+    },
+    {
+      "kind": "services",
+      "name": "getItemAsync",
+      "project": "dmusai-mobile",
+      "loc": 4
+    },
+    {
+      "kind": "services",
+      "name": "setItemAsync",
+      "project": "dmusai-mobile",
+      "loc": 4
+    },
+    {
+      "kind": "services",
+      "name": "deleteItemAsync",
+      "project": "dmusai-mobile",
+      "loc": 4
+    },
+    {
+      "kind": "components",
+      "name": "AlbumCoverAdmin",
+      "project": "music-ai",
+      "loc": 208
+    },
+    {
+      "kind": "components",
+      "name": "BackgroundVideo",
+      "project": "music-ai",
+      "loc": 116
+    },
+    {
+      "kind": "components",
+      "name": "Player",
+      "project": "music-ai",
+      "loc": 286
+    },
+    {
+      "kind": "components",
+      "name": "SearchBar",
+      "project": "music-ai",
+      "loc": 91
+    },
+    {
+      "kind": "components",
+      "name": "SimpleBackgroundVideo",
+      "project": "music-ai",
+      "loc": 106
+    },
+    {
+      "kind": "hooks",
+      "name": "useFastAlbumCovers",
+      "project": "music-ai",
+      "loc": 167
+    },
+    {
+      "kind": "hooks",
+      "name": "useLazyAlbumCovers",
+      "project": "music-ai",
+      "loc": 278
+    },
+    {
+      "kind": "hooks",
+      "name": "useProgressiveAlbumCovers",
+      "project": "music-ai",
+      "loc": 156
+    },
+    {
+      "kind": "services",
+      "name": "ALBUMS_DATABASE",
+      "project": "music-ai",
+      "loc": 423
+    },
+    {
+      "kind": "services",
+      "name": "getAlbumById",
+      "project": "music-ai",
+      "loc": 423
+    },
+    {
+      "kind": "services",
+      "name": "getAlbumsByArtist",
+      "project": "music-ai",
+      "loc": 423
+    },
+    {
+      "kind": "services",
+      "name": "searchAlbums",
+      "project": "music-ai",
+      "loc": 423
+    },
+    {
+      "kind": "services",
+      "name": "getAllAlbums",
+      "project": "music-ai",
+      "loc": 423
+    },
+    {
+      "kind": "services",
+      "name": "getRandomAlbums",
+      "project": "music-ai",
+      "loc": 423
+    },
+    {
+      "kind": "services",
+      "name": "albumCoverUpdater",
+      "project": "music-ai",
+      "loc": 267
+    },
+    {
+      "kind": "services",
+      "name": "audioDbService",
+      "project": "music-ai",
+      "loc": 339
+    },
+    {
+      "kind": "services",
+      "name": "fastItunesService",
+      "project": "music-ai",
+      "loc": 117
+    },
+    {
+      "kind": "services",
+      "name": "itunesApiService",
+      "project": "music-ai",
+      "loc": 219
+    },
+    {
+      "kind": "services",
+      "name": "localAlbumService",
+      "project": "music-ai",
+      "loc": 108
+    },
+    {
+      "kind": "services",
+      "name": "localAudioService",
+      "project": "music-ai",
+      "loc": 170
+    },
+    {
+      "kind": "components",
+      "name": "AICreator",
+      "project": "music-player",
+      "loc": 1112
+    },
+    {
+      "kind": "components",
+      "name": "DeepSearch",
+      "project": "music-player",
+      "loc": 728
+    },
+    {
+      "kind": "components",
+      "name": "FloatingCD",
+      "project": "music-player",
+      "loc": 95
+    },
+    {
+      "kind": "components",
+      "name": "HoloGrid",
+      "project": "music-player",
+      "loc": 147
+    },
+    {
+      "kind": "components",
+      "name": "HotkeyOverlay",
+      "project": "music-player",
+      "loc": 271
+    },
+    {
+      "kind": "components",
+      "name": "IncentiveSystem",
+      "project": "music-player",
+      "loc": 1097
+    },
+    {
+      "kind": "components",
+      "name": "MVPlayer",
+      "project": "music-player",
+      "loc": 366
+    },
+    {
+      "kind": "components",
+      "name": "MiniPlayer",
+      "project": "music-player",
+      "loc": 1018
+    },
+    {
+      "kind": "components",
+      "name": "MobileNavBar",
+      "project": "music-player",
+      "loc": 296
+    },
+    {
+      "kind": "components",
+      "name": "MobileNowPlayingBar",
+      "project": "music-player",
+      "loc": 296
+    },
+    {
+      "kind": "components",
+      "name": "PWAInstallPrompt",
+      "project": "music-player",
+      "loc": 296
+    },
+    {
+      "kind": "components",
+      "name": "MuseAICore",
+      "project": "music-player",
+      "loc": 464
+    },
+    {
+      "kind": "components",
+      "name": "MusicPlayer",
+      "project": "music-player",
+      "loc": 2117
+    },
+    {
+      "kind": "components",
+      "name": "NationalStandards",
+      "project": "music-player",
+      "loc": 868
+    },
+    {
+      "kind": "components",
+      "name": "NeuralStatusBar",
+      "project": "music-player",
+      "loc": 96
+    },
+    {
+      "kind": "components",
+      "name": "ParticleBackground",
+      "project": "music-player",
+      "loc": 113
+    },
+    {
+      "kind": "components",
+      "name": "PracticeRoom",
+      "project": "music-player",
+      "loc": 1015
+    },
+    {
+      "kind": "components",
+      "name": "ProfilePanel",
+      "project": "music-player",
+      "loc": 1180
+    },
+    {
+      "kind": "components",
+      "name": "SmartAnalytics",
+      "project": "music-player",
+      "loc": 581
+    },
+    {
+      "kind": "components",
+      "name": "SmartRecommendation",
+      "project": "music-player",
+      "loc": 421
+    },
+    {
+      "kind": "components",
+      "name": "SoundWaveBar",
+      "project": "music-player",
+      "loc": 210
+    },
+    {
+      "kind": "components",
+      "name": "SpaceTimeCall",
+      "project": "music-player",
+      "loc": 1391
+    },
+    {
+      "kind": "components",
+      "name": "StandardsPanel",
+      "project": "music-player",
+      "loc": 480
+    },
+    {
+      "kind": "components",
+      "name": "StarPowerBoard",
+      "project": "music-player",
+      "loc": 1210
+    },
+    {
+      "kind": "components",
+      "name": "DEFAULT_CONFIG",
+      "project": "music-player",
+      "loc": 1360
+    },
+    {
+      "kind": "components",
+      "name": "PLAYER_SKINS",
+      "project": "music-player",
+      "loc": 1360
+    },
+    {
+      "kind": "components",
+      "name": "ThemeCustomizer",
+      "project": "music-player",
+      "loc": 1360
+    },
+    {
+      "kind": "components",
+      "name": "UsabilityPlan",
+      "project": "music-player",
+      "loc": 887
+    },
+    {
+      "kind": "components",
+      "name": "VoiceInput",
+      "project": "music-player",
+      "loc": 536
+    },
+    {
+      "kind": "hooks",
+      "name": "useHotkeyOverlay",
+      "project": "music-player",
+      "loc": 271
+    },
+    {
+      "kind": "services",
+      "name": "transcribeAudio",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "getNearbyMessages",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "sendSpaceTimeMessage",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "getCollaborationTree",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "getStarPowerBalance",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "dailyCheckin",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "boostContent",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "DMusicWebSocket",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "dmWebSocket",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "checkLocalAPIHealth",
+      "project": "music-player",
+      "loc": 357
+    },
+    {
+      "kind": "services",
+      "name": "getAPIConfig",
+      "project": "music-player",
+      "loc": 357
+    }
+  ],
+  "uiDuplication": {
+    "current": 238,
+    "siblings": [
+      {
+        "key": "dmusai-web",
+        "total": 9,
+        "business": 17,
+        "businessOverlap": 9
+      },
+      {
+        "key": "dmusai-mobile",
+        "total": 0,
+        "business": 16,
+        "businessOverlap": 0
+      },
+      {
+        "key": "music-ai",
+        "total": 238,
+        "business": 8,
+        "businessOverlap": 2
+      },
+      {
+        "key": "music-player",
+        "total": 238,
+        "business": 35,
+        "businessOverlap": 6
+      }
+    ]
+  }
+}
