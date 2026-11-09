@@ -42,13 +42,23 @@ export function Companion() {
 
 | 名称 | 说明 |
 | --- | --- |
-| `XiaoyuCharacter` | userEmotion: XiaoyuEmotionType，固定定位可拖拽 |
+| `XiaoyuCharacter` | userEmotion、animationData、animationSrc；内置兜底动画，固定定位可拖拽（限制在视口内） |
 | `useXiaoyuVoice()` | playEmotionSound、playVoice、playVoiceWithEmotion、isPlaying、cleanup |
 | `getEmotionUI(emotion)` | 返回文案、颜色与动效配置 |
 
 ## 说明
 
-角色动画资源位于 `/assets/animations/*.json`（Lottie），音效位于 `/assets/sounds/*.wav`，需由宿主提供静态资源。
+`XiaoyuCharacter` 默认使用包内内置的 Lottie 动画，**不依赖**应用的 `public` 目录或 `@/` 别名；如需自定义：
+
+```tsx
+// 方式一：传入已解析的动画数据（推荐，无网络请求）
+<XiaoyuCharacter userEmotion="happy" animationData={myLottieJson} />
+
+// 方式二：传入地址，按 document.baseURI 解析，失败时回退内置动画
+<XiaoyuCharacter userEmotion="happy" animationSrc="/assets/animations/xiaoyu-happy.json" />
+```
+
+语音音效仍位于宿主应用的 `/assets/sounds/*.wav`，需由宿主提供。
 
 ## 兼容性
 

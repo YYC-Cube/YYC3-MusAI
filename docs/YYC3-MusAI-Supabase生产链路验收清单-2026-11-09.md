@@ -6,8 +6,8 @@ author: YYC³ Team <admin@0379.email>
 version: v1.0.0
 created: 2026-11-09
 updated: 2026-11-09
-status: active
-tags: [supabase, production, health-check, verification]
+status: superseded
+tags: [supabase, production, health-check, verification, superseded]
 category: report
 language: zh-CN
 audience: developers,ops,managers
@@ -16,8 +16,8 @@ complexity: intermediate
 
 # Supabase 生产链路验收清单与实测记录
 
-> 关联计划：[全维度补全与生产就绪推进计划](./YYC3-MusAI-全维度补全与生产就绪推进计划-2026-11-09.md)（P0-1）
-> 检查脚本：`scripts/check-supabase-health.mjs`（`pnpm check:supabase`）
+> **状态更新（2026-11-09）**：本项已标记为「不适用」——客户端已改为本地优先（`LOCAL_MODE`），Supabase 生产链路不再作为客户端发布门槛；服务端仍依赖 Supabase，其取舍与缺失影响见 [数据链路与 Phase 1 抉择分析](./YYC3-MusAI-数据链路与Phase1抉择分析-2026-11-09.md)。
+> 本文件保留为实测证据与服务端恢复时的操作手册。
 
 ## 一、凭据清单
 
