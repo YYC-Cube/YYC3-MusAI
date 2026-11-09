@@ -81,6 +81,15 @@ describe('useVirtualList', () => {
     expect(screen.getByTestId('visible').textContent).toBe('50')
   })
 
+  it('数据变长时补足初始窗口，新增条目不会被截断', () => {
+    const { rerender } = render(<Probe totalCount={6} initialCount={25} increment={20} />)
+    expect(screen.getByTestId('visible').textContent).toBe('6')
+
+    rerender(<Probe totalCount={7} initialCount={25} increment={20} />)
+    expect(screen.getByTestId('visible').textContent).toBe('7')
+    expect(screen.getByTestId('more').textContent).toBe('false')
+  })
+
   it('加载到 totalCount 后 hasMore 为 false 且不会越界', () => {
     render(<Probe totalCount={50} initialCount={40} increment={15} />)
     expect(screen.getByTestId('visible').textContent).toBe('40')

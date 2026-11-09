@@ -35,9 +35,12 @@ export function useVirtualList(
     setVisibleCount(Math.min(initialCount, totalCount));
   }, [initialCount, totalCount]);
 
-  // Keep visibleCount in bounds when totalCount changes
+  // 总量变化时修正窗口：数据变长且仍在初始窗口内时补足，避免新增条目被截断
   useEffect(() => {
-    setVisibleCount((prev) => Math.min(prev, totalCount) || Math.min(initialCount, totalCount));
+    setVisibleCount((prev) => {
+      const floor = Math.min(initialCount, totalCount);
+      return prev < floor ? floor : Math.min(prev, totalCount);
+    });
   }, [totalCount, initialCount]);
 
   // IntersectionObserver to auto-load more when sentinel is visible

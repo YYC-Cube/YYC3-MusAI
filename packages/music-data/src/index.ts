@@ -13,3 +13,4 @@ export {
   DEMO_PLAYLIST,
 } from './playlistData';
 export * from './localLibrary';
+export * from './localAudio';

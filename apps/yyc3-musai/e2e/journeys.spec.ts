@@ -89,6 +89,62 @@ test.describe('关键旅程 · 桌面端', () => {
     await expect(dialog.getByText('暂无已保存歌单 / No saved playlists')).toBeVisible()
   })
 
+  test('播放列表：本地导入曲目刷新后可恢复', async ({ page }) => {
+    await page.locator('button[title="播放列表"]').first().click()
+    const dialog = page.getByRole('dialog', { name: '播放列表' })
+    await expect(dialog).toBeVisible()
+
+    // 44 字节 WAV 头即可被识别为音频；重点验证不是播放而是持久化
+    const wav = Buffer.alloc(44)
+    wav.write('RIFF', 0, 'ascii')
+    wav.write('WAVE', 8, 'ascii')
+
+    // 文件输入在「添加曲目」菜单展开后才渲染
+    await dialog.getByRole('button', { name: '添加曲目' }).click()
+    await dialog.locator('input[type="file"]').setInputFiles({
+      name: 'local-demo.wav',
+      mimeType: 'audio/wav',
+      buffer: wav,
+    })
+    await expect(dialog.getByText('local-demo')).toBeVisible()
+
+    // 等待原始文件写入 IndexedDB
+    await expect
+      .poll(
+        () =>
+          page.evaluate(async () => {
+            const db = await new Promise<IDBDatabase>((resolve, reject) => {
+              const req = indexedDB.open('yyc3-music-audio')
+              req.onsuccess = () => resolve(req.result)
+              req.onerror = () => reject(req.error)
+            })
+            return new Promise<number>((resolve) => {
+              const req = db.transaction('tracks', 'readonly').objectStore('tracks').count()
+              req.onsuccess = () => resolve(req.result)
+              req.onerror = () => resolve(-1)
+            })
+          }),
+        { timeout: 5000 }
+      )
+      .toBeGreaterThan(0)
+
+    await dialog.getByTestId('save-queue').click()
+    await expect(dialog.getByRole('status')).toContainText('已保存')
+    await dialog.getByRole('button', { name: '关闭播放列表 / Close playlist' }).click()
+    await expect(dialog).toBeHidden()
+
+    await page.reload()
+    const queueSnapshot = await page.evaluate(() => {
+      const key = Object.keys(localStorage).find((item) => item.includes('queue'))
+      return key ? localStorage.getItem(key) : null
+    })
+    expect(queueSnapshot).toContain('local-demo')
+
+    await page.locator('button[title="播放列表"]').first().click()
+    const restored = page.getByRole('dialog', { name: '播放列表' })
+    await expect(restored.getByText('local-demo')).toBeVisible()
+  })
+
   test('评论面板：可从播放器工具条打开', async ({ page }) => {
     await page.locator('button[title="评论"]').first().click()
     await expect(page.getByRole('dialog', { name: '评论' })).toBeVisible()

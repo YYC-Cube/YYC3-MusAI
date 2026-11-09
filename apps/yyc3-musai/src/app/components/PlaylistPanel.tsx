@@ -34,7 +34,7 @@ interface PlaylistPanelProps {
   /** 保存当前队列为本地歌单；未传时不显示保存入口 */
   onSaveQueue?: () => void | Promise<void>;
   /** 加载已保存歌单；未传时不显示已保存列表 */
-  onLoadPlaylist?: (trackIds: string[]) => void;
+  onLoadPlaylist?: (trackIds: string[]) => void | Promise<void>;
   audioMode: 'file' | 'demo';
 }
 
@@ -138,7 +138,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
 
   const handleLoadSaved = useCallback(
     (item: SavedPlaylist) => {
-      onLoadPlaylist?.(item.trackIds);
+      void onLoadPlaylist?.(item.trackIds);
       setShowSaved(false);
     },
     [onLoadPlaylist]

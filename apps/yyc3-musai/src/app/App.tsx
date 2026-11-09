@@ -15,7 +15,9 @@ import {
   dMusicRed,
   dMusicInstruments,
   getFavoriteIds,
+  getLocalAudio,
   getSavedQueue,
+  saveLocalAudio,
   savePlaylist,
   saveQueue,
   toggleFavorite,
@@ -138,6 +140,18 @@ const DEMO_COMMUNITY_ACTIVITIES: CommunityActivity[] = [
 // ==========================================
 // App Component
 // ==========================================
+/** 刷新后 blob URL 失效：用 IndexedDB 中保存的原始文件重建音频地址，取不到则丢弃该曲目 */
+async function reviveBlobTracks(tracks: Track[]): Promise<Track[]> {
+  const revived = await Promise.all(
+    tracks.map(async (track) => {
+      if (typeof track.audioUrl !== 'string' || !track.audioUrl.startsWith('blob:')) return track;
+      const stored = await getLocalAudio(track.id);
+      return stored ? { ...track, audioUrl: URL.createObjectURL(stored.blob) } : null;
+    })
+  );
+  return revived.filter((track): track is Track => Boolean(track));
+}
+
 export function AppInner() {
   // ==========================================
   // i18n
@@ -161,11 +175,14 @@ export function AppInner() {
   // 启动时恢复播放队列；快照为空则保留演示歌单
   useEffect(() => {
     let cancelled = false;
-    void getSavedQueue<Track>().then((saved) => {
+    void (async () => {
+      const saved = await getSavedQueue<Track>();
       if (cancelled) return;
-      if (saved.length > 0) setPlaylist(saved);
+      const playable = saved.length > 0 ? await reviveBlobTracks(saved) : [];
+      if (cancelled) return;
+      if (playable.length > 0) setPlaylist(playable);
       queueHydratedRef.current = true;
-    });
+    })();
     return () => {
       cancelled = true;
     };
@@ -195,16 +212,28 @@ export function AppInner() {
     await savePlaylist('当前队列', playlist.map((track) => track.id));
   }, [playlist]);
 
-  // 加载已保存歌单：优先用当前队列中的曲目，其次回退演示曲库；
-  // 用户本地导入的音频（blob URL）刷新后无法还原，会被跳过
+  // 加载已保存歌单：优先用当前队列中的曲目，其次回退演示曲库，
+  // 本地导入的曲目从 IndexedDB 取回原始文件重建地址
   const handleLoadSavedPlaylist = useCallback(
-    (trackIds: string[]) => {
+    async (trackIds: string[]) => {
       const byId = new Map(playlist.map((track) => [track.id, track]));
-      const resolved = trackIds
-        .map((id) => byId.get(id) ?? DEMO_PLAYLIST.find((track) => track.id === id))
-        .filter((track): track is Track => Boolean(track));
-      if (resolved.length === 0) return;
-      setPlaylist(resolved);
+      const resolved = await Promise.all(
+        trackIds.map(async (id) => {
+          const known = byId.get(id) ?? DEMO_PLAYLIST.find((track) => track.id === id);
+          if (known) return known;
+          // 本地导入的曲目：从 IndexedDB 取回文件，重建可用地址
+          const stored = await getLocalAudio(id);
+          if (!stored) return null;
+          return {
+            ...(stored.meta as Partial<Track>),
+            id,
+            audioUrl: URL.createObjectURL(stored.blob),
+          } as Track;
+        })
+      );
+      const playable = resolved.filter((track): track is Track => Boolean(track));
+      if (playable.length === 0) return;
+      setPlaylist(playable);
       setCurrentTrackIndex(0);
     },
     [playlist]
@@ -716,6 +745,9 @@ export function AppInner() {
         color: `hsl(${Math.random() * 360}, 70%, 50%)`,
       };
       setPlaylist((prev) => [...prev, newTrack]);
+      // 原始文件入 IndexedDB：blob URL 刷新后失效，恢复时用它重建
+      const { audioUrl: _blobUrl, ...trackMeta } = newTrack;
+      void saveLocalAudio(newTrack.id, file, trackMeta as Record<string, unknown>);
       shouldAutoPlayRef.current = true;
       setCurrentTrackIndex(playlist.length);
       // §8.1: Register new song in dynamic index
