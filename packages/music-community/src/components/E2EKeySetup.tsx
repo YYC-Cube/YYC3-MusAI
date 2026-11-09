@@ -17,15 +17,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Shield, Key, Lock, Unlock, CheckCircle2, AlertTriangle,
-  RefreshCw, Download, Upload, Eye, EyeOff, Fingerprint, Sparkles,
-  ArrowRight, ArrowLeft, Info, Copy, Check, ShieldCheck, ShieldAlert,
+  RefreshCw, Download, Upload, Eye, EyeOff, Fingerprint,
+  ArrowLeft, Info, Copy, Check, ShieldCheck,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useI18n } from '@yyc3/music-hooks';
 import {
   generateKeyPair,
-  hasLocalKeyPair,
-  loadPublicKeyJwk,
   deleteLocalKeys,
   createKeyBackup,
   restoreKeyFromBackup,
@@ -57,7 +54,6 @@ type SetupStep = 'intro' | 'generating' | 'uploading' | 'backup' | 'complete' | 
 // ============================================================
 
 export function E2EKeySetup({ isOpen, onClose, user, lang }: E2EKeySetupProps) {
-  const { t } = useI18n();
   const isZh = lang !== 'en';
 
   // ---- State ----

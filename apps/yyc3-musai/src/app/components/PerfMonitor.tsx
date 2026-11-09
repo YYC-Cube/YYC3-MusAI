@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Activity, X, Cpu, MemoryStick, Layers, Clock, FlaskConical } from 'lucide-react';
 import { clsx } from 'clsx';

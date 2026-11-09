@@ -155,7 +155,7 @@ class EmotionDetector {
         behaviorPattern: any
     ): EmotionState {
         let emotion: EmotionState['emotion'];
-        let confidence = 0.7;
+        const confidence = 0.7;
         let intensity = Math.abs(sentiment);
 
         // 根据情感分数和行为模式判断情绪

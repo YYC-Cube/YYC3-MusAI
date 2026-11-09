@@ -1,9 +1,9 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { clsx } from 'clsx';
 import {
-  Music, Users, Wand2, BarChart3, UserCircle,
-  ListMusic, MessageCircle, Compass, Mic,
+  Music, Users, Wand2, UserCircle,
+  Compass,
   GitBranch, Heart, Brain, Radio,
 } from 'lucide-react';
 import { useI18n } from '@yyc3/music-hooks';
@@ -37,10 +37,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   activeTab,
   onTabChange,
   isPlaying,
-  audioEnergy,
+  audioEnergy: _audioEnergy,
   hasUser,
-  onMicTap,
-  isListening,
+  onMicTap: _onMicTap,
+  isListening: _isListening,
   unreadNotifications = 0,
   onOpenForkTree,
   onOpenMHeart,

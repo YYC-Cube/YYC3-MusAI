@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Radio, Users, Send, Music, Wifi, WifiOff } from 'lucide-react';
+import { X, Radio, Users, Send, Music } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';

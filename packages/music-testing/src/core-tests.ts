@@ -16,8 +16,8 @@
  */
 
 import {
-  createSuite, assert, assertEqual, assertDeepEqual,
-  assertTruthy, assertContains, assertInRange, assertThrows,
+  createSuite, assert, assertEqual,
+  assertTruthy, assertContains, assertInRange,
   printResults, type TestSuiteResult,
 } from './test-runner';
 import { API_BASE, apiFetch, apiFetchStrict, ApiError } from '@yyc3/music-utils';

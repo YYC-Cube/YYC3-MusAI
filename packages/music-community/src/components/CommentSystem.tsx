@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Heart, Clock, MessageCircle, ChevronDown } from 'lucide-react';
+import { X, Send, Heart, Clock, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';

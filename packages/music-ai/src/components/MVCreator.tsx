@@ -116,7 +116,7 @@ export const MVCreator: React.FC<MVCreatorProps> = ({
   audioEnergy,
   frequencyData,
   currentTime,
-  emotion,
+  emotion: _emotion,
   customLyrics,
   onHaptic,
 }) => {
@@ -141,7 +141,6 @@ export const MVCreator: React.FC<MVCreatorProps> = ({
 
   // Current lyric line
   const currentLyric = [...effectiveLyrics].reverse().find(l => l.time <= currentTime);
-  const nextLyric = effectiveLyrics.find(l => l.time > currentTime);
 
   // ========== Canvas Rendering Loop ==========
   const render = useCallback(() => {
@@ -432,7 +431,7 @@ export const MVCreator: React.FC<MVCreatorProps> = ({
     ctx.fillRect(0, h - 3, w * progress, 3);
 
     animFrameRef.current = requestAnimationFrame(render);
-  }, [mvTheme, audioEnergy, frequencyData, isPlaying, currentTime, showLyrics, intensity, track, currentLyric, emotion, effectiveLyrics]);
+  }, [mvTheme, audioEnergy, frequencyData, isPlaying, currentTime, showLyrics, intensity, track, currentLyric]);
 
   // Start/stop animation loop
   useEffect(() => {

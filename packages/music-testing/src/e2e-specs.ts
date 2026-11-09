@@ -22,7 +22,7 @@
 
 import {
   createSuite, assert, assertEqual, assertTruthy,
-  assertContains, assertInRange, printResults,
+  assertContains, printResults,
   type TestSuiteResult,
 } from './test-runner';
 import { API_BASE, apiFetch } from '@yyc3/music-utils';

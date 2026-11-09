@@ -118,7 +118,9 @@ export const AILyricsGenerator: React.FC<AILyricsGeneratorProps> = ({
 
     setCompositionStage('composing-params');
     // Haptic feedback
-    try { navigator.vibrate?.(25); } catch {}
+    try { navigator.vibrate?.(25); } catch {
+      // 不支持振动的环境忽略
+    }
 
     try {
       // Step 1: Get composition parameters from backend
@@ -153,7 +155,9 @@ export const AILyricsGenerator: React.FC<AILyricsGeneratorProps> = ({
       onCreateTrack(generatedLyrics, selectedTheme, audioBlobUrl, compResult.composition);
       setTrackCreated(true);
       setCompositionStage('done');
-      try { navigator.vibrate?.([10, 30, 10, 30, 40]); } catch {} // success haptic
+      try { navigator.vibrate?.([10, 30, 10, 30, 40]); } catch {
+        // 不支持振动的环境忽略
+      } // success haptic
       setTimeout(() => { setTrackCreated(false); setCompositionStage('idle'); }, 2500);
     } catch (err) {
       console.error('Composition pipeline failed:', err);

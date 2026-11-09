@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Brain, Sparkles, Music, Zap, Play, RefreshCw, ChevronRight, Shuffle } from 'lucide-react';
+import { X, Brain, Sparkles, RefreshCw, Shuffle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';
@@ -56,31 +56,6 @@ export const SmartPlaylistPanel: React.FC<SmartPlaylistPanelProps> = ({
   const [queue, setQueue] = useState<SmartTrack[]>([]);
   const [applied, setApplied] = useState(false);
 
-  const generateSmartQueue = useCallback(async () => {
-    setLoading(true);
-    setApplied(false);
-    try {
-      const data = await apiFetch<{ analysis: MoodAnalysis; queue: SmartTrack[] }>(
-        `/smart-playlist/${userId || 'anon'}?emotion=${currentEmotion}`
-      );
-      if (data?.analysis) setMood(data.analysis);
-      if (data?.queue) {
-        // Map queue track IDs to local playlist indices
-        const mapped = data.queue.map(q => {
-          const idx = playlist.findIndex(t => t.id === q.id);
-          return { ...q, index: idx >= 0 ? idx : q.index };
-        }).filter(q => q.index >= 0);
-        setQueue(mapped);
-      }
-    } catch (err) {
-      console.error('Smart playlist error:', err);
-      // Fallback: generate locally based on emotion
-      generateLocalQueue();
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, currentEmotion, playlist]);
-
   const generateLocalQueue = useCallback(() => {
     // Local fallback: score tracks by emotion match
     const scored = playlist.map((track, index) => {
@@ -90,8 +65,8 @@ export const SmartPlaylistPanel: React.FC<SmartPlaylistPanelProps> = ({
       const matchScore = Math.round((emotionMatch / totalEmotions) * 80 + Math.random() * 20);
 
       // Determine recommendation reason
-      let reason = 'Matches current mood';
-      let reasonZh = '匹配当前心情';
+      let reason: string;
+      let reasonZh: string;
       if (matchScore > 70) {
         reason = 'Strong mood alignment';
         reasonZh = '心情高度契合';
@@ -116,6 +91,31 @@ export const SmartPlaylistPanel: React.FC<SmartPlaylistPanelProps> = ({
     scored.sort((a, b) => b.matchScore - a.matchScore);
     setQueue(scored);
   }, [playlist, currentEmotion]);
+
+  const generateSmartQueue = useCallback(async () => {
+    setLoading(true);
+    setApplied(false);
+    try {
+      const data = await apiFetch<{ analysis: MoodAnalysis; queue: SmartTrack[] }>(
+        `/smart-playlist/${userId || 'anon'}?emotion=${currentEmotion}`
+      );
+      if (data?.analysis) setMood(data.analysis);
+      if (data?.queue) {
+        // Map queue track IDs to local playlist indices
+        const mapped = data.queue.map(q => {
+          const idx = playlist.findIndex(t => t.id === q.id);
+          return { ...q, index: idx >= 0 ? idx : q.index };
+        }).filter(q => q.index >= 0);
+        setQueue(mapped);
+      }
+    } catch (err) {
+      console.error('Smart playlist error:', err);
+      // Fallback: generate locally based on emotion
+      generateLocalQueue();
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, currentEmotion, playlist, generateLocalQueue]);
 
   useEffect(() => {
     if (isOpen) generateSmartQueue();

@@ -152,6 +152,39 @@ async function reviveBlobTracks(tracks: Track[]): Promise<Track[]> {
   return revived.filter((track): track is Track => Boolean(track));
 }
 
+// AI 歌词主题映射（模块级常量，避免每次渲染重建）
+const THEME_TO_EMOTION: Record<string, Emotion> = {
+  happy: 'happy',
+  sad: 'sad',
+  energetic: 'energetic',
+  calm: 'calm',
+  love: 'happy',
+};
+
+const THEME_TO_CHORD: Record<string, number> = {
+  happy: 1,
+  sad: 2,
+  energetic: 3,
+  calm: 0,
+  love: 2,
+};
+
+const THEME_COLORS: Record<string, string> = {
+  happy: '#FFD700',
+  sad: '#6495ED',
+  energetic: '#FF4500',
+  calm: '#00CED1',
+  love: '#FF69B4',
+};
+
+const THEME_ART: Record<string, string> = {
+  happy: dMusicInstruments,
+  sad: dMusicLogo,
+  energetic: dMusicRed,
+  calm: dMusicLogo,
+  love: dMusicRed,
+};
+
 export function AppInner() {
   // ==========================================
   // i18n
@@ -496,6 +529,8 @@ export function AppInner() {
         });
       }
     });
+    // audio 由 useAudioEngine 返回，每次渲染都是新对象；补进依赖会导致登录态拉取与音量设置反复执行
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- audio 每次渲染都是新对象，补依赖会重复拉取用户与偏好
   }, []);
 
   const handleLogout = async () => {
@@ -595,6 +630,8 @@ export function AppInner() {
   // Haptic Feedback Integration
   // ==========================================
   const haptics = useHaptics();
+  // haptics 每次渲染都是新对象，但其中的 trigger 由 useCallback 保持稳定，可安全作为依赖
+  const { trigger: hapticTrigger } = haptics;
 
   // ==========================================
   // Listening History (feeds recommendation engine)
@@ -662,7 +699,7 @@ export function AppInner() {
   // Actions
   // ==========================================
   const handleLike = useCallback(async () => {
-    haptics.trigger('success');
+    hapticTrigger('success');
     setMValue((prev) => prev + 1);
     // 本地即真：先落收藏缓存，再尝试同步远端计数（无后端时静默失败）
     const liked = await toggleFavorite(currentTrack.id);
@@ -701,11 +738,11 @@ export function AppInner() {
       console.error('Error liking song:', err);
       setMValue((prev) => prev - 1);
     }
-  }, [currentTrack.id, currentTrack.title, user]);
+  }, [currentTrack.id, currentTrack.title, user, hapticTrigger]);
 
   const handleAnnotate = useCallback(
     async (lineIndex: number, emo: Emotion) => {
-      haptics.trigger('light');
+      hapticTrigger('light');
       setAnnotations((prev) => {
         const copy = { ...prev };
         if (!copy[lineIndex]) copy[lineIndex] = {};
@@ -753,7 +790,7 @@ export function AppInner() {
         console.error('Error annotating lyric:', err);
       }
     },
-    [currentTrack.id, currentTrack.title, user]
+    [currentTrack.id, currentTrack.title, user, hapticTrigger]
   );
 
   // ==========================================
@@ -852,38 +889,6 @@ export function AppInner() {
   // ==========================================
   // AI Lyrics → Track Creation Pipeline
   // ==========================================
-  const THEME_TO_EMOTION: Record<string, Emotion> = {
-    happy: 'happy',
-    sad: 'sad',
-    energetic: 'energetic',
-    calm: 'calm',
-    love: 'happy',
-  };
-
-  const THEME_TO_CHORD: Record<string, number> = {
-    happy: 1,
-    sad: 2,
-    energetic: 3,
-    calm: 0,
-    love: 2,
-  };
-
-  const THEME_COLORS: Record<string, string> = {
-    happy: '#FFD700',
-    sad: '#6495ED',
-    energetic: '#FF4500',
-    calm: '#00CED1',
-    love: '#FF69B4',
-  };
-
-  const THEME_ART: Record<string, string> = {
-    happy: dMusicInstruments,
-    sad: dMusicLogo,
-    energetic: dMusicRed,
-    calm: dMusicLogo,
-    love: dMusicRed,
-  };
-
   const handleCreateTrackFromLyrics = useCallback(
     (lyrics: string[], theme: string, audioBlobUrl?: string, compositionParams?: any) => {
       const emotion = THEME_TO_EMOTION[theme] || 'neutral';
@@ -1034,7 +1039,6 @@ export function AppInner() {
       style={{
         backgroundColor: `var(--dm-bg, #0A0E2F)`,
         color: `var(--dm-text-primary, rgba(255,255,255,0.95))`,
-        // @ts-ignore -- selection color via CSS var
         '--tw-ring-color': `var(--dm-accent-from, #8B5CF6)`,
       } as React.CSSProperties}
     >

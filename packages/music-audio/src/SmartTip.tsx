@@ -11,7 +11,7 @@
  * @tags 智能提示,React,动画,情感化
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**

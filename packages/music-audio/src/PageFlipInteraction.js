@@ -129,9 +129,8 @@ class PageFlipInteraction {
 
     /**
      * 处理手势结束
-     * @param {Event} e - 事件对象
      */
-    handleGestureEnd(e) {
+    handleGestureEnd() {
         if (this.isAnimating || !this.gestureStart.x) return;
 
         // 计算移动距离

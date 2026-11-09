@@ -8,7 +8,6 @@ import {
   Plus,
   Link,
   Upload,
-  GripVertical,
   Disc3,
   Sparkles,
   Save,

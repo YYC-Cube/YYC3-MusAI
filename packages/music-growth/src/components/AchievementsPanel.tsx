@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trophy, Lock, Sparkles, TrendingUp, Star, Flame } from 'lucide-react';
+import { X, Trophy, Sparkles, TrendingUp, Star, Flame } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';

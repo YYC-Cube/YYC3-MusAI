@@ -12,8 +12,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X, TrendingUp, ShoppingCart, Tag, Star, ArrowRight, Clock,
-  BarChart3, ArrowLeftRight, Check, AlertCircle, Disc3, Hash,
-  ArrowLeft, Sparkles, DollarSign, Repeat, Users,
+  ArrowLeftRight, Check, AlertCircle, Disc3, Hash,
+  ArrowLeft, Sparkles,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useI18n } from '@yyc3/music-hooks';

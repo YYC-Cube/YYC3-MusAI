@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { ImageWithFallback } from '@yyc3/music-ui';
 import { AudioVisualizer } from './AudioVisualizer';
 import type { Emotion } from '@yyc3/music-hooks';
-const dMusicGold = '/assets/dmusic-gold.png';
 import { useI18n } from '@yyc3/music-hooks';
 
 interface MediaDisplayProps {

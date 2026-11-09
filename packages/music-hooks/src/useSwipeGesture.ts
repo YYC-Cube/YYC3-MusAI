@@ -99,7 +99,9 @@ export function useSwipeGesture({
 
     if (distance >= threshold) {
       // Haptic feedback on successful swipe
-      try { navigator.vibrate?.([15, 20, 30]); } catch {}
+      try { navigator.vibrate?.([15, 20, 30]); } catch {
+        // 不支持振动的环境忽略
+      }
       if (diff > 0 && onSwipeRight) {
         onSwipeRight();
       } else if (diff < 0 && onSwipeLeft) {

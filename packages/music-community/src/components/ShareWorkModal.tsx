@@ -312,8 +312,6 @@ export const ShareWorkModal: React.FC<ShareWorkModalProps> = ({
 
   if (!work) return null;
 
-  const [c1] = THEME_GRADIENTS[work.theme] || ['#8B5CF6', '#EC4899'];
-
   return (
     <AnimatePresence>
       {isOpen && (

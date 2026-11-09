@@ -48,7 +48,7 @@ export class SpeechRecognitionEngine {
   private lastResultTime: number = 0
   private silenceTimeout: ReturnType<typeof setTimeout> | null = null
   
-  private listeners: Map<string, Function[]> = new Map()
+  private listeners: Map<string, Array<(data?: any) => void>> = new Map()
   private resultHistory: SpeechRecognitionResult[] = []
   private maxHistorySize: number = 100
 
@@ -162,7 +162,7 @@ export class SpeechRecognitionEngine {
       }
       
     } catch (error) {
-      throw new Error(`麦克风权限获取失败: ${error.message}`)
+      throw new Error(`麦克风权限获取失败: ${error.message}`, { cause: error })
     }
   }
 
@@ -464,14 +464,14 @@ export class SpeechRecognitionEngine {
   /**
    * 事件监听
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (data?: any) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
     this.listeners.get(event)!.push(callback)
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data?: any) => void): void {
     const listeners = this.listeners.get(event)
     if (listeners) {
       const index = listeners.indexOf(callback)

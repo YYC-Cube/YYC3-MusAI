@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Star, ShoppingBag, Check, Package, Sparkles, Palette, Music, Zap, Megaphone, AlertCircle } from 'lucide-react';
+import { X, Star, ShoppingBag, Check, Package, Sparkles, Palette, Music, Zap, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';

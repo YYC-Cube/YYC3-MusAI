@@ -272,8 +272,8 @@ const TIP_TEMPLATES: TipTemplate[] = [
 // ==========================================
 export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
   const {
-    isPlaying, currentEmotion, currentTrackId, currentTrackTitle,
-    starPower, isLoggedIn, lang,
+    isPlaying, currentEmotion, currentTrackId,
+    lang,
     onPlay, onPause, onNext, onPrev, onShuffleToggle,
     onVolumeUp, onVolumeDown, onMute,
     onOpenPlaylist, onOpenAILyrics, onOpenLeaderboard,
@@ -501,7 +501,9 @@ export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
         showFeedback(`\u2705 ${feedback}`);
 
         // Haptic feedback for successful voice command
-        try { navigator.vibrate?.([5, 15, 5]); } catch {}
+        try { navigator.vibrate?.([5, 15, 5]); } catch {
+          // 不支持振动的环境忽略
+        }
 
         setVoiceHistory(prev => [...prev.slice(-20), {
           command: parsed.action,
@@ -515,7 +517,9 @@ export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
       } else {
         showFeedback(lang === 'zh' ? `\u2753 \u672A\u8BC6\u522B: "${transcript}"` : `\u2753 Unknown: "${transcript}"`);
         // Light haptic for unrecognized
-        try { navigator.vibrate?.(15); } catch {}
+        try { navigator.vibrate?.(15); } catch {
+          // 不支持振动的环境忽略
+        }
       }
     };
 
@@ -527,7 +531,9 @@ export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
       }
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         showFeedback(lang === 'zh' ? '\uD83C\uDFA4 \u8BED\u97F3\u8BC6\u522B\u51FA\u9519' : '\uD83C\uDFA4 Voice recognition error');
-        try { navigator.vibrate?.([30, 50, 30]); } catch {} // warning haptic
+        try { navigator.vibrate?.([30, 50, 30]); } catch {
+          // 不支持振动的环境忽略
+        } // warning haptic
       }
       if (!continuous) {
         setIsListening(false);
@@ -565,7 +571,9 @@ export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
       } else {
         showFeedback(lang === 'zh' ? '\uD83C\uDFA4 \u8BF7\u8BF4\u6307\u4EE4...' : '\uD83C\uDFA4 Listening...');
       }
-      try { navigator.vibrate?.(8); } catch {} // selection haptic
+      try { navigator.vibrate?.(8); } catch {
+        // 不支持振动的环境忽略
+      } // selection haptic
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
     }
@@ -574,7 +582,9 @@ export function useAIAssistant(config: AIAssistantConfig): AIAssistantReturn {
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
       if (recognitionRef.current.restartTimer) clearTimeout(recognitionRef.current.restartTimer);
-      try { recognitionRef.current.recognition?.stop?.(); } catch {}
+      try { recognitionRef.current.recognition?.stop?.(); } catch {
+        // 已停止或不可用时忽略
+      }
       recognitionRef.current = null;
     }
     setIsListening(false);

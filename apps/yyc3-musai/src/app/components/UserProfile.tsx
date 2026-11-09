@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Zap,
   Calendar,
-  ChevronRight,
   Download,
 } from 'lucide-react';
 import { clsx } from 'clsx';

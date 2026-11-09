@@ -31,7 +31,7 @@
 
 import {
   createSuite, assert, assertEqual, assertDeepEqual,
-  assertTruthy, assertContains, assertInRange, assertThrows,
+  assertTruthy, assertContains, assertInRange,
   printResults, type TestSuiteResult,
 } from './test-runner';
 import { API_BASE, apiFetch } from '@yyc3/music-utils';
@@ -222,12 +222,6 @@ function preferencesTests(): ReturnType<typeof createSuite> {
 
   // Mock localStorage for isolated testing
   const STORAGE_KEY = 'dmusic-prefs';
-  const originalStorage = { ...localStorage };
-
-  function mockLocalStorage(): Map<string, string> {
-    const store = new Map<string, string>();
-    return store;
-  }
 
   suite.test('loadPrefs 返回默认值（空 localStorage）', async () => {
     const { loadPrefs } = await import('@yyc3/music-utils');
@@ -248,7 +242,7 @@ function preferencesTests(): ReturnType<typeof createSuite> {
   });
 
   suite.test('savePref + loadPref 读写一致', async () => {
-    const { savePref, loadPref, loadPrefs } = await import('@yyc3/music-utils');
+    const { savePref, loadPref } = await import('@yyc3/music-utils');
     const saved = localStorage.getItem(STORAGE_KEY);
 
     savePref('volume', 0.42);
@@ -396,7 +390,7 @@ function themeSystemTests(): ReturnType<typeof createSuite> {
   });
 
   suite.test('applyTheme 不抛异常', async () => {
-    const { applyTheme, getTheme } = await import('@yyc3/music-design-tokens');
+    const { applyTheme } = await import('@yyc3/music-design-tokens');
     // Apply each theme and verify no errors
     const themes = ['deep-space', 'aurora', 'ocean', 'light', 'midnight'] as const;
     for (const id of themes) {

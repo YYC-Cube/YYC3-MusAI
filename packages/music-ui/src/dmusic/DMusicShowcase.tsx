@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from 'react';
-import { Music, Star, Trophy, Users, BarChart3, Download, Search, Heart, Zap } from 'lucide-react';
+import { Music, Star, Users, BarChart3, Download, Heart, Zap } from 'lucide-react';
 import {
   DButton, DInput, DCard, DMusicCard, DUserCard, DAchievementCard,
   DProgress, AchievementRing, DFeedback, DSpinner, DBadge, DTag,

@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Mic, MicOff, Volume2, VolumeX, Globe, Settings,
-  MessageSquare, History, Zap, Brain, Download,
-  Upload, Play, Pause, StopCircle, ChevronRight,
-  ChevronDown, Star, Copy, Trash2, RefreshCw,
-  AlertCircle, CheckCircle, XCircle, HelpCircle,
-  Languages, Clock, BarChart3, Users, BookOpen
+  Mic, MicOff, Volume2, Globe, Settings,
+  MessageSquare, History, Zap, Brain, Play,
+  ChevronDown, AlertCircle, CheckCircle, XCircle, HelpCircle,
+  Languages, BarChart3
 } from 'lucide-react'
 import { SpeechRecognitionEngine } from '../SpeechRecognitionEngine'
 import { SpeechSynthesisEngine } from '../SpeechSynthesisEngine'
@@ -37,7 +35,7 @@ export const VoiceControlPanel: React.FC = () => {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [currentTranscript, setCurrentTranscript] = useState('')
   const [interimTranscript, setInterimTranscript] = useState('')
-  const [recognitionResults, setRecognitionResults] = useState<Array<{
+  const [_recognitionResults, setRecognitionResults] = useState<Array<{
     transcript: string
     confidence: number
     isFinal: boolean
@@ -126,6 +124,7 @@ export const VoiceControlPanel: React.FC = () => {
     return () => {
       cleanup()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅在挂载时初始化一次，补依赖会导致引擎重复初始化并重复订阅事件
   }, [])
 
   // 设置事件监听
@@ -197,7 +196,7 @@ export const VoiceControlPanel: React.FC = () => {
       }))
     })
 
-    processor.on('command-executed', (data: any) => {
+    processor.on('command-executed', (_data: any) => {
       setStats(prev => ({
         ...prev,
         successfulCommands: prev.successfulCommands + 1
@@ -207,7 +206,7 @@ export const VoiceControlPanel: React.FC = () => {
       speakFeedback('命令执行成功')
     })
 
-    processor.on('command-failed', (data: any) => {
+    processor.on('command-failed', (_data: any) => {
       setStats(prev => ({
         ...prev,
         failedCommands: prev.failedCommands + 1
@@ -353,12 +352,6 @@ export const VoiceControlPanel: React.FC = () => {
   const getLanguageName = (code: string) => {
     const lang = availableLanguages.find(l => l.code === code)
     return lang ? lang.nativeName : code
-  }
-
-  // 获取语音名称
-  const getVoiceName = (voiceURI: string) => {
-    const voice = availableVoices.find(v => v.voiceURI === voiceURI)
-    return voice ? voice.name : voiceURI
   }
 
   // 格式化时间

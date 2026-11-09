@@ -49,8 +49,8 @@ const MAX_LANES = 5;
 export const TimelineComments: React.FC<TimelineCommentsProps> = ({
   songId,
   currentTime,
-  duration,
-  isPlaying,
+  duration: _duration,
+  isPlaying: _isPlaying,
   user,
   lang,
 }) => {

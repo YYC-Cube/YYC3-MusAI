@@ -24,7 +24,6 @@ import ReactFlow, {
     addEdge,
     Connection,
     NodeTypes,
-    Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion } from 'framer-motion';

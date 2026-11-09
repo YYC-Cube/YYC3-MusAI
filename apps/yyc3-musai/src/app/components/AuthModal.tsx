@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase, API_BASE } from '@yyc3/music-utils';
-import { X, Mail, Lock, Loader2, Sparkles } from 'lucide-react';
+import { X, Mail, Lock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const dMusicGold = '/assets/dmusic-gold.png';

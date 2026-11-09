@@ -73,8 +73,6 @@ const EMOTION_ICONS: Record<string, React.ElementType> = {
   neutral: Sparkles,
 };
 
-const CHART_COLORS = ['#667eea', '#764ba2', '#f093fb', '#00CED1', '#FFD700', '#FF4500'];
-
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (

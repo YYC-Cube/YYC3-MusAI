@@ -52,7 +52,7 @@ const RANK_ICONS = [Crown, Medal, Award];
 const RANK_COLORS = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
 
 export const ChallengePanel: React.FC<ChallengePanelProps> = ({
-  isOpen, onClose, user, onOpenCreationStudio,
+  isOpen, onClose, user, onOpenCreationStudio: _onOpenCreationStudio,
 }) => {
   const { lang } = useI18n();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -167,7 +167,7 @@ export const ChallengePanel: React.FC<ChallengePanelProps> = ({
         setHasVoted(true);
         setEntries(prev => prev.map(e => e.id === entryId ? { ...e, communityVotes: result.votes } : e));
       }
-    } catch {}
+    } catch { /* 投票失败时保持静默，由 finally 复位状态 */ }
     finally { setVoting(null); }
   };
 

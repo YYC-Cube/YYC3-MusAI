@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, GitBranch, GitFork, User, Music, ChevronRight, RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -174,13 +174,8 @@ export const ForkTree: React.FC<ForkTreeProps> = ({ isOpen, onClose, lang }) => 
     return 1 + node.children.reduce((sum, child) => sum + countNodes(child), 0);
   };
 
-  const formatDate = (ts: number) => {
-    const d = new Date(ts);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
-  };
-
   // Render a tree node recursively
-  const renderNode = (node: TreeNode, isLast = false) => {
+  const renderNode = (node: TreeNode, _isLast = false) => {
     const colorClass = DEPTH_COLORS[node.depth % DEPTH_COLORS.length];
     const glowColor = DEPTH_GLOW[node.depth % DEPTH_GLOW.length];
     const isRoot = node.depth === 0;

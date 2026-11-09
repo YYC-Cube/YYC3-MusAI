@@ -369,13 +369,6 @@ const LyricsEditor: React.FC<{
     }
   };
 
-  const seekTo = (time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
-  };
-
   const stampCurrentTime = (index: number) => {
     updateLine(index, 'time', parseFloat(currentTime.toFixed(2)));
   };

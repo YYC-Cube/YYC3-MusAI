@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Sparkles, Play, Star, RefreshCw, Loader2,
-  TrendingUp, Zap, Heart, Smile, Frown, Cloud, Minus,
-  Music, Brain, User, ChevronRight, Award,
+  TrendingUp, Zap, Smile, Frown, Cloud, Minus,
+  Music, Brain, ChevronRight, Award,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';
-import { DEMO_PLAYLIST, type Track, dMusicLogo } from '@yyc3/music-data';
+import { type Track } from '@yyc3/music-data';
 
 // ==========================================
 // Recommendations Panel
@@ -78,7 +78,7 @@ export const RecommendationsPanel: React.FC<RecommendationsPanelProps> = ({
   onSelectTrack,
   onHaptic,
 }) => {
-  const { t, lang } = useI18n();
+  const { lang } = useI18n();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<RecommendationData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -425,7 +425,6 @@ export const RecommendationsPanel: React.FC<RecommendationsPanelProps> = ({
                                       {lang === 'zh' ? 'AI 推荐理由' : 'AI Reasoning'}
                                     </p>
                                     {aiAnalysis.recommendations.slice(0, 3).map((rec, i) => {
-                                      const mc = MOOD_CONFIG[rec.mood] || MOOD_CONFIG.neutral;
                                       return (
                                         <div
                                           key={`${rec.mood}-${i}`}

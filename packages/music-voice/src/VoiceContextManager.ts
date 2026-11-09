@@ -38,7 +38,7 @@ export class VoiceContextManager {
   private contextRules: ContextRule[] = []
   private entityExtractors: Map<string, (text: string) => any[]> = new Map()
   
-  private listeners: Map<string, Function[]> = new Map()
+  private listeners: Map<string, Array<(data?: any) => void>> = new Map()
   private maxHistoryPerContext: number = 50
   private contextTimeout: number = 300000 // 5分钟
 
@@ -415,7 +415,7 @@ export class VoiceContextManager {
     if (!context) return null
     
     // 分析文本
-    const analysis = this.analyzeText(text, context)
+    const _analysis = this.analyzeText(text, context)
     
     // 基于上下文和历史猜测意图
     let intent = 'unknown'
@@ -466,7 +466,7 @@ export class VoiceContextManager {
   /**
    * 分析文本
    */
-  private analyzeText(text: string, context: ConversationContext): {
+  private analyzeText(text: string, _context: ConversationContext): {
     length: number
     wordCount: number
     hasQuestion: boolean
@@ -694,14 +694,14 @@ export class VoiceContextManager {
   /**
    * 事件监听
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (data?: any) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
     this.listeners.get(event)!.push(callback)
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data?: any) => void): void {
     const listeners = this.listeners.get(event)
     if (listeners) {
       const index = listeners.indexOf(callback)

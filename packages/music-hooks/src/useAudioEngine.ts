@@ -244,13 +244,17 @@ export function useAudioEngine(config: AudioEngineConfig = {}): AudioEngineRetur
   // ====== Oscillator Management ======
   const tearDownOscillators = useCallback(() => {
     oscillatorsRef.current.forEach((osc) => {
-      try { osc.stop(); } catch {}
+      try { osc.stop(); } catch {
+        // 振荡器可能已停止
+      }
     });
     oscillatorsRef.current = [];
     oscGainsRef.current = [];
 
     if (lfoRef.current) {
-      try { lfoRef.current.stop(); } catch {}
+      try { lfoRef.current.stop(); } catch {
+        // LFO 可能已停止
+      }
       lfoRef.current = null;
       lfoGainRef.current = null;
     }

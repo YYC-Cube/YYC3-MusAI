@@ -63,7 +63,9 @@ export function useHaptics(): HapticsReturn {
     if (!supported) return;
     try {
       navigator.vibrate(0);
-    } catch {}
+    } catch {
+      // 不支持振动的环境忽略
+    }
   }, [supported]);
 
   return { supported, trigger, vibrate, cancel };

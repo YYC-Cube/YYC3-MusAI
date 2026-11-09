@@ -37,7 +37,7 @@ export class SpeechSynthesisEngine {
   private currentItem: SpeechSynthesisItem | null = null
   private utterance: SpeechSynthesisUtterance | null = null
   
-  private listeners: Map<string, Function[]> = new Map()
+  private listeners: Map<string, Array<(data?: any) => void>> = new Map()
   private synthesisHistory: SpeechSynthesisItem[] = []
   private maxHistorySize: number = 100
 
@@ -496,14 +496,14 @@ export class SpeechSynthesisEngine {
   /**
    * 事件监听
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (data?: any) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
     this.listeners.get(event)!.push(callback)
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data?: any) => void): void {
     const listeners = this.listeners.get(event)
     if (listeners) {
       const index = listeners.indexOf(callback)

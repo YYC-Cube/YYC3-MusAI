@@ -42,7 +42,9 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
     savePref('lang', newLang);
     try {
       localStorage.setItem('d-music-lang', newLang);
-    } catch {}
+    } catch {
+      // 隐私模式等写入失败场景忽略
+    }
   }, []);
 
   const toggleLang = useCallback(() => {

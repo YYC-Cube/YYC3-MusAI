@@ -6,7 +6,6 @@ import {
   Crown,
   Medal,
   TrendingUp,
-  TrendingDown,
   Minus,
   Heart,
   Play,
@@ -61,7 +60,9 @@ function loadPreviousRankings(): Record<string, number> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    // 本地缓存不可用时按首次加载处理
+  }
   return {};
 }
 
@@ -70,7 +71,9 @@ function savePreviousRankings(rankings: RankingEntry[]) {
     const map: Record<string, number> = {};
     rankings.forEach((r, i) => { map[r.songId] = i + 1; });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {}
+  } catch {
+    // 写入失败（隐私模式/配额）不影响榜单展示
+  }
 }
 
 function computeRankChanges(rankings: RankingEntry[]): RankingWithChange[] {
@@ -81,14 +84,8 @@ function computeRankChanges(rankings: RankingEntry[]): RankingWithChange[] {
     const currentRank = index + 1;
     const previousRank = prev[entry.songId] ?? null;
 
-    let rankChange: number | null = null;
-    if (!hasPrev) {
-      rankChange = null; // First load, no change data
-    } else if (previousRank === null) {
-      rankChange = null; // New entry
-    } else {
-      rankChange = previousRank - currentRank; // positive = moved up
-    }
+    // 首次加载或新上榜条目无变化数据，其余取与上次排名的差值（正数为上升）
+    const rankChange = !hasPrev || previousRank === null ? null : previousRank - currentRank;
 
     return { ...entry, rankChange, previousRank };
   });

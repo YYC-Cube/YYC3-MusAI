@@ -160,6 +160,7 @@ export const MHeartSystem: React.FC<MHeartSystemProps> = ({
     };
 
     requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- animate 内会持续更新 animatedScore，补依赖会导致每帧重启动画；mheart 为每次请求新建对象
   }, [mheart?.score]);
 
   const currentTier = TIERS.find(

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Clock, Music, Heart, TrendingUp, BarChart2 } from 'lucide-react';
-import { clsx } from 'clsx';
 import * as Recharts from 'recharts';
 import { apiFetch } from '@yyc3/music-utils';
 

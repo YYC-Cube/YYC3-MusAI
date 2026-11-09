@@ -213,7 +213,7 @@ export async function performHealthCheck() {
 
   try {
     // 检查 Supabase 连接
-    const { data, error } = await supabase.from('kv_store_f626b673').select('key').limit(1)
+    const { error } = await supabase.from('kv_store_f626b673').select('key').limit(1)
     healthCheck.checks.supabase = !error
 
     // 检查数据库连接（通过 Supabase）

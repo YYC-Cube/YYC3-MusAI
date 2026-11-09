@@ -13,7 +13,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Disc3, ShoppingBag, Heart, Star, Music, Lock, Package,
-  ChevronRight, Clock, Tag, Sparkles, Trophy, Play, Check, AlertCircle, ArrowLeft,
+  ChevronRight, Clock, Tag, Sparkles, Play, Check, AlertCircle, ArrowLeft,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
@@ -37,13 +37,6 @@ interface AlbumStoreProps {
 }
 
 type ViewMode = 'marketplace' | 'collection' | 'detail';
-
-const GENRE_COLORS: Record<string, string> = {
-  'Electronic / Ambient': 'from-indigo-500/20 to-purple-500/20',
-  'Synthwave / Cyberpunk': 'from-pink-500/20 to-red-500/20',
-  'Classical / Ambient': 'from-emerald-500/20 to-teal-500/20',
-  'Other': 'from-gray-500/20 to-slate-500/20',
-};
 
 function formatDuration(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -189,7 +182,6 @@ export const AlbumStore: React.FC<AlbumStoreProps> = ({
     const owned = ownedIds.has(album.id);
     const coverIdx = albums.findIndex(a => a.id === album.id);
     const totalDuration = album.tracks.reduce((sum, t) => sum + t.duration, 0);
-    const genreBg = GENRE_COLORS[album.genre] || GENRE_COLORS['Other'];
 
     return (
       <motion.div
@@ -409,7 +401,6 @@ export const AlbumStore: React.FC<AlbumStoreProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {albums.map((album, idx) => {
             const owned = ownedIds.has(album.id);
-            const genreBg = GENRE_COLORS[album.genre] || GENRE_COLORS['Other'];
             return (
               <motion.button
                 key={album.id}

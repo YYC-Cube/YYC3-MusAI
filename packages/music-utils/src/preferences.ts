@@ -11,6 +11,9 @@
 
 const STORAGE_KEY = 'dmusic-prefs';
 
+/** 可选 KV 同步所用的 apiFetch 最小签名 */
+type ApiFetch = (path: string, options?: RequestInit) => Promise<any>;
+
 export interface UserPreferences {
   lang: 'zh' | 'en';
   volume: number;
@@ -58,7 +61,7 @@ export function loadPref<K extends keyof UserPreferences>(key: K): UserPreferenc
 export function savePref<K extends keyof UserPreferences>(
   key: K,
   value: UserPreferences[K],
-  kvSync?: { apiFetch: Function; userId: string }
+  kvSync?: { apiFetch: ApiFetch; userId: string }
 ): void {
   try {
     const current = loadPrefs();
@@ -79,13 +82,15 @@ export function savePref<K extends keyof UserPreferences>(
  */
 export function savePrefs(
   partial: Partial<UserPreferences>,
-  kvSync?: { apiFetch: Function; userId: string }
+  kvSync?: { apiFetch: ApiFetch; userId: string }
 ): void {
   try {
     const current = loadPrefs();
     Object.assign(current, partial);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {}
+  } catch {
+    // localStorage may be unavailable (private browsing, quota exceeded)
+  }
   if (kvSync) {
     _debouncedKVSync(kvSync.apiFetch, kvSync.userId);
   }
@@ -94,7 +99,7 @@ export function savePrefs(
 // ---- Debounced KV sync (2s debounce) ----
 let _kvTimer: ReturnType<typeof setTimeout> | null = null;
 
-function _debouncedKVSync(apiFetch: Function, userId: string): void {
+function _debouncedKVSync(apiFetch: ApiFetch, userId: string): void {
   if (_kvTimer) clearTimeout(_kvTimer);
   _kvTimer = setTimeout(() => {
     const prefs = loadPrefs();
@@ -113,7 +118,7 @@ function _debouncedKVSync(apiFetch: Function, userId: string): void {
  * Merges remote prefs on top of local, then writes to localStorage.
  */
 export async function pullPrefsFromKV(
-  apiFetch: Function,
+  apiFetch: ApiFetch,
   userId: string
 ): Promise<UserPreferences> {
   try {

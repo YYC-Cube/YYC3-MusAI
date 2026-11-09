@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  X, Send, Clock, Lock, Unlock, Heart, MessageCircle,
-  Music, Calendar, Sparkles, Radio, Timer, Package,
+  X, Send, Lock, Unlock, Heart, MessageCircle,
+  Music, Sparkles, Radio, Timer, Package,
   RefreshCw, ChevronDown, ChevronUp, Mic, Square, Trash2, Play, Pause,
   MapPin, Navigation, Compass, Type, Shield, ShieldCheck, KeyRound,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch, getSharedAudioContext } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';
-import { DEMO_PLAYLIST } from '@yyc3/music-data';
 
 interface SpaceTimePanelProps {
   isOpen: boolean;
@@ -159,7 +158,6 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; label?: string } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoSupported] = useState(() => 'geolocation' in navigator);
-  const [showNearby, setShowNearby] = useState(false);
   const [nearbyMessages, setNearbyMessages] = useState<STMessage[]>([]);
   const [nearbyLoading, setNearbyLoading] = useState(false);
 
@@ -1130,7 +1128,7 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
                                           try {
                                             const r = await apiFetch<{ signedUrl: string }>(`/voice/url?path=${encodeURIComponent(msg.audioFilePath)}`);
                                             if (r?.signedUrl) url = r.signedUrl;
-                                          } catch {}
+                                          } catch { /* 签名地址获取失败时回退使用原始音频 */ }
                                         }
                                         if (url) { const a = new Audio(url); a.play().catch(() => {}); }
                                       }}

@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 import {
   Trophy, Sparkles, Radio, Star, GitBranch, Award,
-  ChevronRight, TrendingUp, MapPin, Clock, Zap,
-  Music, Users, Palette, Film, X, MessageCircle, Heart,
+  ChevronRight, Zap,
+  Users, Palette, Film, X, MessageCircle,
   Shield, ShoppingBag, Swords, Disc3, ArrowLeftRight, Upload,
 } from 'lucide-react';
 import { useI18n } from '@yyc3/music-hooks';
@@ -250,7 +250,7 @@ export const MobileDiscoverHub: React.FC<MobileDiscoverHubProps> = ({
   const { lang } = useI18n();
   const [quickStats, setQuickStats] = useState<QuickStat[]>([]);
 
-  const actionMap: Record<string, () => void> = {
+  const actionMap: Record<string, () => void> = useMemo(() => ({
     onOpenLeaderboard,
     onOpenRecommendations,
     onOpenSpaceTime,
@@ -266,7 +266,11 @@ export const MobileDiscoverHub: React.FC<MobileDiscoverHubProps> = ({
     onOpenE2ESetup: onOpenE2ESetup || (() => {}),
     onOpenSecondaryMarket: onOpenSecondaryMarket || (() => {}),
     onOpenUpload: onOpenUpload || (() => {}),
-  };
+  }), [
+    onOpenLeaderboard, onOpenRecommendations, onOpenSpaceTime, onOpenStarPower, onOpenIPMatrix,
+    onOpenAchievements, onOpenMVCreator, onOpenCreationStudio, onOpenCopyright, onOpenShop,
+    onOpenChallenge, onOpenAlbumStore, onOpenE2ESetup, onOpenSecondaryMarket, onOpenUpload,
+  ]);
 
   // Fetch quick stats when opened
   useEffect(() => {

@@ -15,7 +15,6 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import type { Emotion } from '@yyc3/music-hooks';
 import type { CommunityActivity } from '@yyc3/music-data';
 import { useI18n } from '@yyc3/music-hooks';
 import { useVirtualList } from '@yyc3/music-hooks';
@@ -77,7 +76,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
     // Haptic feedback on refresh trigger
-    try { navigator.vibrate?.([10, 30, 10, 30, 40]); } catch {}
+    try { navigator.vibrate?.([10, 30, 10, 30, 40]); } catch { /* 部分浏览器不支持震动，忽略 */ }
     onRefresh();
     setTimeout(() => setIsRefreshing(false), 1000);
   }, [onRefresh]);
@@ -105,7 +104,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
     setIsPulling(rubberBand > 10);
     // Light haptic when crossing threshold
     if (diff >= PULL_THRESHOLD && diff < PULL_THRESHOLD + 5) {
-      try { navigator.vibrate?.(15); } catch {}
+      try { navigator.vibrate?.(15); } catch { /* 部分浏览器不支持震动，忽略 */ }
     }
   }, []);
 

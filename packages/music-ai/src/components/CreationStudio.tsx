@@ -151,7 +151,7 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
   onClose,
   onCreateTrack,
   playlist,
-  currentTrackIndex,
+  currentTrackIndex: _currentTrackIndex,
   onHaptic,
   onShareWork,
   onOpenMV,
@@ -159,7 +159,7 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
   starPower = 0,
   onStarPowerUpdate,
 }) => {
-  const { t, lang } = useI18n();
+  const { lang } = useI18n();
   const [activeMode, setActiveMode] = useState<CreationMode | null>(null);
   const [unlockedPremium, setUnlockedPremium] = useState<Set<string>>(new Set());
 
@@ -169,7 +169,9 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
       try {
         const saved = localStorage.getItem('dmusic-unlocked-themes');
         if (saved) setUnlockedPremium(new Set(JSON.parse(saved)));
-      } catch {}
+      } catch {
+        // 本地缓存读取失败时按未解锁处理
+      }
       return;
     }
     (async () => {
@@ -194,10 +196,14 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
                 localStorage.removeItem('dmusic-unlocked-themes');
               }
             }
-          } catch {}
+          } catch {
+            // 迁移单个主题失败时跳过，继续处理其余主题
+          }
         }
       } catch {
-        try { const s = localStorage.getItem('dmusic-unlocked-themes'); if (s) setUnlockedPremium(new Set(JSON.parse(s))); } catch {}
+        try { const s = localStorage.getItem('dmusic-unlocked-themes'); if (s) setUnlockedPremium(new Set(JSON.parse(s))); } catch {
+          // 兜底读取失败时保持当前已解锁集合
+        }
       }
     })();
   }, [user]);
@@ -261,14 +267,18 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
       try {
         const stored = localStorage.getItem('d-music-works');
         if (stored) setWorks(JSON.parse(stored));
-      } catch {}
+      } catch {
+        // 本地作品缓存损坏时忽略
+      }
     }
   }, [isOpen]);
 
   const saveWork = useCallback((work: CreatedWork) => {
     setWorks(prev => {
       const updated = [work, ...prev].slice(0, 50);
-      try { localStorage.setItem('d-music-works', JSON.stringify(updated)); } catch {}
+      try { localStorage.setItem('d-music-works', JSON.stringify(updated)); } catch {
+        // 写入失败（隐私模式/配额）时仅保留内存态
+      }
       return updated;
     });
   }, []);
@@ -276,7 +286,9 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
   const deleteWork = useCallback((id: string) => {
     setWorks(prev => {
       const updated = prev.filter(w => w.id !== id);
-      try { localStorage.setItem('d-music-works', JSON.stringify(updated)); } catch {}
+      try { localStorage.setItem('d-music-works', JSON.stringify(updated)); } catch {
+        // 写入失败（隐私模式/配额）时仅保留内存态
+      }
       return updated;
     });
   }, []);

@@ -7,7 +7,6 @@ import {
   Volume2, VolumeX, Volume1, Sparkles, Smile, Frown,
   Zap, Cloud, Wand2, Trophy, BarChart3, Mic,
 } from 'lucide-react';
-// @ts-ignore - namespace import for radix slider
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import type { Emotion } from '@yyc3/music-hooks';
 import type { LyricLine } from '@yyc3/music-lyrics';
@@ -102,7 +101,7 @@ export const MobilePlayer: React.FC<MobilePlayerProps> = ({
   onAnalyticsToggle,
   onMicToggle,
   isListening,
-  lyrics,
+  lyrics: _lyrics,
   currentLyricText,
   currentLyricTranslation,
   frequencyData,
@@ -111,7 +110,6 @@ export const MobilePlayer: React.FC<MobilePlayerProps> = ({
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
   const volumeRef = useRef<HTMLDivElement>(null);
-  const [dragY, setDragY] = useState(0);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Shield, CheckCircle, Copy, Download, FileText, Clock, Hash, User as UserIcon, Music, Sparkles } from 'lucide-react';
-import { clsx } from 'clsx';
+import { X, Shield, CheckCircle, Copy, FileText, Clock, Hash, User as UserIcon, Music, Sparkles } from 'lucide-react';
 import { apiFetch } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';
 

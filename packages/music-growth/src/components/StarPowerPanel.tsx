@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Star, Zap, Calendar, TrendingUp, Gift, Award,
-  ChevronRight, Sparkles, RefreshCw,
+  ChevronRight, Sparkles,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { apiFetch } from '@yyc3/music-utils';
@@ -55,7 +55,7 @@ export const StarPowerPanel: React.FC<StarPowerPanelProps> = ({
   const [checkedInToday, setCheckedInToday] = useState(false);
   const [streak, setStreak] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [checkinFlash, setCheckinFlash] = useState<{ reward: number; streak: number } | null>(null);
   const [showAllLevels, setShowAllLevels] = useState(false);
 

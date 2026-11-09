@@ -77,7 +77,7 @@ export class VoiceCommandProcessor {
   private agentManager: AgentManager
   private popupManager: PopupEnhancedManager
   
-  private listeners: Map<string, Function[]> = new Map()
+  private listeners: Map<string, Array<(data?: any) => void>> = new Map()
   private maxHistorySize: number = 100
   private learningData: Array<{
     text: string
@@ -253,7 +253,7 @@ export class VoiceCommandProcessor {
       ],
       description: '开始语音识别',
       example: ['开始语音', '启用语音识别', '打开语音'],
-      action: async (params) => {
+      action: async (_params) => {
         return { action: 'start_voice' }
       }
     })
@@ -267,7 +267,7 @@ export class VoiceCommandProcessor {
       ],
       description: '停止语音识别',
       example: ['停止语音', '关闭语音识别', '禁用语音'],
-      action: async (params) => {
+      action: async (_params) => {
         return { action: 'stop_voice' }
       }
     })
@@ -284,7 +284,7 @@ export class VoiceCommandProcessor {
       ],
       description: '确认操作',
       example: ['确认', '是的', '好的'],
-      action: async (params) => {
+      action: async (_params) => {
         return { action: 'confirm' }
       }
     })
@@ -299,7 +299,7 @@ export class VoiceCommandProcessor {
       ],
       description: '取消操作',
       example: ['取消', '不要', '算了'],
-      action: async (params) => {
+      action: async (_params) => {
         return { action: 'cancel' }
       }
     })
@@ -314,7 +314,7 @@ export class VoiceCommandProcessor {
       ],
       description: '返回',
       example: ['返回', '后退', '回到上一页'],
-      action: async (params) => {
+      action: async (_params) => {
         return { action: 'go_back' }
       }
     })
@@ -328,7 +328,7 @@ export class VoiceCommandProcessor {
       ],
       description: '返回首页',
       example: ['首页', '主页', '回到主界面'],
-      action: async (params) => {
+      action: async (_params) => {
         return { action: 'go_home' }
       }
     })
@@ -776,7 +776,7 @@ export class VoiceCommandProcessor {
     }
   }
 
-  private async arrangePopups(params: any): Promise<any> {
+  private async arrangePopups(_params: any): Promise<any> {
     const popupManager = this.popupManager
     const popups = popupManager.getAllPopups()
     
@@ -906,7 +906,7 @@ export class VoiceCommandProcessor {
     return response
   }
 
-  private async showHelp(params: any): Promise<any> {
+  private async showHelp(_params: any): Promise<any> {
     const helpText = `
 可用语音命令:
 • 创建弹窗 - 创建新弹窗
@@ -927,7 +927,7 @@ export class VoiceCommandProcessor {
     }
   }
 
-  private async clearAll(params: any): Promise<any> {
+  private async clearAll(_params: any): Promise<any> {
     const popupManager = this.popupManager
     const popups = popupManager.getAllPopups()
     
@@ -1006,14 +1006,14 @@ export class VoiceCommandProcessor {
   /**
    * 事件监听
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (data?: any) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
     this.listeners.get(event)!.push(callback)
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data?: any) => void): void {
     const listeners = this.listeners.get(event)
     if (listeners) {
       const index = listeners.indexOf(callback)

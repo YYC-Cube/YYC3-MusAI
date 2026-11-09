@@ -321,6 +321,8 @@ export const Starfield: React.FC<StarfieldProps> = ({
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
+    // emotion 仅用于初始化色值，动画循环读取 emotionRef；补进依赖会在情绪变化时重建整片星野与动画帧
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 依赖 emotion 会重建 canvas 星野与动画循环，情绪变色已由 emotionRef 驱动
   }, []);
 
   return (

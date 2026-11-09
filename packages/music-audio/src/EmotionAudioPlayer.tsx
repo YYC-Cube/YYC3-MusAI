@@ -102,6 +102,7 @@ const EmotionAudioPlayer: React.FC<EmotionAudioPlayerProps> = ({
         if (autoPlay) {
             play();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- play 每次渲染都会重建且依赖父组件内联传入的 onPlay，补入依赖会导致 autoPlay 反复触发播放并可能形成渲染循环
     }, [autoPlay]);
 
     /**
