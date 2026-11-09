@@ -1,5 +1,6 @@
 @import 'tailwindcss' source(none);
 @source '../**/*.{js,ts,jsx,tsx}';
-@source '../../../packages/**/*.{js,ts,jsx,tsx}';
+/* 工作区包源码（styles → src → d-music → apps → 仓库根） */
+@source '../../../../packages/**/*.{js,ts,jsx,tsx}';
 
 @import 'tw-animate-css';

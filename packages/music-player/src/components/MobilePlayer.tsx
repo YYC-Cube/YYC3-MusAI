@@ -137,6 +137,10 @@ export const MobilePlayer: React.FC<MobilePlayerProps> = ({
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           className="fixed inset-0 z-[80] bg-[#0A0E2F] flex flex-col overflow-hidden"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="播放器 / Player"
+          data-testid="mobile-player"
         >
           {/* Ambient background glow */}
           <div
@@ -162,6 +166,7 @@ export const MobilePlayer: React.FC<MobilePlayerProps> = ({
             <button
               onClick={onClose}
               className="p-2 -ml-2 rounded-full text-white/50 active:bg-white/10"
+              aria-label="关闭播放器 / Close player"
             >
               <ChevronDown className="w-6 h-6" />
             </button>

@@ -242,6 +242,29 @@ pnpm build
 pnpm preview
 ```
 
+### 组件文档与注册表
+
+```bash
+# 生成 registry.json（15 包 / 305 组件）
+pnpm registry:build
+
+# 本地文档站（http://localhost:3200）
+pnpm docs:dev
+
+# 构建静态文档站
+pnpm docs:build
+```
+
+组件注册表位于根目录 `registry.json`，文档站位于 `apps/component-docs`，详见 [组件注册表与文档站](docs/YYC3-MusAI-组件注册表与文档站-2026-11-09.md)。
+
+### 关键旅程 E2E
+
+```bash
+env -u CI pnpm e2e
+```
+
+覆盖播放/暂停、切歌、播放列表、评论、主题切换、键盘快捷键、成就面板与移动端播放器共 10 条用例。
+
 ---
 
 ## 环境配置

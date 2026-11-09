@@ -72,6 +72,55 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  apps/component-docs:
+    dependencies:
+      '@yyc3/music-data':
+        specifier: workspace:*
+        version: link:../../packages/music-data
+      '@yyc3/music-design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/music-design-tokens
+      '@yyc3/music-emotion':
+        specifier: workspace:*
+        version: link:../../packages/music-emotion
+      '@yyc3/music-lyrics':
+        specifier: workspace:*
+        version: link:../../packages/music-lyrics
+      '@yyc3/music-player':
+        specifier: workspace:*
+        version: link:../../packages/music-player
+      '@yyc3/music-ui':
+        specifier: workspace:*
+        version: link:../../packages/music-ui
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: 19.3.1
+        version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@tailwindcss/vite':
+        specifier: 4.3.5
+        version: 4.3.5(vite@7.3.7(jiti@2.7.0)(lightningcss@1.33.0))
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react':
+        specifier: 5.2.0
+        version: 5.2.0(vite@7.3.7(jiti@2.7.0)(lightningcss@1.33.0))
+      tailwindcss:
+        specifier: 4.3.5
+        version: 4.3.5
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: 7.3.7
+        version: 7.3.7(jiti@2.7.0)(lightningcss@1.33.0)
+
   apps/d-music:
     dependencies:
       '@radix-ui/react-slider':

@@ -1,0 +1,33 @@
+{
+  "name": "@yyc3/component-docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "YYC³ 组件文档站：基于 registry.json 的组件目录、示例与 API 展示",
+  "scripts": {
+    "dev": "vite --port 3200",
+    "build": "node ../../scripts/generate-registry.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview --port 3200",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@yyc3/music-data": "workspace:*",
+    "@yyc3/music-design-tokens": "workspace:*",
+    "@yyc3/music-emotion": "workspace:*",
+    "@yyc3/music-lyrics": "workspace:*",
+    "@yyc3/music-player": "workspace:*",
+    "@yyc3/music-ui": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "^5.9.3",
+    "vite": "7.3.7"
+  }
+}

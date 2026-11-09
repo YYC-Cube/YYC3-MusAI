@@ -22,6 +22,9 @@ complexity: simple
 
 ### 新增
 
+- 关键旅程 E2E：播放/暂停、切歌、播放列表、评论、主题、快捷键、成就、移动端播放器，共 10 条（含原 2 条冒烟）。
+- `registry.json`：扫描 15 个公开包生成 305 个组件元数据，含 8 个实时示例。
+- `apps/component-docs`：React + Vite + Tailwind 组件文档站，支持搜索、主题切换、示例与 Props 展示。
 - `@yyc3/music-lyrics`：`parseLrc()` 标准 LRC 解析（元数据、offset、多时间标签、乱序排序）。
 - `@yyc3/music-utils`：共享 AudioContext 管理器（`getSharedAudioContext` / `resume` / `dispose` / `stats`）。
 - `@yyc3/music-utils`：`apiFetch` / `apiFetchStrict` 支持 `AbortSignal`，`aiApi` / `sttApi` / `voiceApi` 写操作透传 `signal`。
@@ -31,6 +34,8 @@ complexity: simple
 
 - `useAudioEngine`、`SpeechRecognitionEngine`、`SpaceTimePanel` 改用共享 AudioContext，避免上下文耗尽。
 - `useXiaoyuVoice` 移除无用的 AudioContext 创建，cleanup 停止当前音频并防止叠加播放。
+- 修复 Tailwind `@source` 路径错误（指向 `apps/packages`），工作区组件样式类现可正确生成。
+- `MobilePlayer` 与 `CommentSystem` 补充 dialog 语义与关闭按钮可访问名称；`XiaoyuCharacter` 增加具名导出。
 
 ### 安全
 

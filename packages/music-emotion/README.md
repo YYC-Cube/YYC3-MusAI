@@ -33,7 +33,7 @@ export function Companion() {
 
 ## 导出清单
 
-- XiaoyuCharacter（默认导出）、XiaoyuBubble（默认导出）
+- XiaoyuCharacter（默认导出 + 具名导出 `{ XiaoyuCharacter }`）、XiaoyuBubble（默认导出）
 - useXiaoyuVoice（默认导出）
 - emotionUIMap、getEmotionUI、getEmotionColor
 - XiaoyuEmotionType 等类型

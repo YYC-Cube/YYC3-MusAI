@@ -173,4 +173,5 @@ const XiaoyuCharacter: React.FC<XiaoyuCharacterProps> = ({
   );
 };
 
+export { XiaoyuCharacter };
 export default XiaoyuCharacter;

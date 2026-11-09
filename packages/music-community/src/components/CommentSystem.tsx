@@ -145,6 +145,9 @@ export const CommentSystem: React.FC<CommentSystemProps> = ({
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             className="fixed inset-x-0 bottom-0 z-[61] max-h-[75vh] bg-[#0D1235]/95 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl md:inset-x-auto md:right-0 md:top-0 md:bottom-0 md:w-full md:max-w-md md:rounded-none md:rounded-l-2xl md:border-l md:border-t-0"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('comments.title')}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/[0.06] flex-shrink-0">
