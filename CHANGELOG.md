@@ -23,8 +23,11 @@ complexity: simple
 ### 新增
 
 - 关键旅程 E2E：播放/暂停、切歌、播放列表、评论、主题、快捷键、成就、移动端播放器，共 10 条（含原 2 条冒烟）。
-- `registry.json`：扫描 15 个公开包生成 305 个组件元数据，含 8 个实时示例。
+- `registry.json`：扫描 15 个公开包生成 305 个组件元数据，含 16 个实时示例。
 - `apps/component-docs`：React + Vite + Tailwind 组件文档站，支持搜索、主题切换、示例与 Props 展示。
+- 文档站移动端抽屉导航（`<md`）与 16 个实时示例。
+- `.github/workflows/docs-pages.yml`：GitHub Pages 自动构建与部署。
+- `pnpm smoke:packs`：15 包打包 → 安装 → 导入的发布烟雾测试。
 - `@yyc3/music-lyrics`：`parseLrc()` 标准 LRC 解析（元数据、offset、多时间标签、乱序排序）。
 - `@yyc3/music-utils`：共享 AudioContext 管理器（`getSharedAudioContext` / `resume` / `dispose` / `stats`）。
 - `@yyc3/music-utils`：`apiFetch` / `apiFetchStrict` 支持 `AbortSignal`，`aiApi` / `sttApi` / `voiceApi` 写操作透传 `signal`。
@@ -36,6 +39,8 @@ complexity: simple
 - `useXiaoyuVoice` 移除无用的 AudioContext 创建，cleanup 停止当前音频并防止叠加播放。
 - 修复 Tailwind `@source` 路径错误（指向 `apps/packages`），工作区组件样式类现可正确生成。
 - `MobilePlayer` 与 `CommentSystem` 补充 dialog 语义与关闭按钮可访问名称；`XiaoyuCharacter` 增加具名导出。
+- `react-day-picker` 升级至 ^10.0.2，`Calendar` 适配 v10 类名与 Chevron 组件，消除 React 19 peer 冲突。
+- `XiaoyuBubble` 增加具名导出，文档站可直接按需引入。
 
 ### 安全
 

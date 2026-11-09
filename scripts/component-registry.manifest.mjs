@@ -98,6 +98,78 @@ export const curatedComponents = [
   size={180}
   mode="circular"
 />`
+  },
+  {
+    name: 'DProgress',
+    package: '@yyc3/music-ui',
+    description: '进度条，支持渐变/成功/警告变体与百分比标签。',
+    props: ['value', 'size', 'variant', 'showLabel'],
+    demo: 'DProgress',
+    example: '<DProgress value={68} showLabel />'
+  },
+  {
+    name: 'DInput',
+    package: '@yyc3/music-ui',
+    description: '带标签、提示与错误态的输入框，支持前后缀图标与密码可见切换。',
+    props: ['variant', 'label', 'error', 'hint', 'inputSize', 'leftIcon'],
+    demo: 'DInput',
+    example: '<DInput label="搜索" placeholder="歌曲 / 歌手" />'
+  },
+  {
+    name: 'DSpinner',
+    package: '@yyc3/music-ui',
+    description: '加载指示器，三档尺寸。',
+    props: ['size'],
+    demo: 'DSpinner',
+    example: '<DSpinner size="lg" />'
+  },
+  {
+    name: 'DEmptyState',
+    package: '@yyc3/music-ui',
+    description: '空状态占位，支持图标、标题、描述与操作区。',
+    props: ['icon', 'title', 'description', 'action'],
+    demo: 'DEmptyState',
+    example: '<DEmptyState title="暂无收藏" description="喜欢这首歌就加入收藏吧" />'
+  },
+  {
+    name: 'DAchievementCard',
+    package: '@yyc3/music-ui',
+    description: '成就卡片，展示稀有度、进度与解锁状态。',
+    props: ['title', 'description', 'icon', 'progress', 'unlocked', 'rarity'],
+    demo: 'DAchievementCard',
+    example: '<DAchievementCard title="夜行者" description="连续 7 天收听" icon="🌙" progress={70} rarity="rare" />'
+  },
+  {
+    name: 'AchievementRing',
+    package: '@yyc3/music-ui',
+    description: '环形进度，用于成就完成度与专注计时。',
+    props: ['progress', 'size', 'strokeWidth', 'color', 'bgColor'],
+    demo: 'AchievementRing',
+    example: '<AchievementRing progress={72} size={72} />'
+  },
+  {
+    name: 'StatCard',
+    package: '@yyc3/music-ui',
+    description: '指标卡，展示数值、环比与趋势线。',
+    props: ['label', 'value', 'change', 'trend', 'icon'],
+    demo: 'StatCard',
+    example: '<StatCard label="本周播放" value={128} change={12.5} trend={[3, 6, 4, 9, 7, 12]} />'
+  },
+  {
+    name: 'SparklineChart',
+    package: '@yyc3/music-ui',
+    description: '迷你趋势折线，适合表格与指标卡内嵌。',
+    props: ['data', 'width', 'height', 'color', 'showDot'],
+    demo: 'SparklineChart',
+    example: '<SparklineChart data={[3, 6, 4, 9, 7, 12, 10]} width={160} height={40} />'
+  },
+  {
+    name: 'XiaoyuBubble',
+    package: '@yyc3/music-emotion',
+    description: '小语气泡，按情绪切换配色，可关闭。',
+    props: ['text', 'emotion', 'isVisible', 'onClose'],
+    demo: 'XiaoyuBubble',
+    example: '<XiaoyuBubble text="今天也一起听歌吧！" emotion="happy" isVisible />'
   }
 ];
 

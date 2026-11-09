@@ -422,7 +422,9 @@ describe('Calendar', () => {
       />
     )
     expect(document.querySelector('.custom')).not.toBeNull()
-    const day = screen.getAllByRole('gridcell', { name: '15' })[0]
+    const cell = document.querySelector('[data-day="2024-01-15"]') as HTMLElement | null
+    expect(cell).not.toBeNull()
+    const day = cell!.querySelector('button') as HTMLElement
     await user.click(day)
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(onSelect.mock.calls[0][0]).toBeInstanceOf(Date)
@@ -440,7 +442,10 @@ describe('Calendar', () => {
     )
     expect(container.querySelector('table')).not.toBeNull()
     expect(container.querySelectorAll('[aria-selected="true"]').length).toBeGreaterThan(0)
-    expect(container.querySelector('.day-outside')).toBeNull()
+    // v10 起 showOutsideDays=false 仍渲染外部日期单元格，但以 data-hidden 标记隐藏
+    const outsideDays = Array.from(container.querySelectorAll('[data-outside="true"]'))
+    expect(outsideDays.length).toBeGreaterThan(0)
+    expect(outsideDays.every((el) => el.getAttribute('data-hidden') === 'true')).toBe(true)
   })
 
   it('支持自定义 classNames 合并', () => {

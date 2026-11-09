@@ -130,4 +130,5 @@ const XiaoyuBubble: React.FC<XiaoyuBubbleProps> = ({
   );
 };
 
+export { XiaoyuBubble };
 export default XiaoyuBubble;

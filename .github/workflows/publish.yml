@@ -58,6 +58,10 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
+      - name: Version packages (manual release)
+        if: ${{ env.NPM_TOKEN != '' && github.event_name == 'workflow_dispatch' && inputs.dry_run == false }}
+        run: pnpm exec changeset version
+
       - name: Verify pack contents (README + dist + entry files)
         run: node scripts/verify-packs.mjs
 

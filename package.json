@@ -49,6 +49,7 @@
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
     "verify:packs": "node scripts/verify-packs.mjs",
+    "smoke:packs": "node scripts/smoke-pack-install.mjs",
     "registry:build": "node scripts/generate-registry.mjs",
     "docs:dev": "pnpm --filter @yyc3/component-docs dev",
     "docs:build": "pnpm --filter @yyc3/component-docs build",

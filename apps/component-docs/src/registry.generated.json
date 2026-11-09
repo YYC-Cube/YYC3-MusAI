@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-11-09T14:02:05.505Z",
+  "generatedAt": "2026-11-09T14:13:04.542Z",
   "totals": {
     "packages": 15,
     "components": 305,
-    "curated": 8
+    "curated": 16
   },
   "packages": [
     {
@@ -470,7 +470,7 @@
       "package": "@yyc3/music-emotion",
       "version": "2.0.0",
       "category": "情感角色",
-      "description": "小语角色、气泡、情绪映射与语音播放 Hook。",
+      "description": "小语气泡，按情绪切换配色，可关闭。",
       "props": [
         "text",
         "emotion",
@@ -478,8 +478,8 @@
         "onClose"
       ],
       "source": "packages/music-emotion/src/components/xiaoyu/XiaoyuBubble.tsx",
-      "demo": null,
-      "example": null
+      "demo": "XiaoyuBubble",
+      "example": "<XiaoyuBubble text=\"今天也一起听歌吧！\" emotion=\"happy\" isVisible />"
     },
     {
       "name": "XiaoyuCharacter",
@@ -821,19 +821,17 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "环形进度，用于成就完成度与专注计时。",
       "props": [
         "progress",
         "size",
         "strokeWidth",
         "color",
-        "bgColor",
-        "children",
-        "className"
+        "bgColor"
       ],
       "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
-      "demo": null,
-      "example": null
+      "demo": "AchievementRing",
+      "example": "<AchievementRing progress={72} size={72} />"
     },
     {
       "name": "Alert",
@@ -1670,19 +1668,18 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "成就卡片，展示稀有度、进度与解锁状态。",
       "props": [
         "title",
         "description",
         "icon",
         "progress",
         "unlocked",
-        "rarity",
-        "className"
+        "rarity"
       ],
       "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
-      "demo": null,
-      "example": null
+      "demo": "DAchievementCard",
+      "example": "<DAchievementCard title=\"夜行者\" description=\"连续 7 天收听\" icon=\"🌙\" progress={70} rarity=\"rare\" />"
     },
     {
       "name": "DataExportButton",
@@ -1901,7 +1898,7 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "带标签、提示与错误态的输入框，支持前后缀图标与密码可见切换。",
       "props": [
         "variant",
         "label",
@@ -1911,8 +1908,8 @@
         "leftIcon"
       ],
       "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
-      "demo": null,
-      "example": null
+      "demo": "DInput",
+      "example": "<DInput label=\"搜索\" placeholder=\"歌曲 / 歌手\" />"
     },
     {
       "name": "DList",
@@ -2028,17 +2025,16 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "进度条，支持渐变/成功/警告变体与百分比标签。",
       "props": [
         "value",
         "size",
         "variant",
-        "showLabel",
-        "className"
+        "showLabel"
       ],
       "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
-      "demo": null,
-      "example": null
+      "demo": "DProgress",
+      "example": "<DProgress value={68} showLabel />"
     },
     {
       "name": "Drawer",
@@ -2320,14 +2316,13 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "加载指示器，三档尺寸。",
       "props": [
-        "size",
-        "className"
+        "size"
       ],
       "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
-      "demo": null,
-      "example": null
+      "demo": "DSpinner",
+      "example": "<DSpinner size=\"lg\" />"
     },
     {
       "name": "DTabBar",
@@ -3603,18 +3598,17 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "迷你趋势折线，适合表格与指标卡内嵌。",
       "props": [
         "data",
         "width",
         "height",
         "color",
-        "showDot",
-        "className"
+        "showDot"
       ],
       "source": "packages/music-ui/src/dmusic/DataViz.tsx",
-      "demo": null,
-      "example": null
+      "demo": "SparklineChart",
+      "example": "<SparklineChart data={[3, 6, 4, 9, 7, 12, 10]} width={160} height={40} />"
     },
     {
       "name": "StarPowerChart",
@@ -3634,18 +3628,17 @@
       "package": "@yyc3/music-ui",
       "version": "2.0.0",
       "category": "UI 基础",
-      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "description": "指标卡，展示数值、环比与趋势线。",
       "props": [
         "label",
         "value",
         "change",
         "trend",
-        "icon",
-        "className"
+        "icon"
       ],
       "source": "packages/music-ui/src/dmusic/DataViz.tsx",
-      "demo": null,
-      "example": null
+      "demo": "StatCard",
+      "example": "<StatCard label=\"本周播放\" value={128} change={12.5} trend={[3, 6, 4, 9, 7, 12]} />"
     },
     {
       "name": "Switch",
