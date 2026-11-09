@@ -63,6 +63,9 @@ export async function saveLocalAudio(
   const result = await request<IDBValidKey>('readwrite', (store) =>
     store.put({ id, blob, meta, updatedAt: Date.now() } satisfies StoredAudio)
   );
+  if (result === null) {
+    console.warn('[localAudio] 保存失败：浏览器不支持 IndexedDB 或存储配额不足，该曲目将无法跨刷新恢复');
+  }
   return result !== null;
 }
 
@@ -82,4 +85,30 @@ export async function deleteLocalAudio(id: string): Promise<boolean> {
 export async function listLocalAudioIds(): Promise<string[]> {
   const result = await request<IDBValidKey[]>('readonly', (store) => store.getAllKeys());
   return (result ?? []).map(String);
+}
+
+/**
+ * 清理不再被引用的音频文件，返回删除数量。
+ * 队列与歌单都只保存 trackId，因此回收时必须传入两者的并集。
+ */
+export async function pruneLocalAudio(keepIds: Iterable<string>): Promise<number> {
+  const keep = new Set(keepIds);
+  const ids = await listLocalAudioIds();
+  const orphans = ids.filter((id) => !keep.has(id));
+  let removed = 0;
+  for (const id of orphans) {
+    if (await deleteLocalAudio(id)) removed += 1;
+  }
+  return removed;
+}
+
+/** 查询当前源的存储占用与配额；浏览器不支持时返回 null */
+export async function getAudioStorageUsage(): Promise<{ usage: number; quota: number } | null> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return null;
+  try {
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    return { usage, quota };
+  } catch {
+    return null;
+  }
 }

@@ -3,8 +3,10 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   deleteLocalAudio,
+  getAudioStorageUsage,
   getLocalAudio,
   listLocalAudioIds,
+  pruneLocalAudio,
   saveLocalAudio,
 } from '../src/localAudio';
 
@@ -50,5 +52,27 @@ describe('localAudio', () => {
     await saveLocalAudio('custom-a', blob(), {});
     await saveLocalAudio('custom-b', blob(), {});
     expect((await listLocalAudioIds()).sort()).toEqual(['custom-a', 'custom-b']);
+  });
+
+  it('回收未被引用的音频，保留队列与歌单仍引用的', async () => {
+    await saveLocalAudio('keep-queue', blob(), {});
+    await saveLocalAudio('keep-playlist', blob(), {});
+    await saveLocalAudio('orphan-1', blob(), {});
+    await saveLocalAudio('orphan-2', blob(), {});
+
+    const removed = await pruneLocalAudio(['keep-queue', 'keep-playlist']);
+
+    expect(removed).toBe(2);
+    expect((await listLocalAudioIds()).sort()).toEqual(['keep-playlist', 'keep-queue']);
+  });
+
+  it('回收时不误删：传入空集合会清空全部音频', async () => {
+    await saveLocalAudio('only', blob(), {});
+    expect(await pruneLocalAudio([])).toBe(1);
+    expect(await listLocalAudioIds()).toEqual([]);
+  });
+
+  it('存储占用在无 navigator.storage 时返回 null', async () => {
+    expect(await getAudioStorageUsage()).toBeNull();
   });
 });

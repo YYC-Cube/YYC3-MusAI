@@ -16,7 +16,9 @@ import {
   dMusicInstruments,
   getFavoriteIds,
   getLocalAudio,
+  getSavedPlaylists,
   getSavedQueue,
+  pruneLocalAudio,
   saveLocalAudio,
   savePlaylist,
   saveQueue,
@@ -182,6 +184,13 @@ export function AppInner() {
       if (cancelled) return;
       if (playable.length > 0) setPlaylist(playable);
       queueHydratedRef.current = true;
+      // 回收孤儿音频：队列与已保存歌单都不再引用的文件从 IndexedDB 删除
+      const playlists = await getSavedPlaylists();
+      const keep = new Set([
+        ...playable.map((track) => track.id),
+        ...playlists.flatMap((item) => item.trackIds),
+      ]);
+      void pruneLocalAudio(keep);
     })();
     return () => {
       cancelled = true;
