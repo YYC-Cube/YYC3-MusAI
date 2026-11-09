@@ -255,7 +255,7 @@ pnpm docs:dev
 pnpm docs:build
 ```
 
-组件注册表位于根目录 `registry.json`，文档站位于 `apps/component-docs`，详见 [组件注册表与文档站](docs/YYC3-MusAI-组件注册表与文档站-2026-11-09.md)。
+组件注册表位于根目录 `registry.json`，文档站位于 `apps/component-docs`，线上地址：<https://musai.yyc3.vip/docs/>。详见 [组件注册表与文档站](docs/YYC3-MusAI-组件注册表与文档站-2026-11-09.md)。
 
 ### 关键旅程 E2E
 
