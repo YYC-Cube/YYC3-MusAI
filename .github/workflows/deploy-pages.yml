@@ -49,7 +49,8 @@ jobs:
           DOCS_BASE: /docs/
 
       - name: Bundle docs into app artifact
-        run: node -e "require('node:fs').cpSync('apps/component-docs/dist', 'apps/d-music/dist/docs', { recursive: true })"
+        run: |
+          node -e "require('node:fs').cpSync('apps/component-docs/dist', 'apps/d-music/dist/docs', { recursive: true })"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
