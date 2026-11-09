@@ -45,11 +45,14 @@ jobs:
       - name: Build component docs
         run: pnpm docs:build
 
+      - name: Archive build artifacts
+        run: tar -czf d-music-dist.tar.gz -C apps/d-music/dist .
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: d-music-dist
-          path: apps/d-music/dist
+          path: d-music-dist.tar.gz
           retention-days: 7
 
   server-integration:

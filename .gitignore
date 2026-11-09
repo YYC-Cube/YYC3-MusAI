@@ -191,3 +191,6 @@ data/**/!.env.example
 .npmrc
 *.log
 .DS_Store
+
+# CI 构建产物归档
+d-music-dist.tar.gz
