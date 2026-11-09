@@ -19,7 +19,7 @@
 **YYC³ AI Family - 智能音乐平台**
 
 > 🏛️ **单仓一体化架构**（2026-11-09 扁平化）
-> 本仓库为 YYC3-MusAI **唯一开发主线**：`apps/d-music`（主应用）+ `packages/`（16 个 `@yyc3/music-*` 库包）
+> 本仓库为 YYC3-MusAI **唯一开发主线**：`apps/yyc3-musai`（主应用）+ `packages/`（16 个 `@yyc3/music-*` 库包）
 > 由 pnpm workspace + Turborepo 统一管理，**无嵌套子仓**。
 > v11.2 扁平化之前的 `src/` 基线快照已归档至 `archive/baseline/src/`，仅供追溯，不再演进。
 > 治理资产：`docs/` 全生命周期文档、`data/` 数据库治理、`supabase/` 后端源、`config/` 参数定义。
@@ -145,14 +145,14 @@ YYC3-MusAI 是 YYC³ AI Family 项目中的智能音乐播放器，集成了先�
 ```
 YYC3-MusAI/
 ├── apps/
-│   └── d-music/                     # 主应用（Vite + React 19）
+│   └── yyc3-musai/                  # 主应用（Vite + React 19）
 │       ├── src/app/                 # 应用源码：App.tsx / main.tsx / components
 │       ├── src/styles/              # 全局样式（tailwind/theme/fonts）
 │       ├── public/                  # 静态资源（musai-icons 多端图标、music、mv、CNAME）
 │       ├── e2e/                     # Playwright 冒烟用例
 │       ├── index.html               # 应用入口 HTML（含 PWA/图标配置）
 │       ├── vite.config.ts           # 构建配置（含 manualChunks 分包）
-│       └── package.json             # @yyc3/d-music
+│       └── package.json             # @yyc3/yyc3-musai
 │
 ├── packages/                        # 16 个库包（@yyc3/music-*）
 │   ├── music-ai/  music-audio/  music-commerce/  music-community/
@@ -578,13 +578,13 @@ pnpm preview
 
 ```bash
 # 构建镜像
-docker build -t d-music-b:latest .
+docker build -t yyc3-musai:latest .
 
 # 运行容器
 docker run -p 3198:3198 \
   -e VITE_SUPABASE_URL=https://your-project-id.supabase.co \
   -e VITE_SUPABASE_ANON_KEY=your-anon-key \
-  d-music-b:latest
+  yyc3-musai:latest
 ```
 
 ### Supabase 部署

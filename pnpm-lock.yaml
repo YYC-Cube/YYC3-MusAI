@@ -121,7 +121,7 @@ importers:
         specifier: 7.3.7
         version: 7.3.7(jiti@2.7.0)(lightningcss@1.33.0)
 
-  apps/d-music:
+  apps/yyc3-musai:
     dependencies:
       '@radix-ui/react-slider':
         specifier: 1.2.3

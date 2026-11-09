@@ -50,7 +50,7 @@ jobs:
 
       - name: Bundle docs into app artifact
         run: |
-          node -e "require('node:fs').cpSync('apps/component-docs/dist', 'apps/d-music/dist/docs', { recursive: true })"
+          node -e "require('node:fs').cpSync('apps/component-docs/dist', 'apps/yyc3-musai/dist/docs', { recursive: true })"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -58,7 +58,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/d-music/dist
+          path: apps/yyc3-musai/dist
 
   deploy:
     name: Deploy

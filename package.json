@@ -43,7 +43,7 @@
     "typecheck": "turbo run typecheck",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "e2e": "pnpm --filter @yyc3/d-music exec playwright test",
+    "e2e": "pnpm --filter @yyc3/yyc3-musai exec playwright test",
     "test:deno": "pnpm --filter @yyc3/music-server run test:deno",
     "test:deno:coverage": "pnpm --filter @yyc3/music-server run test:deno:coverage",
     "lint": "turbo run lint",

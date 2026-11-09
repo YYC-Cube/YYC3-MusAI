@@ -1,7 +1,7 @@
 {
-  "name": "@yyc3/d-music",
+  "name": "@yyc3/yyc3-musai",
   "version": "11.2.0",
-  "description": "YYC³ D-Music 智能音乐播放器主应用（基线 YYC3-MusAI v11.2 拆分迁移）",
+  "description": "YYC³ MusAI 智能音乐播放器主应用（基线 YYC3-MusAI v11.2 拆分迁移）",
   "private": true,
   "type": "module",
   "scripts": {
