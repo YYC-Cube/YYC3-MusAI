@@ -1,0 +1,90 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '仅校验打包产物，不发布'
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
+
+jobs:
+  publish:
+    name: Build · Verify Packs · Publish
+    runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit (blocking)
+        run: pnpm audit --audit-level=high
+        env:
+          npm_config_registry: https://registry.npmjs.org
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests + coverage gate
+        run: pnpm test:coverage
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Verify pack contents (README + dist + entry files)
+        run: node scripts/verify-packs.mjs
+
+      - name: Publish via changesets
+        if: ${{ env.NPM_TOKEN != '' && (github.event_name == 'push' || inputs.dry_run == false) }}
+        run: pnpm exec changeset publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+
+      - name: Skip publish (no token / dry run)
+        if: ${{ env.NPM_TOKEN == '' || (github.event_name == 'workflow_dispatch' && inputs.dry_run != false) }}
+        run: echo "NPM_TOKEN 未配置或为 dry-run，已跳过实际发布；打包产物校验已通过。"
+
+      - name: Registry install smoke
+        if: ${{ env.NPM_TOKEN != '' && (github.event_name == 'push' || inputs.dry_run == false) }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/yyc3-smoke && cd /tmp/yyc3-smoke
+          npm init -y >/dev/null
+          for pkg in \
+            @yyc3/music-data @yyc3/music-design-tokens @yyc3/music-utils @yyc3/music-hooks \
+            @yyc3/music-ui @yyc3/music-player @yyc3/music-lyrics @yyc3/music-ai \
+            @yyc3/music-community @yyc3/music-commerce @yyc3/music-growth \
+            @yyc3/music-audio @yyc3/music-emotion @yyc3/music-voice @yyc3/music-testing; do
+            npm install "$pkg" --no-audit --no-fund
+          done
+          node -e "for (const p of ['music-data','music-design-tokens','music-utils','music-hooks','music-ui','music-player','music-lyrics','music-ai','music-community','music-commerce','music-growth','music-audio','music-emotion','music-voice','music-testing']) { require.resolve('@yyc3/' + p); } console.log('registry install smoke passed')"
+        env:
+          npm_config_registry: https://registry.npmjs.org

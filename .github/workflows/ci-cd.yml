@@ -87,7 +87,9 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Run audit
-        run: pnpm audit --audit-level=high || true
+      - name: Run audit (blocking)
+        run: pnpm audit --audit-level=high
+        env:
+          npm_config_registry: https://registry.npmjs.org
 
   # 部署由 .github/workflows/deploy-pages.yml 负责（GitHub Pages + musai.yyc3.vip）

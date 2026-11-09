@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm run build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
@@ -49,6 +50,7 @@
   ],
   "author": "YYC³ Team <admin@0379.email>",
   "license": "MIT",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git",

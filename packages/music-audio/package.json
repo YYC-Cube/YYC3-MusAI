@@ -10,13 +10,14 @@
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm run build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
   "dependencies": {
     "framer-motion": "^12.0.0",
     "reactflow": "^11.11.4",
-    "react-syntax-highlighter": "^15.6.1"
+    "react-syntax-highlighter": "^16.1.2"
   },
   "peerDependencies": {
     "react": ">=19.0.0"
@@ -54,6 +55,7 @@
   ],
   "author": "YYC³ Team <admin@0379.email>",
   "license": "MIT",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git",

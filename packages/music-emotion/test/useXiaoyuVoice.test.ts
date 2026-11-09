@@ -102,8 +102,8 @@ describe('useXiaoyuVoice', () => {
   })
 
   it('复用同一个 AudioContext', async () => {
-    const Ctor = vi.fn(() => new FakeAudioContext())
-    vi.stubGlobal('AudioContext', Ctor as any)
+    class TrackedAudioContext extends FakeAudioContext {}
+    vi.stubGlobal('AudioContext', TrackedAudioContext as any)
     const { result } = renderHook(() => useXiaoyuVoice())
 
     await act(async () => {
@@ -111,7 +111,7 @@ describe('useXiaoyuVoice', () => {
       await result.current.playVoice('hi', 'happy')
     })
 
-    expect(Ctor).toHaveBeenCalledTimes(1)
+    expect(FakeAudioContext.instances).toHaveLength(1)
   })
 
   it('cleanup 关闭 AudioContext 且可重复调用', async () => {
@@ -135,14 +135,14 @@ describe('useXiaoyuVoice', () => {
 
   it('webkitAudioContext 回退可用', async () => {
     delete (globalThis as any).AudioContext
-    const Ctor = vi.fn(() => new FakeAudioContext())
-    ;(window as any).webkitAudioContext = Ctor
+    class TrackedAudioContext extends FakeAudioContext {}
+    ;(window as any).webkitAudioContext = TrackedAudioContext
 
     const { result } = renderHook(() => useXiaoyuVoice())
     await act(async () => {
       await result.current.playEmotionSound('happy')
     })
-    expect(Ctor).toHaveBeenCalledTimes(1)
+    expect(FakeAudioContext.instances).toHaveLength(1)
     delete (window as any).webkitAudioContext
   })
 

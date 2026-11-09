@@ -195,10 +195,12 @@ describe('useAudioComposer', () => {
   })
 
   it('构造函数抛错时进入错误状态', async () => {
-    const Ctor = vi.fn(() => {
-      throw new Error('no audio context')
-    })
-    vi.stubGlobal('OfflineAudioContext', Ctor as any)
+    class ThrowingContext {
+      constructor() {
+        throw new Error('no audio context')
+      }
+    }
+    vi.stubGlobal('OfflineAudioContext', ThrowingContext as any)
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const { result } = renderHook(() => useAudioComposer())
 

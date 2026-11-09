@@ -9,6 +9,8 @@ import { afterEach, vi } from 'vitest'
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+  // Vitest 4 起 restoreAllMocks 仅还原 spy，不再清空 vi.fn() 的调用记录
+  vi.clearAllMocks()
 })
 
 if (typeof window !== 'undefined') {

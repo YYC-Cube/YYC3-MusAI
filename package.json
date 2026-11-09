@@ -48,6 +48,8 @@
     "test:deno:coverage": "pnpm --filter @yyc3/music-server run test:deno:coverage",
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
+    "verify:packs": "node scripts/verify-packs.mjs",
+    "check:supabase": "node scripts/check-supabase-health.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish"
@@ -59,7 +61,7 @@
     "@testing-library/jest-dom": "^6.10.0",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
@@ -70,7 +72,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.1",
     "vite": "7.3.7",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.12",
     "zod": "4.6.7"
   },
   "engines": {
@@ -79,6 +81,12 @@
   },
   "packageManager": "pnpm@10.17.0",
   "pnpm": {
+    "overrides": {
+      "tinypool": ">=2.2.0",
+      "glob": ">=14.0.4",
+      "minimatch": ">=11.0.5",
+      "prismjs": ">=1.30.0"
+    },
     "onlyBuiltDependencies": [
       "@tailwindcss/oxide",
       "esbuild",
