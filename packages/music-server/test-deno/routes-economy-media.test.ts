@@ -525,10 +525,23 @@ Deno.test('market: 历史分页与统计', async () => {
 // ============================================================
 
 Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
-  const missing = await request(app, `${P}/pki/public-key`, { body: {} });
+  const anonymous = await request(app, `${P}/pki/public-key`, { body: {} });
+  assertEquals(anonymous.status, 401);
+
+  const mismatched = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('another-user'),
+    body: { userId: 'pki-user', publicKeyJwk: { kty: 'RSA', n: 'n', e: 'AQAB' } },
+  });
+  assertEquals(mismatched.status, 403);
+
+  const missing = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('pki-user'),
+    body: {},
+  });
   assertEquals(missing.status, 400);
 
   const invalid = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: { kty: 'RSA' } },
   });
   assertEquals(invalid.status, 400);
@@ -537,6 +550,7 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
     kty: 'RSA', n: 'abcdefghijklmnopqrstuvwxyz0123456789ABCD', e: 'AQAB',
   };
   const created = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: jwk },
   });
   assertEquals(created.status, 200);
@@ -546,6 +560,7 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
   assert(fake.readJson('pki:enrollment-log').includes('pki-user'));
 
   const updated = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: { ...jwk, n: 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' } },
   });
   assertEquals((await jsonBody(updated)).isNew, false);
@@ -561,7 +576,19 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
   assertEquals(notFound.status, 404);
   assertEquals((await jsonBody(notFound)).enrolled, false);
 
-  const deleted = await request(app, `${P}/pki/public-key/pki-user`, { method: 'DELETE' });
+  const deleteAnonymous = await request(app, `${P}/pki/public-key/pki-user`, { method: 'DELETE' });
+  assertEquals(deleteAnonymous.status, 401);
+
+  const deleteMismatched = await request(app, `${P}/pki/public-key/pki-user`, {
+    method: 'DELETE',
+    token: tokenFor('another-user'),
+  });
+  assertEquals(deleteMismatched.status, 403);
+
+  const deleted = await request(app, `${P}/pki/public-key/pki-user`, {
+    method: 'DELETE',
+    token: tokenFor('pki-user'),
+  });
   assertEquals(deleted.status, 200);
   assertEquals(fake.read('pki:public-key:pki-user'), undefined);
   assertEquals(fake.readJson('pki:enrollment-log').includes('pki-user'), false);
@@ -569,43 +596,76 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
   fake.kvDown = true;
   const downGet = await request(app, `${P}/pki/public-key/pki-user`);
   const downPost = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: jwk },
   });
-  const downDelete = await request(app, `${P}/pki/public-key/pki-user`, { method: 'DELETE' });
+  const downDelete = await request(app, `${P}/pki/public-key/pki-user`, {
+    method: 'DELETE',
+    token: tokenFor('pki-user'),
+  });
   fake.kvDown = false;
   assertEquals(downGet.status, 500);
-  assertEquals(downPost.status, 500);
-  assertEquals(downDelete.status, 500);
+  // KV 不可用时鉴权链路先失败，写操作返回 401
+  assertEquals(downPost.status, 401);
+  assertEquals(downDelete.status, 401);
 
-  const broken = await request(app, `${P}/pki/public-key`, { body: '{bad' });
+  const broken = await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('pki-user'),
+    body: '{bad',
+  });
   assertEquals(broken.status, 500);
 });
 
 Deno.test('pki: 密钥备份与状态', async () => {
-  const missing = await request(app, `${P}/pki/key-backup`, { body: { userId: 'bk-user' } });
+  const anonymous = await request(app, `${P}/pki/key-backup`, { body: { userId: 'bk-user' } });
+  assertEquals(anonymous.status, 401);
+
+  const missing = await request(app, `${P}/pki/key-backup`, {
+    token: tokenFor('bk-user'),
+    body: { userId: 'bk-user' },
+  });
   assertEquals(missing.status, 400);
 
   const payload = {
     userId: 'bk-user', encryptedPrivateKey: 'cipher', salt: 'salt', iv: 'iv',
     publicKeyJwk: { kty: 'RSA', n: 'n' },
   };
-  const created = await request(app, `${P}/pki/key-backup`, { body: payload });
+  const created = await request(app, `${P}/pki/key-backup`, {
+    token: tokenFor('bk-user'),
+    body: payload,
+  });
   assertEquals(created.status, 200);
   assertEquals((await jsonBody(created)).isNew, true);
 
-  const updated = await request(app, `${P}/pki/key-backup`, { body: payload });
+  const updated = await request(app, `${P}/pki/key-backup`, {
+    token: tokenFor('bk-user'),
+    body: payload,
+  });
   assertEquals((await jsonBody(updated)).isNew, false);
 
-  const fetched = await request(app, `${P}/pki/key-backup/bk-user`);
+  const fetchAnonymous = await request(app, `${P}/pki/key-backup/bk-user`);
+  assertEquals(fetchAnonymous.status, 401);
+
+  const fetchMismatched = await request(app, `${P}/pki/key-backup/bk-user`, {
+    token: tokenFor('another-user'),
+  });
+  assertEquals(fetchMismatched.status, 403);
+
+  const fetched = await request(app, `${P}/pki/key-backup/bk-user`, {
+    token: tokenFor('bk-user'),
+  });
   assertEquals(fetched.status, 200);
   const backup = await jsonBody(fetched);
   assertEquals(backup.hasBackup, true);
   assertEquals(backup.encryptedPrivateKey, 'cipher');
 
-  const noBackup = await request(app, `${P}/pki/key-backup/none`);
+  const noBackup = await request(app, `${P}/pki/key-backup/none`, {
+    token: tokenFor('none'),
+  });
   assertEquals(noBackup.status, 404);
 
   await request(app, `${P}/pki/public-key`, {
+    token: tokenFor('bk-user'),
     body: { userId: 'bk-user', publicKeyJwk: { kty: 'RSA', n: 'abc', e: 'AQAB' } },
   });
   const status = await jsonBody(await request(app, `${P}/pki/status/bk-user`));
@@ -619,13 +679,19 @@ Deno.test('pki: 密钥备份与状态', async () => {
   assertEquals(none.fingerprint, null);
 
   fake.kvDown = true;
-  const downBackup = await request(app, `${P}/pki/key-backup/bk-user`);
+  const downBackup = await request(app, `${P}/pki/key-backup/bk-user`, {
+    token: tokenFor('bk-user'),
+  });
   const downStatus = await request(app, `${P}/pki/status/bk-user`);
   fake.kvDown = false;
-  assertEquals(downBackup.status, 500);
+  // 需鉴权的备份读取在 KV 不可用时先返回 401；公开的状态查询返回 500
+  assertEquals(downBackup.status, 401);
   assertEquals(downStatus.status, 500);
 
-  const broken = await request(app, `${P}/pki/key-backup`, { body: '{bad' });
+  const broken = await request(app, `${P}/pki/key-backup`, {
+    token: tokenFor('bk-user'),
+    body: '{bad',
+  });
   assertEquals(broken.status, 500);
 });
 

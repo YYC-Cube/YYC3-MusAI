@@ -316,8 +316,8 @@ export function registerSpacetimeRoutes(app: any) {
     } catch (error) { console.log('Voice URL error:', error); return c.json({ error: `Failed: ${error}` }, 500); }
   });
 
-  // --- STT Proxy ---
-  app.post(`${P}/stt/transcribe`, async (c: any) => {
+  // --- STT Proxy（避免与 routes-ai 的 /stt/transcribe 重复注册） ---
+  app.post(`${P}/voice/stt`, async (c: any) => {
     try {
       const body = await c.req.json();
       const { audioBase64, language } = body;

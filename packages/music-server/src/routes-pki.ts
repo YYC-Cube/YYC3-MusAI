@@ -102,14 +102,20 @@ async function addToEnrollmentLog(userId: string): Promise<void> {
 
 export function registerPkiRoutes(app: any) {
 
-  // ---- POST /pki/public-key — Upload/update public key ----
-  app.post(`${ROUTE_PREFIX}/pki/public-key`, rateLimit(RATE_SENSITIVE), async (c: any) => {
+  // ---- POST /pki/public-key — Upload/update public key（需登录且仅限本人） ----
+  app.post(`${ROUTE_PREFIX}/pki/public-key`, requireAuth, rateLimit(RATE_SENSITIVE), async (c: any) => {
     try {
       const body = await c.req.json();
       const { userId, publicKeyJwk } = body;
 
       if (!userId || !publicKeyJwk) {
         return c.json({ error: 'Missing required fields: userId, publicKeyJwk' }, 400);
+      }
+
+      // A2: 仅允许操作自己的公钥
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
       }
 
       // Validate JWK structure
@@ -174,10 +180,15 @@ export function registerPkiRoutes(app: any) {
     }
   });
 
-  // ---- DELETE /pki/public-key/:userId — Delete public key (key rotation) ----
-  app.delete(`${ROUTE_PREFIX}/pki/public-key/:userId`, rateLimit(RATE_SENSITIVE), async (c: any) => {
+  // ---- DELETE /pki/public-key/:userId — Delete public key (key rotation，需登录且仅限本人) ----
+  app.delete(`${ROUTE_PREFIX}/pki/public-key/:userId`, requireAuth, rateLimit(RATE_SENSITIVE), async (c: any) => {
     const userId = c.req.param('userId');
     try {
+      // A2: 仅允许删除自己的密钥
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
+      }
       await kv.del(`pki:public-key:${userId}`);
       await kv.del(`pki:key-backup:${userId}`);
 
@@ -198,14 +209,20 @@ export function registerPkiRoutes(app: any) {
     }
   });
 
-  // ---- POST /pki/key-backup — Store encrypted key backup ----
-  app.post(`${ROUTE_PREFIX}/pki/key-backup`, rateLimit(RATE_SENSITIVE), async (c: any) => {
+  // ---- POST /pki/key-backup — Store encrypted key backup（需登录且仅限本人） ----
+  app.post(`${ROUTE_PREFIX}/pki/key-backup`, requireAuth, rateLimit(RATE_SENSITIVE), async (c: any) => {
     try {
       const body = await c.req.json();
       const { userId, encryptedPrivateKey, salt, iv, publicKeyJwk } = body;
 
       if (!userId || !encryptedPrivateKey || !salt || !iv) {
         return c.json({ error: 'Missing required backup fields' }, 400);
+      }
+
+      // A2: 仅允许写入自己的备份
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
       }
 
       const now = Date.now();
@@ -238,10 +255,15 @@ export function registerPkiRoutes(app: any) {
     }
   });
 
-  // ---- GET /pki/key-backup/:userId — Retrieve encrypted key backup ----
-  app.get(`${ROUTE_PREFIX}/pki/key-backup/:userId`, async (c: any) => {
+  // ---- GET /pki/key-backup/:userId — Retrieve encrypted key backup（需登录且仅限本人） ----
+  app.get(`${ROUTE_PREFIX}/pki/key-backup/:userId`, requireAuth, async (c: any) => {
     const userId = c.req.param('userId');
     try {
+      // A2: 加密私钥备份仅本人可取
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
+      }
       // P1b: 读优先关系表，未命中回退 KV
       const record = await readKeyBackup(userId);
       if (!record) {

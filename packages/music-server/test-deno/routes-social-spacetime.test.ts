@@ -516,29 +516,29 @@ Deno.test('spacetime: 语音上传与签名 URL', async () => {
   assertEquals(broken.status, 500);
 });
 
-Deno.test('spacetime: STT 代理（本地服务成功/失败/异常）', async () => {
-  const missing = await request(spacetimeApp, `${P}/stt/transcribe`, { body: {} });
+Deno.test('spacetime: 语音 STT 代理 /voice/stt（本地服务成功/失败/异常）', async () => {
+  const missing = await request(spacetimeApp, `${P}/voice/stt`, { body: {} });
   assertEquals(missing.status, 400);
   assertEquals((await jsonBody(missing)).error, 'audioBase64 required');
 
   Deno.env.set('DMUSIC_LOCAL_API', 'http://local.stt');
   fake.localSttOk = true;
   fake.localSttBody = { text: 'local text', segments: [{ start: 0, end: 1, text: 'x' }] };
-  const ok = await request(spacetimeApp, `${P}/stt/transcribe`, {
+  const ok = await request(spacetimeApp, `${P}/voice/stt`, {
     body: { audioBase64: 'AAAA', language: 'zh' },
   });
   assertEquals(ok.status, 200);
   assertEquals((await jsonBody(ok)).text, 'local text');
 
   fake.localSttOk = false;
-  const down = await request(spacetimeApp, `${P}/stt/transcribe`, {
+  const down = await request(spacetimeApp, `${P}/voice/stt`, {
     body: { audioBase64: 'AAAA' },
   });
   assertEquals(down.status, 200);
   assertMatch((await jsonBody(down)).message, /not configured/);
 
   fake.localSttThrow = true;
-  const threw = await request(spacetimeApp, `${P}/stt/transcribe`, {
+  const threw = await request(spacetimeApp, `${P}/voice/stt`, {
     body: { audioBase64: 'AAAA' },
   });
   fake.localSttThrow = false;
@@ -546,12 +546,12 @@ Deno.test('spacetime: STT 代理（本地服务成功/失败/异常）', async (
   assertEquals((await jsonBody(threw)).text, '');
 
   Deno.env.delete('DMUSIC_LOCAL_API');
-  const notConfigured = await request(spacetimeApp, `${P}/stt/transcribe`, {
+  const notConfigured = await request(spacetimeApp, `${P}/voice/stt`, {
     body: { audioBase64: 'AAAA' },
   });
   assertMatch((await jsonBody(notConfigured)).message, /not configured/);
 
-  const broken = await request(spacetimeApp, `${P}/stt/transcribe`, { body: '{bad' });
+  const broken = await request(spacetimeApp, `${P}/voice/stt`, { body: '{bad' });
   assertEquals(broken.status, 500);
 });
 

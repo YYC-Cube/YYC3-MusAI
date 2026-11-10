@@ -233,7 +233,7 @@ complexity: intermediate
 | GET | `/spacetime/messages/nearby` | — | — | — |
 | POST | `/voice/upload` | — | — | — |
 | GET | `/voice/url` | — | — | — |
-| POST | `/stt/transcribe` | — | — | — |
+| POST | `/voice/stt` | — | — | — |
 
 ### 创作挑战（`routes-challenge.ts`，7 个端点）
 
@@ -283,12 +283,15 @@ complexity: intermediate
 
 | 方法 | 路径 | 鉴权 | 限流 | 请求校验 |
 | --- | --- | --- | --- | --- |
-| POST | `/pki/public-key` | — | 敏感 20/min | — |
+| POST | `/pki/public-key` | ✅ | 敏感 20/min | — |
 | GET | `/pki/public-key/:userId` | — | — | — |
-| DELETE | `/pki/public-key/:userId` | — | 敏感 20/min | — |
-| POST | `/pki/key-backup` | — | 敏感 20/min | — |
-| GET | `/pki/key-backup/:userId` | — | — | — |
+| DELETE | `/pki/public-key/:userId` | ✅ | 敏感 20/min | — |
+| POST | `/pki/key-backup` | ✅ | 敏感 20/min | — |
+| GET | `/pki/key-backup/:userId` | ✅ | — | — |
 | GET | `/pki/status/:userId` | — | — | — |
+
+> PKI 写操作与加密私钥备份读取均要求登录，且 `userId` 必须与令牌主体一致（不一致返回 **403**）。
+> `GET /pki/public-key/:userId` 与 `GET /pki/status/:userId` 保持公开（公钥与状态本身非机密）。
 
 ### AI 能力（`routes-ai.ts`，6 个端点）
 
@@ -369,20 +372,27 @@ KV 统计与健康检查。
 ## 五、与前端契约的注意事项
 
 1. **错误体不统一为 `{ error }`**：部分 409 会附带 `soldOut` 等业务字段，前端应保留原始 body（`ApiError.data`）。
-2. **鉴权边界**：`/pki/*` 与上传类端点在文档层面标注“需登录”，但代码暂未挂 `requireAuth`（见 §6 待加固）；
-   前端在未登录场景不应假设 401，需处理 200 + 空数据。
+2. **鉴权边界**：PKI 写操作与密钥备份读取已要求登录且 `userId` 必须与令牌主体一致（不一致 403）；
+   上传类端点仍按 `userId` 参数处理，未强绑定令牌，前端不应假设未登录一定失败。
 3. **双写窗口**：写操作先落 KV 再同步关系表，读取立即一致（KV 为基线）；关系表侧延迟不影响响应。
 4. **限流**：`apiFetch` 已按 `Retry-After` 自动退避；`apiFetchStrict` 会抛 `ApiError`（含 `isRateLimited`）。
 5. **路径前缀**：客户端 `API_BASE` 需含 `/make-server-f626b673`，否则 404。
 
 ## 六、已知问题与待加固
 
+> **2026-11-11 更新**：A1、A2 已修复（见 §6.1）；下表保留剩余项。
+
 | 编号 | 问题 | 影响 | 建议 |
 | --- | --- | --- | --- |
-| A1 | `/stt/transcribe` 在 `routes-ai.ts` 与 `routes-spacetime.ts` 重复注册 | 后者永不生效（Hono 先注册优先） | 下线 spacetime 副本或改为 `/voice/stt` |
-| A2 | `POST/DELETE /pki/public-key`、`POST /pki/key-backup` 未挂 `requireAuth`（该导入当前未使用） | 任意人可覆盖他人公钥/备份 | 下一轮补 `requireAuth` + 主体一致性校验 |
 | A3 | 列表端点无统一分页（仅 `limit` 截断） | 大数据量无法翻页 | 新端点统一 `limit` + `cursor` |
 | A4 | 错误体字段不统一（`error` / `detail` / 业务字段混用） | 前端需多分支 | 统一 `{ error, code?, detail?, ...business }` |
+
+### 6.1 已修复
+
+| 编号 | 修复内容 | 验证 |
+| --- | --- | --- |
+| A1 | `routes-spacetime.ts` 的 STT 代理由 `/stt/transcribe` 改为 **`/voice/stt`**，与 `routes-ai.ts` 的 `/stt/transcribe` 不再冲突，能力不丢失 | 测试用例改走 `/voice/stt` 并通过 |
+| A2 | `POST /pki/public-key`、`DELETE /pki/public-key/:userId`、`POST /pki/key-backup`、`GET /pki/key-backup/:userId` 加 `requireAuth`，并校验 `userId` 与令牌主体一致（不一致 403） | 新增 401/403 断言，`deno test` 121/121 |
 
 ## 七、验收自检
 
@@ -390,7 +400,7 @@ KV 统计与健康检查。
 - [x] 每个端点的方法、路径、鉴权、限流、校验均可回溯到 `src/routes-*.ts`
 - [x] 限流档位与 `src/rate-limit.ts` 常量一致（30/20/10/5/10 次）
 - [x] 前缀与 `ROUTE_PREFIX` 一致（`/make-server-f626b673`）
-- [x] 已标注 4 项已知问题，其中 A2 为安全项
+- [x] 已标注剩余 2 项已知问题（A3/A4），A1/A2 已修复并验证
 
 ## 八、后续（P1-4 / P1-5）
 
