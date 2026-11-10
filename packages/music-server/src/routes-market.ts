@@ -27,6 +27,7 @@
 import { ROUTE_PREFIX, kv, requireAuth, queryCache } from "./server-utils.ts";
 import { rateLimit, RATE_STARPOWER, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate, marketListSchema, marketBuySchema } from "./validation.ts";
+import { apiError, parsePagination, pageMeta } from "./api-contract.ts";
 
 // ==========================================
 // Types
@@ -96,8 +97,13 @@ export function registerMarketRoutes(app: any) {
   // ---- GET /market/listings — Browse active resale listings ----
   app.get(`${ROUTE_PREFIX}/market/listings`, async (c: any) => {
     try {
+      // A3：统一分页（?page=&limit=），响应键 listings 不变
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
       const cached = queryCache.get<MarketListing[]>('market:listings');
-      if (cached) return c.json({ listings: cached, total: cached.length });
+      if (cached) {
+        const items = cached.slice(pager.offset, pager.offset + pager.limit);
+        return c.json({ listings: items, ...pageMeta(cached.length, pager) });
+      }
 
       const ids = await getListingIndex();
       const listings: MarketListing[] = [];
@@ -110,10 +116,11 @@ export function registerMarketRoutes(app: any) {
       // Sort by newest first
       listings.sort((a, b) => b.createdAt - a.createdAt);
       queryCache.set('market:listings', listings, 15_000);
-      return c.json({ listings, total: listings.length });
+      const items = listings.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ listings: items, ...pageMeta(listings.length, pager) });
     } catch (error) {
       console.log(`[Market] Error listing active listings:`, error);
-      return c.json({ error: 'Failed to fetch listings', detail: String(error) }, 500);
+      return apiError(c, 500, 'Failed to fetch listings', { detail: String(error) });
     }
   });
 

@@ -29,6 +29,7 @@ import { z } from "zod";
 import {
   getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
 } from "./db.ts";
+import { apiError, parsePagination, pageMeta } from "./api-contract.ts";
 
 // ==========================================
 // Constants
@@ -621,8 +622,9 @@ export function registerUploadRoutes(app: any) {
         }
       }
 
-      // Fetch metadata for each (limited to 50)
-      const limited = mediaIds.slice(0, 50);
+      // Fetch metadata for each (A3：统一分页)
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
+      const limited = mediaIds.slice(pager.offset, pager.offset + pager.limit);
       const sb = createAdminClient();
       const mediaList: any[] = [];
 
@@ -649,11 +651,11 @@ export function registerUploadRoutes(app: any) {
         }
       }
 
-      return c.json({ media: mediaList, total: mediaIds.length });
+      return c.json({ media: mediaList, ...pageMeta(mediaIds.length, pager) });
 
     } catch (error) {
       console.log(`[Upload] Error listing media:`, error);
-      return c.json({ error: `Failed to list media: ${error}` }, 500);
+      return apiError(c, 500, 'Failed to list media', { detail: String(error) });
     }
   });
 

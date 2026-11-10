@@ -27,6 +27,7 @@ import {
   getAlbumByLegacyId, listAlbums as listAlbumsFromDb, listAlbumsByCreator,
   upsertAlbum, updateAlbumLikes, addAlbumOwnership, listOwnedAlbumIds,
 } from "./db.ts";
+import { apiError, parsePagination, pageMeta } from "./api-contract.ts";
 
 // ==========================================
 // Types
@@ -216,14 +217,20 @@ export function registerAlbumRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/albums`, async (c: any) => {
     try {
       await ensureSeed();
+      // A3：统一分页（?page=&limit=），响应键 albums 不变
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
       const cached = queryCache.get<Album[]>('albums:list');
-      if (cached) return c.json({ albums: cached, total: cached.length });
+      if (cached) {
+        const items = cached.slice(pager.offset, pager.offset + pager.limit);
+        return c.json({ albums: items, ...pageMeta(cached.length, pager) });
+      }
 
       // P1b: 读优先关系表，空则回退 KV 索引
       const fromDb = await listAlbumsFromDb();
       if (fromDb.length > 0) {
         queryCache.set('albums:list', fromDb, 30_000);
-        return c.json({ albums: fromDb, total: fromDb.length });
+        const items = fromDb.slice(pager.offset, pager.offset + pager.limit);
+        return c.json({ albums: items, ...pageMeta(fromDb.length, pager) });
       }
 
       const albumIds = await getAlbumIndex();
@@ -240,10 +247,11 @@ export function registerAlbumRoutes(app: any) {
       // Sort by release date descending
       albums.sort((a, b) => b.releaseDate - a.releaseDate);
       queryCache.set('albums:list', albums, 30_000); // 30s cache
-      return c.json({ albums, total: albums.length });
+      const items = albums.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ albums: items, ...pageMeta(albums.length, pager) });
     } catch (error) {
       console.log(`[Albums] Error listing albums:`, error);
-      return c.json({ error: 'Failed to list albums', detail: String(error) }, 500);
+      return apiError(c, 500, 'Failed to list albums', { detail: String(error) });
     }
   });
 

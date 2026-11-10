@@ -10,6 +10,7 @@ import {
 } from "./server-utils.ts";
 import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate, shareWorkSchema, forkWorkSchema } from "./validation.ts";
+import { parsePagination, pageMeta } from "./api-contract.ts";
 
 export function registerCommunityRoutes(app: any) {
   // ==========================================
@@ -93,17 +94,17 @@ export function registerCommunityRoutes(app: any) {
 
   app.get(`${ROUTE_PREFIX}/shared-works`, async (c: any) => {
     try {
-      const page = parseInt(c.req.query('page') || '1');
-      const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+      // A3：统一分页（沿用 page/limit，schema 由 parsePagination 归一）
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
       const index = await getSharedWorkIndex();
-      const works = await getAllSharedWorks(page, limit);
+      const works = await getAllSharedWorks(pager.page, pager.limit);
       return c.json({
-        works, total: index.length, page, limit,
-        hasMore: page * limit < index.length,
+        works,
+        ...pageMeta(index.length, pager),
       });
     } catch (error) {
       console.log("Error fetching shared works:", error);
-      return c.json({ works: [], total: 0 }, 500);
+      return c.json({ works: [], ...pageMeta(0, { page: 1, limit: 50, offset: 0 }) }, 500);
     }
   });
 

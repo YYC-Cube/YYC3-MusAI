@@ -52,20 +52,25 @@ complexity: intermediate
 { "success": true, "album": { "id": "album-xxx" } }
 ```
 
-列表类端点返回 `{ "<domain>": [...], "total": <number> }`。
+列表类端点返回 `{ "<domain>": [...], "total": <number>, "page": <number>, "limit": <number>, "hasMore": <boolean> }`（分页字段见 §2.6）。
 
 ### 2.3 错误码
 
-| 状态码 | 语义 | 响应体 |
-| --- | --- | --- |
-| 200 | 成功 | 领域对象 |
-| 400 | 参数/校验失败 | `{ "error": "..." }` |
-| 401 | 未认证或 token 无效 | `{ "error": "Unauthorized ..." }` |
-| 403 | 无权限（如非 admin） | `{ "error": "Unauthorized: admin only" }` |
-| 404 | 资源不存在 | `{ "error": "<X> not found" }` |
-| 409 | 状态冲突（如售罄/并发购买） | `{ "error": "...", "soldOut": true }` |
-| 429 | 触发限流 | `{ "error": "Too many requests" }` + `Retry-After` |
-| 500 | 服务端异常 | `{ "error": "...", "detail": "<原因>" }` |
+**统一错误体（A4 已实施）**：`{ "error": string, "code": ErrorCode, ...业务字段 }`
+
+| 状态码 | `code` | 语义 | 响应体示例 |
+| --- | --- | --- | --- |
+| 200 | — | 成功 | 领域对象 |
+| 400 | `VALIDATION_FAILED` | 参数/校验失败 | `{ "error": "...", "code": "VALIDATION_FAILED" }` |
+| 401 | `UNAUTHORIZED` | 未认证或 token 无效 | `{ "error": "Unauthorized ...", "code": "UNAUTHORIZED" }` |
+| 403 | `FORBIDDEN` | 无权限 / 主体不符 | `{ "error": "Forbidden: userId mismatch", "code": "FORBIDDEN" }` |
+| 404 | `NOT_FOUND` | 路由或资源不存在 | `{ "error": "Route not found: GET /...", "code": "NOT_FOUND" }` |
+| 409 | `CONFLICT` | 状态冲突 | `{ "error": "...", "code": "CONFLICT", "soldOut": true }` |
+| 429 | `RATE_LIMITED` | 触发限流 | `{ "error": "Too many requests", "code": "RATE_LIMITED" }` + `Retry-After` |
+| 500 | `INTERNAL` | 服务端异常 | `{ "error": "Internal server error", "code": "INTERNAL", "detail": "..." }` |
+
+实现：`src/api-contract.ts` 的 `apiError()`；全局兜底由入口 `app.notFound()` / `app.onError()` 统一处理，
+业务 handler 内的错误正逐步迁移到 `apiError`（已迁移：`/albums`、`/market/listings`、`/upload/media`）。
 
 ### 2.4 限流档位
 
@@ -85,10 +90,25 @@ complexity: intermediate
 - 写操作 **双写**：KV 为响应基线，关系表侧尽力同步（PG 不可用仅告警，不影响主流程）；
 - `KV_DRIVER=pg|supabase` 控制 KV 后端，默认 `pg`；`DB_DISABLED=1` 可让关系表读返回空、写跳过（测试用）。
 
-### 2.6 分页
+### 2.6 分页（A3 已实施）
 
-现有列表端点多为 `limit` 上限截断（50 / 200 / 500），尚无统一 `offset` 游标；
-新端点建议统一 `?limit=&cursor=`，并在响应返回 `nextCursor`。
+统一查询参数：`?page=1&limit=50`
+
+| 参数 | 默认 | 上限 | 说明 |
+| --- | --- | --- | --- |
+| `page` | 1 | — | 页码，非法/≤0 回落 1 |
+| `limit` | 50 | 100 | 每页条数，超上限夹取，非法回落默认 |
+
+响应在保留原有业务键的同时追加分页元信息（向后兼容）：
+
+```json
+{ "albums": [ ... ], "total": 3, "page": 1, "limit": 1, "hasMore": true }
+```
+
+实现：`src/api-contract.ts` 的 `parsePagination()` / `pageMeta()`。
+
+已接入：`GET /albums`、`GET /market/listings`、`GET /upload/media`、`GET /shared-works`（沿用原 page/limit 语义）。
+其余列表端点仍为 `limit` 截断，后续按同一 helper 逐步接入。
 
 ## 三、端点清单
 
@@ -380,19 +400,21 @@ KV 统计与健康检查。
 
 ## 六、已知问题与待加固
 
-> **2026-11-11 更新**：A1、A2 已修复（见 §6.1）；下表保留剩余项。
+> **2026-11-11 更新**：A1–A4 均已修复；本节保留剩余“渐进接入”项。
 
-| 编号 | 问题 | 影响 | 建议 |
+| 编号 | 事项 | 现状 | 建议 |
 | --- | --- | --- | --- |
-| A3 | 列表端点无统一分页（仅 `limit` 截断） | 大数据量无法翻页 | 新端点统一 `limit` + `cursor` |
-| A4 | 错误体字段不统一（`error` / `detail` / 业务字段混用） | 前端需多分支 | 统一 `{ error, code?, detail?, ...business }` |
+| R1 | 统一分页仅覆盖 4 个核心列表端点 | `/albums`、`/market/listings`、`/upload/media`、`/shared-works` 已接入 | 其余列表端点按 `parsePagination` 逐步接入 |
+| R2 | 业务 handler 错误体尚未全量迁移 | 全局 404/500 已统一；4 个端点的 catch 已用 `apiError` | 其余 handler 按同一规范替换 |
 
 ### 6.1 已修复
 
 | 编号 | 修复内容 | 验证 |
 | --- | --- | --- |
 | A1 | `routes-spacetime.ts` 的 STT 代理由 `/stt/transcribe` 改为 **`/voice/stt`**，与 `routes-ai.ts` 的 `/stt/transcribe` 不再冲突，能力不丢失 | 测试用例改走 `/voice/stt` 并通过 |
-| A2 | `POST /pki/public-key`、`DELETE /pki/public-key/:userId`、`POST /pki/key-backup`、`GET /pki/key-backup/:userId` 加 `requireAuth`，并校验 `userId` 与令牌主体一致（不一致 403） | 新增 401/403 断言，`deno test` 121/121 |
+| A2 | `POST /pki/public-key`、`DELETE /pki/public-key/:userId`、`POST /pki/key-backup`、`GET /pki/key-backup/:userId` 加 `requireAuth`，并校验 `userId` 与令牌主体一致（不一致 403） | 新增 401/403 断言，`deno test` 通过 |
+| A3 | 新增 `parsePagination` / `pageMeta`，为 4 个核心列表端点提供 `page`/`limit`/`hasMore`（保留原响应键，向后兼容） | 契约工具单测 3 例 + `/albums` 分页集成 1 例；Node 实跑 `?page=1&limit=1` 返回 `total=3, hasMore=true` |
+| A4 | 统一错误体 `{ error, code, ...业务字段 }`，入口新增 `app.notFound()` / `app.onError()` 全局兜底 | 单测覆盖 400/401/409/500 映射；Node 实跑未知路由返回 `404 + code=NOT_FOUND` |
 
 ## 七、验收自检
 
@@ -400,7 +422,7 @@ KV 统计与健康检查。
 - [x] 每个端点的方法、路径、鉴权、限流、校验均可回溯到 `src/routes-*.ts`
 - [x] 限流档位与 `src/rate-limit.ts` 常量一致（30/20/10/5/10 次）
 - [x] 前缀与 `ROUTE_PREFIX` 一致（`/make-server-f626b673`）
-- [x] 已标注剩余 2 项已知问题（A3/A4），A1/A2 已修复并验证
+- [x] 已标注剩余渐进项（R1/R2），A1–A4 已修复并有单测/实跑验证
 
 ## 八、后续（P1-4 / P1-5）
 

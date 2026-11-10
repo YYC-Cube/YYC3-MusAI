@@ -27,6 +27,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
+import { apiError, ERROR_CODES } from "./api-contract.ts";
 
 // §2.2 Route modules
 import { registerAuthRoutes } from "./routes-auth.ts";
@@ -47,6 +48,15 @@ import { registerDiagnosticsRoutes } from "./routes-diagnostics.ts";
 import { registerUploadRoutes } from "./routes-upload.ts";
 
 const app = new Hono();
+
+// A4：统一 404 / 未捕获异常的错误体
+app.notFound((c) =>
+  apiError(c, 404, `Route not found: ${c.req.method} ${new URL(c.req.url).pathname}`, undefined, ERROR_CODES.NOT_FOUND),
+);
+app.onError((err, c) => {
+  console.error(`[Server] Unhandled error on ${c.req.method} ${new URL(c.req.url).pathname}:`, err);
+  return apiError(c, 500, 'Internal server error', { detail: String(err) }, ERROR_CODES.INTERNAL);
+});
 
 app.use('*', logger(console.log));
 

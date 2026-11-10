@@ -50,6 +50,37 @@ Deno.test('albums: 首次访问播种 demo 并列表/缓存', async () => {
   const down = await request(app, `${P}/albums`);
   fake.kvDown = false;
   assertEquals(down.status, 500);
+  // A4：统一错误体带 code
+  assertEquals((await jsonBody(down)).code, 'INTERNAL');
+});
+
+Deno.test('albums: 统一分页（page/limit/hasMore）', async () => {
+  queryCache.clear();
+  await request(app, `${P}/albums`); // 播种
+
+  const firstPage = await request(app, `${P}/albums?page=1&limit=1`);
+  const first = await jsonBody(firstPage);
+  assertEquals(firstPage.status, 200);
+  assertEquals(first.total, 3);
+  assertEquals(first.page, 1);
+  assertEquals(first.limit, 1);
+  assertEquals(first.hasMore, true);
+  assertEquals(first.albums.length, 1);
+
+  const lastPage = await jsonBody(await request(app, `${P}/albums?page=3&limit=1`));
+  assertEquals(lastPage.albums.length, 1);
+  assertEquals(lastPage.hasMore, false);
+
+  // 越界页返回空列表
+  const beyond = await jsonBody(await request(app, `${P}/albums?page=9&limit=1`));
+  assertEquals(beyond.albums.length, 0);
+  assertEquals(beyond.hasMore, false);
+
+  // 非法 limit 回落默认值
+  const invalid = await jsonBody(await request(app, `${P}/albums?page=1&limit=abc`));
+  assertEquals(invalid.limit, 50);
+  assertEquals(invalid.albums.length, 3);
+  queryCache.clear();
 });
 
 Deno.test('albums: 详情成功/不存在/错误', async () => {
