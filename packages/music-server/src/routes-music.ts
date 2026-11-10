@@ -7,6 +7,7 @@ import { ROUTE_PREFIX, kv, registerSongId, getAllSongIds, queryCache } from "./s
 import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate, annotationSchema, commentSchema, songRegisterSchema } from "./validation.ts";
 import { requireAuth } from "./server-utils.ts";
+import { getSongStatsByLegacyId, updateSongStats } from "./db.ts";
 
 export function registerMusicRoutes(app: any) {
   // ==========================================
@@ -15,6 +16,9 @@ export function registerMusicRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/likes/:songId`, async (c: any) => {
     const songId = c.req.param("songId");
     try {
+      // P1b: 读优先关系表，未命中回退 KV
+      const dbStats = await getSongStatsByLegacyId(songId);
+      if (dbStats) return c.json({ likes: dbStats.like_count ?? 0 });
       const value = await kv.get(`song:${songId}:likes`);
       const likes = value ? parseInt(value as string) : 0;
       return c.json({ likes });
@@ -37,6 +41,9 @@ export function registerMusicRoutes(app: any) {
       let stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
       stats.likes = newLikes;
       await kv.set(`song:${songId}:stats`, JSON.stringify(stats));
+
+      // P1b: 关系表侧尽力同步
+      await updateSongStats(songId, { likes: newLikes });
 
       // §6.2 — Invalidate cached leaderboard on likes change
       queryCache.invalidate('cache:leaderboard');
@@ -103,6 +110,9 @@ export function registerMusicRoutes(app: any) {
       stats.plays += 1;
       await kv.set(`song:${songId}:stats`, JSON.stringify(stats));
 
+      // P1b: 关系表侧尽力同步
+      await updateSongStats(songId, { plays: stats.plays });
+
       const hour = new Date().toISOString().slice(0, 13);
       const hourlyKey = `analytics:plays:${hour}`;
       const hourlyVal = await kv.get(hourlyKey);
@@ -162,6 +172,9 @@ export function registerMusicRoutes(app: any) {
       let stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
       stats.comments = comments.length;
       await kv.set(`song:${songId}:stats`, JSON.stringify(stats));
+
+      // P1b: 关系表侧尽力同步评论数
+      await updateSongStats(songId, { comments: stats.comments });
 
       return c.json({ success: true, comment });
     } catch (error) {

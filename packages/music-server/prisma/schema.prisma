@@ -246,3 +246,46 @@ model AlbumOwnership {
   @@index([userId], map: "idx_album_ownership_user")
   @@map("album_ownership")
 }
+
+// ==========================================
+// Song 域（P1b）— 先接管互动计数器，元数据仍来自上传链路
+// ==========================================
+
+model Music {
+  id            String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  legacyId      String?   @unique @map("legacy_id")
+  title         String    @map("title") @db.VarChar(200)
+  artist        String    @map("artist") @db.VarChar(200)
+  album         String?   @map("album") @db.VarChar(200)
+  cover         String?   @default("/images/default-cover.jpg") @map("cover") @db.VarChar(500)
+  duration      Int       @map("duration")
+  filePath      String    @map("file_path") @db.VarChar(500)
+  fileSize      BigInt?   @map("file_size")
+  format        String?   @map("format") @db.VarChar(20)
+  bitrate       Int?      @map("bitrate")
+  sampleRate    Int?      @map("sample_rate")
+  genre         String?   @map("genre") @db.VarChar(50)
+  releaseDate   DateTime? @map("release_date") @db.Date
+  lyrics        String?   @map("lyrics")
+  description   String?   @map("description")
+  creatorId     String    @map("creator_id") @db.Uuid
+  status        String?   @default("pending") @map("status") @db.VarChar(20)
+  isPublic      Boolean?  @default(true) @map("is_public")
+  isOriginal    Boolean?  @default(true) @map("is_original")
+  copyrightInfo String?   @map("copyright_info")
+  playCount     Int?      @default(0) @map("play_count")
+  likeCount     Int?      @default(0) @map("like_count")
+  shareCount    Int?      @default(0) @map("share_count")
+  downloadCount Int?      @default(0) @map("download_count")
+  commentCount  Int?      @default(0) @map("comment_count")
+  tags          Json?     @map("tags")
+  emotions      Json?     @map("emotions")
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime? @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  @@index([createdAt(sort: Desc)], map: "idx_musics_created")
+  @@index([creatorId], map: "idx_musics_creator")
+  @@index([playCount(sort: Desc)], map: "idx_musics_play_count")
+  @@index([status], map: "idx_musics_status")
+  @@map("musics")
+}

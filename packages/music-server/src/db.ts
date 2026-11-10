@@ -416,3 +416,41 @@ export async function listOwnedAlbumIds(userId: string): Promise<string[]> {
     return res.rows.map((r: any) => r.album_id);
   });
 }
+
+// ==========================================
+// Song 域（musai.musics，legacy_id 对齐 KV songId）
+// 说明：曲目元数据仍以客户端/上传链路为准，本域先接管互动计数器。
+// ==========================================
+
+/** 查询歌曲互动计数（点赞 / 播放 / 评论） */
+export async function getSongStatsByLegacyId(songId: string): Promise<any | null> {
+  return await safeQuery("getSongStatsByLegacyId", null, async (client) => {
+    const res = await client.query(
+      `SELECT like_count, play_count, comment_count
+         FROM musai.musics WHERE legacy_id = $1 LIMIT 1`,
+      [songId],
+    );
+    return res.rows[0] ?? null;
+  });
+}
+
+/** 同步歌曲互动计数（关系表侧尽力而为，仅更新传入字段） */
+export async function updateSongStats(
+  songId: string,
+  patch: { likes?: number; plays?: number; comments?: number },
+): Promise<void> {
+  const sets: string[] = [];
+  const values: any[] = [songId];
+  let idx = 2;
+  if (patch.likes !== undefined) { sets.push(`like_count = $${idx++}`); values.push(patch.likes); }
+  if (patch.plays !== undefined) { sets.push(`play_count = $${idx++}`); values.push(patch.plays); }
+  if (patch.comments !== undefined) { sets.push(`comment_count = $${idx++}`); values.push(patch.comments); }
+  if (sets.length === 0) return;
+  sets.push(`updated_at = now()`);
+  await safeExec("updateSongStats", async (client) => {
+    await client.query(
+      `UPDATE musai.musics SET ${sets.join(", ")} WHERE legacy_id = $1`,
+      values,
+    );
+  });
+}
