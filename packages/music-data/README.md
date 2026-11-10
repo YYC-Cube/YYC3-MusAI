@@ -32,6 +32,7 @@ console.log(ACHIEVEMENTS.length)
 - 类型：Track、LyricLine、Emotion、MediaMode、UserProfileData、AuthUser
 - 组件 Props 类型：PlayerControlsProps、MediaDisplayProps、LyricsDisplayProps、CommunityFeedProps、AIAssistantProps、CreationStudioProps 等 40+
 - 运行时数据：DEMO_PLAYLIST、ACHIEVEMENTS、dMusicLogo、dMusicGold、dMusicInstruments、dMusicRed、artistWarm、artistBlue
+- 本地数据：localLibrary（收藏/歌单/队列）、localAudio（IndexedDB 音频）、libraryScanner（曲库扫描）
 
 ## 关键 API
 
@@ -40,6 +41,8 @@ console.log(ACHIEVEMENTS.length)
 | `DEMO_PLAYLIST` | 演示歌单（Track[]），用于本地开发与测试夹具 |
 | `ACHIEVEMENTS` | 成就定义表（含阈值、星力奖励） |
 | `Track / LyricLine` | 跨包共享的数据契约，所有音乐域包以此为类型基线 |
+| `scanLibrary(entries)` | 文件清单 → 曲目元数据；扩展名过滤、路径与内容指纹去重、专辑归组、情绪/流派推断与分组统计 |
+| `parseFileName(fileName)` | 从「艺术家 - 标题」形式的文件名拆出艺术家与标题，无分隔符时艺术家回落为「未知艺术家」 |
 
 ## 说明
 

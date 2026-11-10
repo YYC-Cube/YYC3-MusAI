@@ -32,6 +32,7 @@ const session = await supabase.auth.getSession()
 - crypto：generateKeyPair、encryptMessage、decryptMessage、createKeyBackup 等 E2E 密钥 API
 - preferences：loadPrefs、loadPref、savePref、savePrefs、pullPrefsFromKV
 - canvasPerfRegistry：getCanvasPerf、setCanvasPerf
+- aiEndpoints：isLocalDeployment、getOllamaUrl、getOllamaChatUrl、getOllamaTagsUrl、getOllamaEndpointInfo
 - monitoring.js：性能与错误采集
 
 ## 关键 API
@@ -47,6 +48,7 @@ const session = await supabase.auth.getSession()
 | `encryptMessage / decryptMessage` | 基于 WebCrypto 的端到端加解密，密钥本地持久化 |
 | `savePref(key, value)` | 本地优先写入并按需同步到 Supabase KV |
 | `getCanvasPerf / setCanvasPerf` | 跨组件共享 Canvas 帧率与耗时指标 |
+| `getOllamaUrl(subPath, opts?)` | 解析 Ollama 端点：本地部署走同源代理（`VITE_OLLAMA_PROXY_PATH`），远端走直连（`VITE_OLLAMA_BASE_URL`） |
 
 ## 说明
 

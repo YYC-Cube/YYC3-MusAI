@@ -1,11 +1,17 @@
-# D-Music API 对接方案
+# D-Music API 对接方案（LEGACY）
 
 > Supabase Edge Functions (Hono) + 本地 API 代理
-> 更新日期：2026-02-21 v2.0
+> 更新日期：2026-02-21 v2.0 · 状态标记：**legacy（已冻结）**
+
+> ⚠️ **2026-11-10 复核结论**：本文件记录的 45 条路由是 2026-02 快照；当前服务端实测 **84 个端点**
+> （GET 64 / POST 56 / DELETE 3 / PUT 1，含重复计数）、KV 调用 305 处（get 179 / set 120 / del 6 / getByPrefix 2）。
+> 服务端迁移（Supabase → Hono + Prisma + PG15）已定为下一轮主线，
+> 路线与目标契约见 [YYC3-MusAI-下一轮主线规划-2026-11-10.md](../docs/YYC3-MusAI-下一轮主线规划-2026-11-10.md) §3。
+> 路由清单在 P1-3 交付时整体重写，本文件在此之前仅作历史参考。
 
 ---
 
-## 一、Supabase Edge Function 路由总览（45条）
+## 一、Supabase Edge Function 路由总览（2026-02 快照 · 45 条）
 
 > 基础路径: `https://{projectId}.supabase.co/functions/v1/make-server-f626b673`
 
