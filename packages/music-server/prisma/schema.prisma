@@ -1,0 +1,199 @@
+// P1b · User 域 Prisma Schema —— 仅保留 user 域相关表（musai schema）
+// 连接由 prisma.config.ts 读取（schema=musai）。跨表引用改为普通字段，
+// 避免引入其他域模型，保持 user 域自包含，便于逐域迁移。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                                   String   @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  username                             String   @unique @map("username") @db.VarChar(50)
+  email                                String   @unique @map("email") @db.VarChar(100)
+  passwordHash                         String   @map("password_hash") @db.VarChar(255)
+  nickname                             String?  @map("nickname") @db.VarChar(100)
+  avatar                               String?  @default("/images/default-avatar.png") @map("avatar") @db.VarChar(500)
+  bio                                  String?  @map("bio")
+  gender                               String?  @default("other") @map("gender") @db.VarChar(10)
+  birthday                             DateTime? @map("birthday") @db.Date
+  country                              String?  @map("country") @db.VarChar(50)
+  city                                 String?  @map("city") @db.VarChar(50)
+  role                                 String?  @default("user") @map("role") @db.VarChar(20)
+  status                               String?  @default("active") @map("status") @db.VarChar(20)
+  emailVerified                        Boolean? @default(false) @map("email_verified")
+  twoFactorEnabled                     Boolean? @default(false) @map("two_factor_enabled")
+  twoFactorSecret                      String?  @map("two_factor_secret") @db.VarChar(100)
+  lastLoginAt                          DateTime? @map("last_login_at") @db.Timestamp(6)
+  lastLoginIp                          String?  @map("last_login_ip") @db.VarChar(45)
+  loginAttempts                        Int?     @default(0) @map("login_attempts")
+  lockedUntil                          DateTime? @map("locked_until") @db.Timestamp(6)
+  createdAt                            DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                            DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  starPower          UserStarPower?
+  preferences        UserPreferences?
+  unlockedThemes     UserUnlockedTheme[]
+  achievements       UserAchievement[]
+  achievementStats   UserAchievementStats?
+  social             UserSocial?
+  starPowerTx        StarPowerTransaction[]
+  playHistory        PlayHistory[]
+  notifications      Notification[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+  @@index([status], map: "idx_users_status")
+  @@index([username], map: "idx_users_username")
+  @@map("users")
+}
+
+model UserStarPower {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId             String    @unique @map("user_id") @db.Uuid
+  totalStarPower     Int?      @default(0) @map("total_star_power")
+  availableStarPower Int?      @default(0) @map("available_star_power")
+  frozenStarPower    Int?      @default(0) @map("frozen_star_power")
+  vipLevel           Int?      @default(1) @map("vip_level")
+  vipExp             Int?      @default(0) @map("vip_exp")
+  mheartValue        Int?      @default(0) @map("mheart_value")
+  mheartLevel        Int?      @default(1) @map("mheart_level")
+  dailyCheckinStreak Int?      @default(0) @map("daily_checkin_streak")
+  lastCheckinDate    DateTime? @map("last_checkin_date") @db.Date
+  createdAt          DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([mheartValue], map: "idx_star_power_mheart")
+  @@index([userId], map: "idx_star_power_user")
+  @@index([vipLevel], map: "idx_star_power_vip")
+  @@map("user_star_power")
+}
+
+model UserPreferences {
+  id                  String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId              String    @unique @map("user_id") @db.Uuid
+  language            String?   @default("zh-CN") @map("language") @db.VarChar(10)
+  theme               String?   @default("cosmic") @map("theme") @db.VarChar(20)
+  autoplay            Boolean?  @default(true) @map("autoplay")
+  defaultQuality      String?   @default("high") @map("default_quality") @db.VarChar(20)
+  downloadQuality     String?   @default("high") @map("download_quality") @db.VarChar(20)
+  notificationEnabled Boolean?  @default(true) @map("notification_enabled")
+  emailNotification   Boolean?  @default(true) @map("email_notification")
+  privateProfile      Boolean?  @default(false) @map("private_profile")
+  showPlayHistory     Boolean?  @default(true) @map("show_play_history")
+  createdAt           DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("user_preferences")
+}
+
+model UserUnlockedTheme {
+  id              String          @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  themeId         String          @map("theme_id") @db.Uuid
+  unlockedAt      DateTime?       @default(now()) @db.Timestamp(6)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userId, themeId])
+  @@map("user_unlocked_themes")
+}
+
+model StarPowerTransaction {
+  id               String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  transactionType  String    @db.VarChar(50) @map("transaction_type")
+  amount           Int       @map("amount")
+  balanceAfter     Int       @map("balance_after")
+  description      String?   @db.VarChar(500) @map("description")
+  relatedId        String?   @db.Uuid @map("related_id")
+  relatedType      String?   @db.VarChar(50) @map("related_type")
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([transactionType, relatedType], map: "idx_transactions_type")
+  @@index([userId, createdAt], map: "idx_transactions_user_created")
+  @@map("star_power_transactions")
+}
+
+model UserAchievement {
+  id             String       @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  achievementId  String       @map("achievement_id") @db.Uuid
+  unlockedAt     DateTime?    @default(now()) @map("unlocked_at") @db.Timestamp(6)
+  newlyUnlocked  Boolean?     @default(true) @map("newly_unlocked")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userId, achievementId])
+  @@index([userId], map: "idx_user_achievements_user")
+  @@map("user_achievements")
+}
+
+model UserAchievementStats {
+  id                   String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId               String    @unique @map("user_id") @db.Uuid
+  totalWorks           Int?      @default(0) @map("total_works")
+  streakDays           Int?      @default(0) @map("streak_days")
+  totalLikesReceived   Int?      @default(0) @map("total_likes_received")
+  totalForks           Int?      @default(0) @map("total_forks")
+  totalPlays           Int?      @default(0) @map("total_plays")
+  totalMessages        Int?      @default(0) @map("total_messages")
+  totalCapsules        Int?      @default(0) @map("total_capsules")
+  peakStarPower        Int?      @default(0) @map("peak_star_power")
+  locationMessages     Int?      @default(0) @map("location_messages")
+  voiceMessages        Int?      @default(0) @map("voice_messages")
+  updatedAt            DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("user_achievement_stats")
+}
+
+model UserSocial {
+  id        String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId    String    @unique @map("user_id") @db.Uuid
+  wechat    String?   @db.VarChar(100)
+  weibo     String?   @db.VarChar(100)
+  qq        String?   @db.VarChar(50)
+  github    String?   @db.VarChar(100)
+  twitter   String?   @db.VarChar(100)
+  instagram String?   @db.VarChar(100)
+  website   String?   @db.VarChar(255)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("user_social")
+}
+
+model PlayHistory {
+  id            String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  musicId       String    @db.Uuid @map("music_id")
+  playDuration  Int?      @map("play_duration")
+  playSource    String?   @db.VarChar(50) @map("play_source")
+  playedAt      DateTime? @default(now()) @map("played_at") @db.Timestamp(6)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([musicId], map: "idx_play_history_music")
+  @@index([userId, playedAt(sort: Desc)], map: "idx_play_history_user_time")
+  @@map("play_history")
+}
+
+model Notification {
+  id               String    @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  type             String    @db.VarChar(20)
+  fromUser         String?   @db.VarChar(100) @map("from_user")
+  workTitle        String?   @db.VarChar(200) @map("work_title")
+  originalWorkId   String?   @db.Uuid @map("original_work_id")
+  isRead           Boolean?  @default(false) @map("is_read")
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([createdAt(sort: Desc)], map: "idx_notifications_created")
+  @@index([userId, isRead], map: "idx_notifications_user_read")
+  @@map("notifications")
+}

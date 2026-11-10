@@ -8,6 +8,10 @@ import {
   ROUTE_PREFIX, kv, requireAuth, getUserFromRequest, getAllSharedWorks,
 } from "./server-utils.ts";
 import { validate, profileUpdateSchema } from "./validation.ts";
+import {
+  getUserProfile, getUserStarPower, getUserPreferences, getUserUnlockedThemes,
+  upsertUserProfile, upsertUserStarPower, upsertUserPreferences, addUserUnlockedTheme,
+} from "./db.ts";
 
 export function registerUserRoutes(app: any) {
   // ==========================================
@@ -50,6 +54,26 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/profile/:userId`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
+      // P1b: 读优先关系表，未命中回退 KV（legacy）
+      const pgProfile = await getUserProfile(userId);
+      if (pgProfile) {
+        return c.json({
+          profile: {
+            userId: pgProfile.id,
+            email: pgProfile.email || '',
+            displayName: pgProfile.nickname || pgProfile.username || '',
+            starPower: 0,
+            totalListeningTime: 0,
+            totalAnnotations: 0,
+            totalLikes: 0,
+            achievements: [],
+            joinedAt: pgProfile.created_at?.toISOString() || new Date().toISOString(),
+            streak: 0,
+            role: pgProfile.role || 'user',
+            avatar: pgProfile.avatar || '',
+          },
+        });
+      }
       const value = await kv.get(`user:${userId}:profile`);
       if (value) {
         const profile = JSON.parse(value as string);
@@ -72,17 +96,31 @@ export function registerUserRoutes(app: any) {
     const userId = c.req.param("userId");
     try {
       const body = await c.req.json();
-      const existing = await kv.get(`user:${userId}:profile`);
-      let profile = existing ? JSON.parse(existing as string) : {
-        userId, email: '', displayName: '', starPower: 0,
-        totalListeningTime: 0, totalAnnotations: 0, totalLikes: 0,
-        achievements: [], joinedAt: new Date().toISOString(), streak: 0, role: 'user',
-      };
       const parsed = validate(profileUpdateSchema, body);
       if (!parsed.success) return c.json({ error: parsed.error }, 400);
-      profile = { ...profile, ...parsed.data };
-      await kv.set(`user:${userId}:profile`, JSON.stringify(profile));
-      return c.json({ success: true, profile });
+      // P1b: 双写 KV + PG（关系表为主，KV 保留兼容旧客户端缓存）
+      const existing = await getUserProfile(userId);
+      const displayName = parsed.data.displayName || (existing?.nickname || existing?.username || userId);
+      await upsertUserProfile(userId, {
+        email: parsed.data.email,
+        nickname: parsed.data.displayName,
+        avatar: parsed.data.avatar,
+        role: parsed.data.role as string | undefined,
+      });
+      await kv.set(`user:${userId}:profile`, JSON.stringify({
+        userId,
+        email: parsed.data.email || (existing?.email || ''),
+        displayName,
+        starPower: (await getUserStarPower(userId))?.totalStarPower || 0,
+        totalListeningTime: 0,
+        totalAnnotations: 0,
+        totalLikes: 0,
+        achievements: [],
+        joinedAt: existing?.created_at?.toISOString() || new Date().toISOString(),
+        streak: 0,
+        role: parsed.data.role || existing?.role || 'user',
+      }));
+      return c.json({ success: true, profile: await getUserProfile(userId) });
     } catch (error) {
       console.log(`Error updating profile for user ${userId}:`, error);
       return c.json({ error: `Failed to update profile: ${error}` }, 500);
@@ -95,6 +133,11 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/user/role/:userId`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
+      // P1b: 读优先关系表
+      const pgProfile = await getUserProfile(userId);
+      if (pgProfile) {
+        return c.json({ userId, role: pgProfile.role || 'user' });
+      }
       const roleVal = await kv.get(`user:${userId}:role`);
       return c.json({ userId, role: (roleVal as string) || 'user' });
     } catch (error) {
@@ -115,6 +158,8 @@ export function registerUserRoutes(app: any) {
       if (!validRoles.includes(role)) {
         return c.json({ error: `Invalid role. Must be: ${validRoles.join(', ')}` }, 400);
       }
+      // P1b: 双写 KV + PG
+      await upsertUserProfile(userId, { role });
       await kv.set(`user:${userId}:role`, role);
       console.log(`Role updated: user=${userId} role=${role} by=${requester.id}`);
       return c.json({ success: true, userId, role });
@@ -129,9 +174,14 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/user/:userId/unlocked-themes`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
+      // P1b: 读优先关系表
+      const themes = await getUserUnlockedThemes(userId);
+      if (themes.length > 0) {
+        return c.json({ themes });
+      }
       const raw = await kv.get(`user:${userId}:unlocked-themes`);
-      const themes: string[] = raw ? JSON.parse(raw as string) : [];
-      return c.json({ themes });
+      const themesKV: string[] = raw ? JSON.parse(raw as string) : [];
+      return c.json({ themes: themesKV });
     } catch (error) { console.log(`Unlocked themes fetch error for ${userId}:`, error); return c.json({ themes: [] }, 500); }
   });
 
@@ -141,12 +191,10 @@ export function registerUserRoutes(app: any) {
       const body = await c.req.json();
       const { themeId } = body;
       if (!themeId) return c.json({ error: 'themeId required' }, 400);
-      const raw = await kv.get(`user:${userId}:unlocked-themes`);
-      const themes: string[] = raw ? JSON.parse(raw as string) : [];
-      if (!themes.includes(themeId)) {
-        themes.push(themeId);
-        await kv.set(`user:${userId}:unlocked-themes`, JSON.stringify(themes));
-      }
+      // P1b: 双写 KV + PG
+      await addUserUnlockedTheme(userId, themeId);
+      const themes = await getUserUnlockedThemes(userId);
+      await kv.set(`user:${userId}:unlocked-themes`, JSON.stringify(themes));
       console.log(`Theme ${themeId} unlocked for user ${userId}`);
       return c.json({ success: true, themes });
     } catch (error) { console.log(`Theme unlock error for ${userId}:`, error); return c.json({ error: `Failed: ${error}` }, 500); }
@@ -158,6 +206,19 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/preferences/:userId`, async (c: any) => {
     try {
       const userId = c.req.param('userId');
+      // P1b: 读优先关系表
+      const pgPrefs = await getUserPreferences(userId);
+      if (pgPrefs) {
+        return c.json({ preferences: {
+          lang: pgPrefs.language,
+          theme: pgPrefs.theme,
+          volume: null,
+          shuffleEnabled: null,
+          repeatMode: null,
+          mode: pgPrefs.theme,
+          ...pgPrefs,
+        } });
+      }
       const raw = await kv.get(`prefs:${userId}`);
       const preferences = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : null;
       return c.json({ preferences });
@@ -176,6 +237,8 @@ export function registerUserRoutes(app: any) {
       for (const key of allowed) {
         if (body[key] !== undefined) clean[key] = body[key];
       }
+      // P1b: 双写 KV + PG
+      await upsertUserPreferences(userId, clean);
       await kv.set(`prefs:${userId}`, JSON.stringify(clean));
       console.log(`[Prefs] Saved preferences for user ${userId}`);
       return c.json({ saved: true });
