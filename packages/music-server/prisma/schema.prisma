@@ -197,3 +197,52 @@ model Notification {
   @@index([userId, isRead], map: "idx_notifications_user_read")
   @@map("notifications")
 }
+
+// ==========================================
+// Album 域（P1b）
+// KV 侧使用字符串 id，关系表通过 legacy_id 对齐。
+// ==========================================
+
+model Album {
+  id                String   @id @default(dbgenerated("public.uuid_generate_v4()")) @map("id") @db.Uuid
+  legacyId          String?  @unique @map("legacy_id")
+  title             String   @map("title") @db.VarChar(200)
+  artist            String   @map("artist") @db.VarChar(200)
+  cover             String?  @default("/images/default-album.jpg") @map("cover") @db.VarChar(500)
+  description       String?  @map("description")
+  releaseDate       DateTime? @map("release_date") @db.Date
+  genre             String?  @map("genre") @db.VarChar(50)
+  creatorId         String   @map("creator_id") @db.Uuid
+  creatorName       String?  @map("creator_name") @db.VarChar(200)
+  trackCount        Int?     @default(0) @map("track_count")
+  duration          Int?     @default(0) @map("duration")
+  playCount         Int?     @default(0) @map("play_count")
+  likeCount         Int?     @default(0) @map("like_count")
+  status            String?  @default("draft") @map("status") @db.VarChar(20)
+  price             Int?     @default(0) @map("price")
+  limitedEdition    Boolean? @default(false) @map("limited_edition")
+  maxSupply         Int?     @map("max_supply")
+  circulatingSupply Int?     @default(0) @map("circulating_supply")
+  exclusiveContent  Json?    @default("[]") @map("exclusive_content")
+  tags              Json?    @default("[]") @map("tags")
+  totalSales        Int?     @default(0) @map("total_sales")
+  tracks            Json?    @default("[]") @map("tracks")
+  createdAt         DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime? @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  @@index([creatorId], map: "idx_albums_creator")
+  @@index([releaseDate(sort: Desc)], map: "idx_albums_release")
+  @@map("albums")
+}
+
+model AlbumOwnership {
+  albumId     String   @map("album_id")
+  userId      String   @map("user_id")
+  purchasedAt DateTime @default(now()) @map("purchased_at") @db.Timestamptz(6)
+  price       Int      @default(0) @map("price")
+  edition     Int?     @map("edition")
+
+  @@id([albumId, userId])
+  @@index([userId], map: "idx_album_ownership_user")
+  @@map("album_ownership")
+}

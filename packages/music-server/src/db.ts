@@ -31,10 +31,11 @@ function getPool() {
 }
 
 /**
- * 安全执行：PG 不可用（未部署 / 无凭证 / 网络异常）时返回 fallback，
+ * 安全执行：PG 不可用（未部署 / 无凭证 / 网络异常 / 显式禁用）时返回 fallback，
  * 保证关系表未就绪阶段仍可由 KV 提供服务。
  */
 async function safeQuery<T>(label: string, fallback: T, fn: (client: any) => Promise<T>): Promise<T> {
+  if (Deno.env.get("DB_DISABLED") === "1") return fallback;
   let client: any = null;
   try {
     client = await getPool().connect();
@@ -49,6 +50,7 @@ async function safeQuery<T>(label: string, fallback: T, fn: (client: any) => Pro
 
 /** 安全写入：失败仅告警，不影响 KV 主链路 */
 async function safeExec(label: string, fn: (client: any) => Promise<void>): Promise<void> {
+  if (Deno.env.get("DB_DISABLED") === "1") return;
   let client: any = null;
   try {
     client = await getPool().connect();
@@ -234,5 +236,183 @@ export async function createUser(
        ON CONFLICT (user_id) DO NOTHING`,
       [userId],
     );
+  });
+}
+
+// ==========================================
+// Album 域（musai.albums / musai.album_ownership）
+// KV 侧使用字符串 id（如 album-cosmic-dreams），关系表通过 legacy_id 对齐。
+// ==========================================
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function asUuid(value: unknown): string | null {
+  return typeof value === "string" && UUID_RE.test(value) ? value : null;
+}
+
+function rowToAlbum(row: any): any {
+  return {
+    id: row.legacy_id ?? row.id,
+    creatorId: row.creator_id,
+    creatorName: row.creator_name ?? row.artist ?? 'Anonymous',
+    title: row.title,
+    description: row.description ?? '',
+    coverUrl: row.cover ?? '',
+    genre: row.genre ?? 'Other',
+    tracks: Array.isArray(row.tracks) ? row.tracks : [],
+    price: row.price ?? 0,
+    limitedEdition: row.limited_edition ?? false,
+    maxSupply: row.max_supply ?? null,
+    circulatingSupply: row.circulating_supply ?? 0,
+    releaseDate: row.release_date ? new Date(row.release_date).getTime() : 0,
+    exclusiveContent: Array.isArray(row.exclusive_content) ? row.exclusive_content : [],
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    likes: row.like_count ?? 0,
+    totalSales: row.total_sales ?? 0,
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+  };
+}
+
+/** 按 KV 字符串 id（legacy_id）查询专辑 */
+export async function getAlbumByLegacyId(albumId: string): Promise<any | null> {
+  return await safeQuery("getAlbumByLegacyId", null, async (client) => {
+    const res = await client.query(
+      `SELECT * FROM musai.albums WHERE legacy_id = $1 LIMIT 1`,
+      [albumId],
+    );
+    return res.rows[0] ? rowToAlbum(res.rows[0]) : null;
+  });
+}
+
+/** 列出专辑（关系表侧） */
+export async function listAlbums(limit = 200): Promise<any[]> {
+  return await safeQuery<any[]>("listAlbums", [], async (client) => {
+    const res = await client.query(
+      `SELECT * FROM musai.albums
+        WHERE legacy_id IS NOT NULL
+        ORDER BY release_date DESC NULLS LAST, created_at DESC
+        LIMIT $1`,
+      [limit],
+    );
+    return res.rows.map(rowToAlbum);
+  });
+}
+
+/** 按创作者列出专辑（仅支持 uuid 创作者，否则交由 KV 兜底） */
+export async function listAlbumsByCreator(creatorId: string): Promise<any[]> {
+  const uuid = asUuid(creatorId);
+  if (!uuid) return [];
+  return await safeQuery<any[]>("listAlbumsByCreator", [], async (client) => {
+    const res = await client.query(
+      `SELECT * FROM musai.albums
+        WHERE creator_id = $1
+        ORDER BY created_at DESC`,
+      [uuid],
+    );
+    return res.rows.map(rowToAlbum);
+  });
+}
+
+/** 写入/更新专辑（关系表侧尽力同步） */
+export async function upsertAlbum(album: any): Promise<void> {
+  const creatorUuid = asUuid(album.creatorId);
+  if (!creatorUuid) return; // 非 uuid 创作者（system / demo）只保留在 KV
+  await safeExec("upsertAlbum", async (client) => {
+    await client.query(
+      `INSERT INTO musai.albums (
+         legacy_id, title, artist, cover, description, release_date, genre, creator_id,
+         creator_name, track_count, duration, like_count, status,
+         price, limited_edition, max_supply, circulating_supply,
+         exclusive_content, tags, total_sales, tracks, created_at, updated_at
+       ) VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8,
+         $9, $10, $11, $12, 'published',
+         $13, $14, $15, $16,
+         $17::jsonb, $18::jsonb, $19, $20::jsonb, $21, now()
+       )
+       ON CONFLICT (legacy_id) DO UPDATE SET
+         title = EXCLUDED.title,
+         artist = EXCLUDED.artist,
+         cover = EXCLUDED.cover,
+         description = EXCLUDED.description,
+         release_date = EXCLUDED.release_date,
+         genre = EXCLUDED.genre,
+         creator_name = EXCLUDED.creator_name,
+         track_count = EXCLUDED.track_count,
+         duration = EXCLUDED.duration,
+         like_count = EXCLUDED.like_count,
+         price = EXCLUDED.price,
+         limited_edition = EXCLUDED.limited_edition,
+         max_supply = EXCLUDED.max_supply,
+         circulating_supply = EXCLUDED.circulating_supply,
+         exclusive_content = EXCLUDED.exclusive_content,
+         tags = EXCLUDED.tags,
+         total_sales = EXCLUDED.total_sales,
+         tracks = EXCLUDED.tracks,
+         updated_at = now()`,
+      [
+        album.id,
+        album.title,
+        album.artist ?? album.creatorName ?? 'Unknown',
+        album.coverUrl || null,
+        album.description || null,
+        album.releaseDate ? new Date(album.releaseDate).toISOString().slice(0, 10) : null,
+        album.genre || null,
+        creatorUuid,
+        album.creatorName ?? null,
+        Array.isArray(album.tracks) ? album.tracks.length : 0,
+        Array.isArray(album.tracks)
+          ? album.tracks.reduce((sum: number, t: any) => sum + (Number(t?.duration) || 0), 0)
+          : 0,
+        album.likes ?? 0,
+        album.price ?? 0,
+        album.limitedEdition ?? false,
+        album.maxSupply ?? null,
+        album.circulatingSupply ?? 0,
+        JSON.stringify(album.exclusiveContent ?? []),
+        JSON.stringify(album.tags ?? []),
+        album.totalSales ?? 0,
+        JSON.stringify(album.tracks ?? []),
+        album.createdAt ? new Date(album.createdAt) : new Date(),
+      ],
+    );
+  });
+}
+
+/** 同步专辑点赞数（关系表侧） */
+export async function updateAlbumLikes(albumId: string, likes: number): Promise<void> {
+  await safeExec("updateAlbumLikes", async (client) => {
+    await client.query(
+      `UPDATE musai.albums SET like_count = $2, updated_at = now() WHERE legacy_id = $1`,
+      [albumId, likes],
+    );
+  });
+}
+
+/** 记录专辑购买归属（关系表侧） */
+export async function addAlbumOwnership(
+  albumId: string,
+  userId: string,
+  price: number,
+  edition?: number | null,
+): Promise<void> {
+  await safeExec("addAlbumOwnership", async (client) => {
+    await client.query(
+      `INSERT INTO musai.album_ownership (album_id, user_id, price, edition)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (album_id, user_id) DO NOTHING`,
+      [albumId, userId, price, edition ?? null],
+    );
+  });
+}
+
+/** 查询用户已购专辑 id 列表（关系表侧） */
+export async function listOwnedAlbumIds(userId: string): Promise<string[]> {
+  return await safeQuery<string[]>("listOwnedAlbumIds", [], async (client) => {
+    const res = await client.query(
+      `SELECT album_id FROM musai.album_ownership WHERE user_id = $1 ORDER BY purchased_at DESC`,
+      [userId],
+    );
+    return res.rows.map((r: any) => r.album_id);
   });
 }

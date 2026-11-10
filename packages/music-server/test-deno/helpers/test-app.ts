@@ -5,6 +5,9 @@
 import { Hono } from 'npm:hono';
 import { cors } from 'npm:hono/cors';
 
+// P1b：关系表在测试中禁用（fake KV 为唯一数据源，避免命中本机 PG 真实数据）
+Deno.env.set('DB_DISABLED', '1');
+
 import { registerAuthRoutes } from '../../src/routes-auth.ts';
 import { registerMusicRoutes } from '../../src/routes-music.ts';
 import { registerStarpowerRoutes } from '../../src/routes-starpower.ts';
