@@ -454,3 +454,130 @@ export async function updateSongStats(
     );
   });
 }
+
+// ==========================================
+// Media 域（musai.media_files，legacy_id 对齐 KV mediaId）
+// 说明：文件本体仍在对象存储，关系表保存元数据。
+// ==========================================
+
+function rowToMedia(row: any): any {
+  return {
+    id: row.legacy_id,
+    userId: row.user_id,
+    userName: row.user_name ?? '',
+    title: row.title ?? '',
+    artist: row.artist ?? '',
+    album: row.album ?? '',
+    genre: row.genre ?? '',
+    duration: row.duration ?? 0,
+    description: row.description ?? '',
+    mimeType: row.mime_type ?? '',
+    mediaType: row.media_type ?? 'audio',
+    filePath: row.file_path,
+    fileSize: row.file_size ? Number(row.file_size) : 0,
+    coverPath: row.cover_path ?? null,
+    isPublic: row.is_public ?? true,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    plays: row.plays ?? 0,
+    likes: row.likes ?? 0,
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+  };
+}
+
+/** 按 KV mediaId（legacy_id）查询媒体元数据 */
+export async function getMediaById(mediaId: string): Promise<any | null> {
+  return await safeQuery("getMediaById", null, async (client) => {
+    const res = await client.query(
+      `SELECT * FROM musai.media_files WHERE legacy_id = $1 LIMIT 1`,
+      [mediaId],
+    );
+    return res.rows[0] ? rowToMedia(res.rows[0]) : null;
+  });
+}
+
+/** 列出用户的媒体 id（按创建时间倒序） */
+export async function listUserMediaIds(userId: string, limit = 50): Promise<string[]> {
+  return await safeQuery<string[]>("listUserMediaIds", [], async (client) => {
+    const res = await client.query(
+      `SELECT legacy_id FROM musai.media_files
+        WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`,
+      [userId, limit],
+    );
+    return res.rows.map((r: any) => r.legacy_id);
+  });
+}
+
+/** 列出公开媒体 id（按创建时间倒序） */
+export async function listPublicMediaIds(limit = 50): Promise<string[]> {
+  return await safeQuery<string[]>("listPublicMediaIds", [], async (client) => {
+    const res = await client.query(
+      `SELECT legacy_id FROM musai.media_files
+        WHERE is_public = true ORDER BY created_at DESC LIMIT $1`,
+      [limit],
+    );
+    return res.rows.map((r: any) => r.legacy_id);
+  });
+}
+
+/** 写入/更新媒体元数据（关系表侧尽力同步） */
+export async function upsertMedia(meta: any): Promise<void> {
+  await safeExec("upsertMedia", async (client) => {
+    await client.query(
+      `INSERT INTO musai.media_files (
+         legacy_id, user_id, user_name, title, artist, album, genre, duration,
+         description, mime_type, media_type, file_path, file_size, cover_path,
+         is_public, tags, plays, likes, created_at, updated_at
+       ) VALUES (
+         $1,$2,$3,$4,$5,$6,$7,$8,
+         $9,$10,$11,$12,$13,$14,
+         $15,$16::jsonb,$17,$18,$19, now()
+       )
+       ON CONFLICT (legacy_id) DO UPDATE SET
+         user_name = EXCLUDED.user_name,
+         title = EXCLUDED.title,
+         artist = EXCLUDED.artist,
+         album = EXCLUDED.album,
+         genre = EXCLUDED.genre,
+         duration = EXCLUDED.duration,
+         description = EXCLUDED.description,
+         mime_type = EXCLUDED.mime_type,
+         media_type = EXCLUDED.media_type,
+         file_path = EXCLUDED.file_path,
+         file_size = EXCLUDED.file_size,
+         cover_path = EXCLUDED.cover_path,
+         is_public = EXCLUDED.is_public,
+         tags = EXCLUDED.tags,
+         plays = EXCLUDED.plays,
+         likes = EXCLUDED.likes,
+         updated_at = now()`,
+      [
+        meta.id,
+        meta.userId,
+        meta.userName ?? null,
+        meta.title ?? '',
+        meta.artist ?? null,
+        meta.album ?? null,
+        meta.genre ?? null,
+        meta.duration ?? 0,
+        meta.description ?? null,
+        meta.mimeType ?? null,
+        meta.mediaType ?? 'audio',
+        meta.filePath,
+        meta.fileSize ?? null,
+        meta.coverPath ?? null,
+        meta.isPublic ?? true,
+        JSON.stringify(meta.tags ?? []),
+        meta.plays ?? 0,
+        meta.likes ?? 0,
+        meta.createdAt ? new Date(meta.createdAt) : new Date(),
+      ],
+    );
+  });
+}
+
+/** 删除媒体元数据（关系表侧） */
+export async function deleteMedia(mediaId: string): Promise<void> {
+  await safeExec("deleteMedia", async (client) => {
+    await client.query(`DELETE FROM musai.media_files WHERE legacy_id = $1`, [mediaId]);
+  });
+}

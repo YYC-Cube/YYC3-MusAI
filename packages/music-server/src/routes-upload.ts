@@ -26,6 +26,9 @@ import { ROUTE_PREFIX, kv, registerSongId, queryCache, createAdminClient } from 
 import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate } from "./validation.ts";
 import { z } from "npm:zod@3.23.8";
+import {
+  getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
+} from "./db.ts";
 
 // ==========================================
 // Constants
@@ -202,6 +205,15 @@ function isVideoType(mimeType: string): boolean {
   return ALLOWED_VIDEO_TYPES.includes(mimeType);
 }
 
+/** P1b: 读取媒体元数据——关系表优先，未命中回退 KV */
+async function getMediaMeta(mediaId: string): Promise<MediaMeta | null> {
+  const fromDb = await getMediaById(mediaId);
+  if (fromDb) return fromDb as MediaMeta;
+  const raw = await kv.get(`media:${mediaId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw as string) as MediaMeta; } catch { return null; }
+}
+
 /** Upload bytes to Storage, store meta in KV, return full media object with signed URLs */
 async function finalizeUpload(
   fileBytes: Uint8Array,
@@ -275,6 +287,9 @@ async function finalizeUpload(
 
   // Register in song index
   await registerSongId(mediaId);
+
+  // P1b: 关系表侧尽力同步元数据
+  await upsertMedia(meta);
 
   // Generate signed URLs
   const { data: signedData } = await sb.storage
@@ -494,8 +509,9 @@ export function registerUploadRoutes(app: any) {
   app.put(`${ROUTE_PREFIX}/upload/media/:mediaId/lyrics`, rateLimit(RATE_SENSITIVE), async (c: any) => {
     try {
       const mediaId = c.req.param('mediaId');
-      const metaRaw = await kv.get(`media:${mediaId}`);
-      if (!metaRaw) {
+      // P1b: 存在性校验走统一读取（关系表优先，回退 KV）
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) {
         return c.json({ error: 'Media not found' }, 404);
       }
 
@@ -537,11 +553,11 @@ export function registerUploadRoutes(app: any) {
     // Exclude lyrics sub-routes
     if (mediaId === 'lyrics') return c.json({ error: 'Media not found' }, 404);
     try {
-      const raw = await kv.get(`media:${mediaId}`);
-      if (!raw) {
+      // P1b: 关系表优先，未命中回退 KV
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) {
         return c.json({ error: 'Media not found' }, 404);
       }
-      const meta: MediaMeta = JSON.parse(raw as string);
 
       const sb = createAdminClient();
       const { data: signedData, error } = await sb.storage
@@ -587,11 +603,22 @@ export function registerUploadRoutes(app: any) {
       let mediaIds: string[];
 
       if (userId) {
-        const raw = await kv.get(`media:user:${userId}`);
-        mediaIds = raw ? JSON.parse(raw as string) : [];
+        // P1b: 用户列表读优先关系表，空则回退 KV
+        const dbIds = await listUserMediaIds(userId, 50);
+        if (dbIds.length > 0) {
+          mediaIds = dbIds;
+        } else {
+          const raw = await kv.get(`media:user:${userId}`);
+          mediaIds = raw ? JSON.parse(raw as string) : [];
+        }
       } else {
-        const raw = await kv.get('media:index');
-        mediaIds = raw ? JSON.parse(raw as string) : [];
+        const dbIds = await listPublicMediaIds(50);
+        if (dbIds.length > 0) {
+          mediaIds = dbIds;
+        } else {
+          const raw = await kv.get('media:index');
+          mediaIds = raw ? JSON.parse(raw as string) : [];
+        }
       }
 
       // Fetch metadata for each (limited to 50)
@@ -600,9 +627,8 @@ export function registerUploadRoutes(app: any) {
       const mediaList: any[] = [];
 
       for (const id of limited) {
-        const raw = await kv.get(`media:${id}`);
-        if (raw) {
-          const meta: MediaMeta = JSON.parse(raw as string);
+        const meta = await getMediaMeta(id);
+        if (meta) {
           const { data: signedData } = await sb.storage
             .from(MEDIA_BUCKET)
             .createSignedUrl(meta.filePath, SIGNED_URL_EXPIRY);
@@ -635,11 +661,11 @@ export function registerUploadRoutes(app: any) {
   app.delete(`${ROUTE_PREFIX}/upload/media/:mediaId`, rateLimit(RATE_SENSITIVE), async (c: any) => {
     const mediaId = c.req.param('mediaId');
     try {
-      const raw = await kv.get(`media:${mediaId}`);
-      if (!raw) {
+      // P1b: 关系表优先，未命中回退 KV
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) {
         return c.json({ error: 'Media not found' }, 404);
       }
-      const meta: MediaMeta = JSON.parse(raw as string);
 
       // Delete from Storage
       const sb = createAdminClient();
@@ -651,6 +677,9 @@ export function registerUploadRoutes(app: any) {
       // Delete KV metadata + lyrics
       await kv.del(`media:${mediaId}`);
       await kv.del(`lyrics:${mediaId}`);
+
+      // P1b: 关系表侧尽力同步删除
+      await deleteMedia(mediaId);
 
       // Remove from user's list
       const userRaw = await kv.get(`media:user:${meta.userId}`);

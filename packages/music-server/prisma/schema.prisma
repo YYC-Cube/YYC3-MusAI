@@ -289,3 +289,35 @@ model Music {
   @@index([status], map: "idx_musics_status")
   @@map("musics")
 }
+
+// ==========================================
+// Media 域（P1b）— 上传媒体元数据；文件本体仍在对象存储
+// ==========================================
+
+model MediaFile {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @map("id") @db.Uuid
+  legacyId   String   @unique @map("legacy_id")
+  userId     String   @map("user_id")
+  userName   String?  @map("user_name")
+  title      String   @default("") @map("title") @db.VarChar(200)
+  artist     String?  @map("artist") @db.VarChar(200)
+  album      String?  @map("album") @db.VarChar(200)
+  genre      String?  @map("genre") @db.VarChar(50)
+  duration   Int?     @map("duration")
+  description String? @map("description")
+  mimeType   String?  @map("mime_type") @db.VarChar(100)
+  mediaType  String?  @map("media_type") @db.VarChar(20)
+  filePath   String   @map("file_path") @db.VarChar(500)
+  fileSize   BigInt?  @map("file_size")
+  coverPath  String?  @map("cover_path") @db.VarChar(500)
+  isPublic   Boolean? @default(true) @map("is_public")
+  tags       Json?    @default("[]") @map("tags")
+  plays      Int?     @default(0) @map("plays")
+  likes      Int?     @default(0) @map("likes")
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId], map: "idx_media_files_user")
+  @@index([isPublic, createdAt(sort: Desc)], map: "idx_media_files_public")
+  @@map("media_files")
+}
