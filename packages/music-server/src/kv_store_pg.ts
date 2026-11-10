@@ -1,7 +1,7 @@
 /**
  * D-Music P1a — PostgreSQL KV 存储实现（Deno 过渡版）
  *
- * 与 `kv_store.tsx`（Supabase 版）签名完全一致，供 `KV_DRIVER=pg` 时使用。
+ * 与 `kv_store.ts`（Supabase 版）签名完全一致，供 `KV_DRIVER=pg` 时使用。
  * 表：musai.kv_store(namespace TEXT, key TEXT, value JSONB, updated_at TIMESTAMPTZ, PK(namespace, key))
  *
  * 注意：npm:pg 已将 jsonb 列解析为 JS 值，`get` 直接返回该值（对象/字符串/数字），

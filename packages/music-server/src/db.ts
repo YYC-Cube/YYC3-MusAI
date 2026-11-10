@@ -1,10 +1,10 @@
 // ==========================================
-// P1b · User 域数据层 — pg 驱动（Deno 运行时，musai schema）
+// P1b · 关系表数据层 — pg 驱动（Deno 运行时，musai schema）
 //
 // 读写策略（逐域迁移，user 域先行）：
-//   - 读：优先查询关系表（pg），命中返回；未命中回退 KV（legacy）
-//   - 写：双写 KV + PG，保证旧客户端/缓存与新表同步
-//   - 路由层 0 改动：仅 routes-user.ts 把 kv.get/set(...) 换成 db.* 查询
+//   - 读：优先查询关系表（pg），命中返回；未命中或 PG 不可用回退 KV（legacy）
+//   - 写：双写 KV + PG，PG 侧尽力而为（失败仅告警，不阻断主流程）
+//   - 路由层无需感知驱动差异
 //
 // 连接串：PG_* 环境变量（与 kv_store_pg.ts 一致），默认本机 PG15:5433 yyc3_music musai schema
 // ==========================================
@@ -24,34 +24,61 @@ function getPool() {
       password: Deno.env.get("PG_PASSWORD") ?? "",
       database: Deno.env.get("PG_DATABASE") ?? "yyc3_music",
       max: 10,
+      connectionTimeoutMillis: 3000,
     });
   }
   return _pool;
+}
+
+/**
+ * 安全执行：PG 不可用（未部署 / 无凭证 / 网络异常）时返回 fallback，
+ * 保证关系表未就绪阶段仍可由 KV 提供服务。
+ */
+async function safeQuery<T>(label: string, fallback: T, fn: (client: any) => Promise<T>): Promise<T> {
+  let client: any = null;
+  try {
+    client = await getPool().connect();
+    return await fn(client);
+  } catch (error) {
+    console.log(`[DB] ${label} skipped: ${error instanceof Error ? error.message : error}`);
+    return fallback;
+  } finally {
+    client?.release();
+  }
+}
+
+/** 安全写入：失败仅告警，不影响 KV 主链路 */
+async function safeExec(label: string, fn: (client: any) => Promise<void>): Promise<void> {
+  let client: any = null;
+  try {
+    client = await getPool().connect();
+    await fn(client);
+  } catch (error) {
+    console.log(`[DB] ${label} skipped: ${error instanceof Error ? error.message : error}`);
+  } finally {
+    client?.release();
+  }
 }
 
 // ==========================================
 // User 域查询（映射 musai 现有关系表，不重复建表）
 // ==========================================
 
-/** 查询用户基础信息（含 role, nickname, avatar, email） */
+/** 查询用户基础信息（含 role / nickname / avatar / email） */
 export async function getUserProfile(userId: string): Promise<any> {
-  const client = await getPool().connect();
-  try {
+  return await safeQuery("getUserProfile", null, async (client) => {
     const res = await client.query(
       `SELECT id, username, email, nickname, avatar, role, status, created_at
        FROM musai.users WHERE id = $1`,
       [userId],
     );
     return res.rows[0] || null;
-  } finally {
-    client.release();
-  }
+  });
 }
 
-/** 查询用户星力（缓存回退字段） */
+/** 查询用户星力 */
 export async function getUserStarPower(userId: string): Promise<any> {
-  const client = await getPool().connect();
-  try {
+  return await safeQuery("getUserStarPower", null, async (client) => {
     const res = await client.query(
       `SELECT total_star_power, available_star_power, frozen_star_power,
               vip_level, mheart_value, daily_checkin_streak
@@ -59,15 +86,12 @@ export async function getUserStarPower(userId: string): Promise<any> {
       [userId],
     );
     return res.rows[0] || null;
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /** 查询用户偏好 */
 export async function getUserPreferences(userId: string): Promise<any> {
-  const client = await getPool().connect();
-  try {
+  return await safeQuery("getUserPreferences", null, async (client) => {
     const res = await client.query(
       `SELECT language, theme, autoplay, default_quality, download_quality,
               notification_enabled, email_notification, private_profile, show_play_history
@@ -75,26 +99,25 @@ export async function getUserPreferences(userId: string): Promise<any> {
       [userId],
     );
     return res.rows[0] || null;
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /** 查询用户已解锁主题列表 */
 export async function getUserUnlockedThemes(userId: string): Promise<string[]> {
-  const client = await getPool().connect();
-  try {
+  return await safeQuery<string[]>("getUserUnlockedThemes", [], async (client) => {
     const res = await client.query(
       `SELECT theme_id FROM musai.user_unlocked_themes WHERE user_id = $1 ORDER BY unlocked_at`,
       [userId],
     );
     return res.rows.map((r: any) => r.theme_id);
-  } finally {
-    client.release();
-  }
+  });
 }
 
-/** 写入/更新用户基础信息（双写配套） */
+// ==========================================
+// User 域写入（双写 KV + PG）
+// ==========================================
+
+/** 写入/更新用户基础信息 */
 export async function upsertUserProfile(
   userId: string,
   data: {
@@ -104,8 +127,7 @@ export async function upsertUserProfile(
     role?: string;
   },
 ): Promise<void> {
-  const client = await getPool().connect();
-  try {
+  await safeExec("upsertUserProfile", async (client) => {
     const fields: string[] = [];
     const values: any[] = [userId];
     let idx = 2;
@@ -121,9 +143,7 @@ export async function upsertUserProfile(
        ON CONFLICT (id) DO UPDATE SET ${fields.join(", ")}`,
       values,
     );
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /** 写入/更新用户星力 */
@@ -131,17 +151,14 @@ export async function upsertUserStarPower(
   userId: string,
   totalStarPower: number,
 ): Promise<void> {
-  const client = await getPool().connect();
-  try {
+  await safeExec("upsertUserStarPower", async (client) => {
     await client.query(
       `INSERT INTO musai.user_star_power (user_id, total_star_power, available_star_power)
        VALUES ($1, $2, $2)
        ON CONFLICT (user_id) DO UPDATE SET total_star_power = $2, available_star_power = $2, updated_at = now()`,
       [userId, totalStarPower],
     );
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /** 写入/更新用户偏好 */
@@ -149,8 +166,7 @@ export async function upsertUserPreferences(
   userId: string,
   prefs: Record<string, any>,
 ): Promise<void> {
-  const client = await getPool().connect();
-  try {
+  await safeExec("upsertUserPreferences", async (client) => {
     await client.query(
       `INSERT INTO musai.user_preferences (user_id, language, theme, autoplay, default_quality, download_quality,
                notification_enabled, email_notification, private_profile, show_play_history)
@@ -168,9 +184,9 @@ export async function upsertUserPreferences(
          updated_at = now()`,
       [
         userId,
-        prefs.language ?? 'zh-CN',
-        prefs.theme ?? 'cosmic',
-        prefs.autoplay ?? true,
+        prefs.language ?? prefs.lang ?? 'zh-CN',
+        prefs.theme ?? prefs.mode ?? 'cosmic',
+        prefs.autoplay ?? prefs.shuffleEnabled ?? true,
         prefs.defaultQuality ?? 'high',
         prefs.downloadQuality ?? 'high',
         prefs.notificationEnabled ?? true,
@@ -179,24 +195,19 @@ export async function upsertUserPreferences(
         prefs.showPlayHistory ?? true,
       ],
     );
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /** 添加用户已解锁主题 */
 export async function addUserUnlockedTheme(userId: string, themeId: string): Promise<void> {
-  const client = await getPool().connect();
-  try {
+  await safeExec("addUserUnlockedTheme", async (client) => {
     await client.query(
       `INSERT INTO musai.user_unlocked_themes (user_id, theme_id)
        VALUES ($1, $2)
        ON CONFLICT (user_id, theme_id) DO NOTHING`,
       [userId, themeId],
     );
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /** 创建用户（signup 双写配套） */
@@ -204,8 +215,7 @@ export async function createUser(
   userId: string,
   data: { email: string; passwordHash: string; displayName: string },
 ): Promise<void> {
-  const client = await getPool().connect();
-  try {
+  await safeExec("createUser", async (client) => {
     await client.query(
       `INSERT INTO musai.users (id, username, email, password_hash, nickname, role, status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, 'user', 'active', now(), now())
@@ -224,7 +234,5 @@ export async function createUser(
        ON CONFLICT (user_id) DO NOTHING`,
       [userId],
     );
-  } finally {
-    client.release();
-  }
+  });
 }

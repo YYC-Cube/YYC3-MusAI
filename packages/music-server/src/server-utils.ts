@@ -10,7 +10,7 @@
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import * as kvSupabase from "./kv_store.tsx";
+import * as kvSupabase from "./kv_store.ts";
 import * as kvPg from "./kv_store_pg.ts";
 
 // KV 双驱开关：KV_DRIVER=pg（默认，落 musai.kv_store）| supabase（legacy 回退）

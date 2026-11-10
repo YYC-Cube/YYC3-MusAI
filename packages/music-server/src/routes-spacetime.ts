@@ -6,7 +6,7 @@
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import * as kv from "./kv_store.tsx";
+import * as kv from "./kv_store.ts";
 import { requireAuth, ROUTE_PREFIX } from "./server-utils.ts";
 import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
 import {

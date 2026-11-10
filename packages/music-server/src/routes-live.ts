@@ -5,7 +5,7 @@
  * Extracted from index.tsx for modularization.
  */
 
-import * as kv from "./kv_store.tsx";
+import * as kv from "./kv_store.ts";
 import { ROUTE_PREFIX } from "./server-utils.ts";
 import { rateLimit, RATE_STANDARD } from "./rate-limit.ts";
 import { validate, liveHeartbeatSchema, liveLeaveSchema, danmakuSchema } from "./validation.ts";

@@ -96,31 +96,24 @@ export function registerUserRoutes(app: any) {
     const userId = c.req.param("userId");
     try {
       const body = await c.req.json();
+      const existing = await kv.get(`user:${userId}:profile`);
+      let profile = existing ? JSON.parse(existing as string) : {
+        userId, email: '', displayName: '', starPower: 0,
+        totalListeningTime: 0, totalAnnotations: 0, totalLikes: 0,
+        achievements: [], joinedAt: new Date().toISOString(), streak: 0, role: 'user',
+      };
       const parsed = validate(profileUpdateSchema, body);
       if (!parsed.success) return c.json({ error: parsed.error }, 400);
-      // P1b: 双写 KV + PG（关系表为主，KV 保留兼容旧客户端缓存）
-      const existing = await getUserProfile(userId);
-      const displayName = parsed.data.displayName || (existing?.nickname || existing?.username || userId);
+      profile = { ...profile, ...parsed.data };
+      // P1b: KV 为响应基线，关系表侧尽力同步（PG 不可用不影响主流程）
       await upsertUserProfile(userId, {
         email: parsed.data.email,
         nickname: parsed.data.displayName,
         avatar: parsed.data.avatar,
         role: parsed.data.role as string | undefined,
       });
-      await kv.set(`user:${userId}:profile`, JSON.stringify({
-        userId,
-        email: parsed.data.email || (existing?.email || ''),
-        displayName,
-        starPower: (await getUserStarPower(userId))?.totalStarPower || 0,
-        totalListeningTime: 0,
-        totalAnnotations: 0,
-        totalLikes: 0,
-        achievements: [],
-        joinedAt: existing?.created_at?.toISOString() || new Date().toISOString(),
-        streak: 0,
-        role: parsed.data.role || existing?.role || 'user',
-      }));
-      return c.json({ success: true, profile: await getUserProfile(userId) });
+      await kv.set(`user:${userId}:profile`, JSON.stringify(profile));
+      return c.json({ success: true, profile });
     } catch (error) {
       console.log(`Error updating profile for user ${userId}:`, error);
       return c.json({ error: `Failed to update profile: ${error}` }, 500);
@@ -191,10 +184,14 @@ export function registerUserRoutes(app: any) {
       const body = await c.req.json();
       const { themeId } = body;
       if (!themeId) return c.json({ error: 'themeId required' }, 400);
-      // P1b: 双写 KV + PG
+      // P1b: KV 为响应基线，关系表侧尽力同步
+      const raw = await kv.get(`user:${userId}:unlocked-themes`);
+      const themes: string[] = raw ? JSON.parse(raw as string) : [];
+      if (!themes.includes(themeId)) {
+        themes.push(themeId);
+        await kv.set(`user:${userId}:unlocked-themes`, JSON.stringify(themes));
+      }
       await addUserUnlockedTheme(userId, themeId);
-      const themes = await getUserUnlockedThemes(userId);
-      await kv.set(`user:${userId}:unlocked-themes`, JSON.stringify(themes));
       console.log(`Theme ${themeId} unlocked for user ${userId}`);
       return c.json({ success: true, themes });
     } catch (error) { console.log(`Theme unlock error for ${userId}:`, error); return c.json({ error: `Failed: ${error}` }, 500); }

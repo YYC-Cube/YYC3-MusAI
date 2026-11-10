@@ -5,7 +5,7 @@
  * Extracted from index.tsx for modularization.
  */
 
-import * as kv from "./kv_store.tsx";
+import * as kv from "./kv_store.ts";
 import { requireAuth, ROUTE_PREFIX } from "./server-utils.ts";
 import { aiModelManager } from "./ai-model-manager.ts";
 import { validate, challengeSubmitSchema, challengeVoteSchema } from "./validation.ts";
