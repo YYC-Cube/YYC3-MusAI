@@ -14,3 +14,4 @@ export {
 } from './playlistData';
 export * from './localLibrary';
 export * from './localAudio';
+export * from './libraryScanner';

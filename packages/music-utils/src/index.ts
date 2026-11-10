@@ -6,4 +6,5 @@ export * from './audioContext';
 export * from './crypto';
 export * from './preferences';
 export * from './canvasPerfRegistry';
+export * from './aiEndpoints';
 // monitoring.js 通过子路径引入：import { ... } from '@yyc3/music-utils/monitoring'
