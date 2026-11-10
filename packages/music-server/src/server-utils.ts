@@ -10,7 +10,31 @@
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import * as kv from "./kv_store.tsx";
+import * as kvSupabase from "./kv_store.tsx";
+import * as kvPg from "./kv_store_pg.ts";
+
+// KV 双驱开关：KV_DRIVER=pg（默认，落 musai.kv_store）| supabase（legacy 回退）
+// 路由层 0 改动，均通过 server-utils.ts 导出的 kv 使用。
+// 惰性分发：每次调用再读取 KV_DRIVER，以便测试在 import 后再设置环境变量。
+function currentKvDriver() {
+  return Deno.env.get("KV_DRIVER") ?? "pg";
+}
+
+function kvImpl() {
+  return currentKvDriver() === "pg" ? kvPg : kvSupabase;
+}
+
+export const kv = {
+  set: (key: string, value: any): Promise<void> => kvImpl().set(key, value),
+  get: (key: string): Promise<any> => kvImpl().get(key),
+  del: (key: string): Promise<void> => kvImpl().del(key),
+  mset: (keys: string[], values: any[]): Promise<void> =>
+    kvImpl().mset(keys, values),
+  mget: (keys: string[]): Promise<any[]> => kvImpl().mget(keys),
+  mdel: (keys: string[]): Promise<void> => kvImpl().mdel(keys),
+  getByPrefix: (prefix: string): Promise<any[]> =>
+    kvImpl().getByPrefix(prefix),
+};
 
 // ==========================================
 // Constants
@@ -252,8 +276,7 @@ export function createAdminClient() {
   );
 }
 
-// Re-export kv for convenience
-export { kv };
+// kv 已在顶部按 KV_DRIVER 双驱导出，路由层直接从 server-utils 导入使用
 
 // ==========================================
 // §8.2 — Shared Work Helpers

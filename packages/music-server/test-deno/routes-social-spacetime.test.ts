@@ -17,6 +17,7 @@ const fake = new FakeSupabase();
 fake.install();
 Deno.env.set('SUPABASE_URL', 'http://localhost:54321');
 Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'test-service-key');
+Deno.env.set('KV_DRIVER', 'supabase');
 Deno.env.delete('OPENAI_API_KEY');
 Deno.env.delete('DMUSIC_LOCAL_API');
 

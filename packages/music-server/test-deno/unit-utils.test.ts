@@ -19,6 +19,7 @@ fake.install();
 Deno.env.set('SUPABASE_URL', 'http://localhost:54321');
 Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'test-service-key');
 Deno.env.set('SUPABASE_ANON_KEY', 'test-anon-key');
+Deno.env.set('KV_DRIVER', 'supabase');
 
 import * as kv from '../src/kv_store.tsx';
 import {
