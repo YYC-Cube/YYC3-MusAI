@@ -321,3 +321,30 @@ model MediaFile {
   @@index([isPublic, createdAt(sort: Desc)], map: "idx_media_files_public")
   @@map("media_files")
 }
+
+// ==========================================
+// PKI 域（P1b）— E2EE 公钥登记与加密私钥备份
+// ==========================================
+
+model PkiPublicKey {
+  userId       String   @id @map("user_id")
+  publicKeyJwk Json     @map("public_key_jwk")
+  algorithm    String   @default("RSA-OAEP-2048-SHA256") @map("algorithm") @db.VarChar(50)
+  fingerprint  String   @map("fingerprint") @db.VarChar(100)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("pki_public_keys")
+}
+
+model PkiKeyBackup {
+  userId              String   @id @map("user_id")
+  encryptedPrivateKey String   @map("encrypted_private_key")
+  salt                String   @map("salt")
+  iv                  String   @map("iv")
+  publicKeyJwk        Json?    @default("{}") @map("public_key_jwk")
+  createdAt           DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("pki_key_backups")
+}

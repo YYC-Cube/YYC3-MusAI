@@ -581,3 +581,134 @@ export async function deleteMedia(mediaId: string): Promise<void> {
     await client.query(`DELETE FROM musai.media_files WHERE legacy_id = $1`, [mediaId]);
   });
 }
+
+// ==========================================
+// PKI 域（musai.pki_public_keys / musai.pki_key_backups）
+// 记录以 userId（KV 字符串）为主键，时间字段统一换算为毫秒时间戳。
+// ==========================================
+
+function rowToPublicKey(row: any): any {
+  return {
+    userId: row.user_id,
+    publicKeyJwk: row.public_key_jwk ?? {},
+    algorithm: row.algorithm ?? 'RSA-OAEP-2048-SHA256',
+    fingerprint: row.fingerprint,
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : 0,
+  };
+}
+
+function rowToKeyBackup(row: any): any {
+  return {
+    userId: row.user_id,
+    encryptedPrivateKey: row.encrypted_private_key,
+    salt: row.salt,
+    iv: row.iv,
+    publicKeyJwk: row.public_key_jwk ?? {},
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : 0,
+  };
+}
+
+/** 查询用户公钥记录 */
+export async function getPkiPublicKey(userId: string): Promise<any | null> {
+  return await safeQuery("getPkiPublicKey", null, async (client) => {
+    const res = await client.query(
+      `SELECT * FROM musai.pki_public_keys WHERE user_id = $1 LIMIT 1`,
+      [userId],
+    );
+    return res.rows[0] ? rowToPublicKey(res.rows[0]) : null;
+  });
+}
+
+/** 写入/更新用户公钥记录 */
+export async function upsertPkiPublicKey(record: {
+  userId: string;
+  publicKeyJwk: any;
+  algorithm: string;
+  fingerprint: string;
+  createdAt: number;
+  updatedAt: number;
+}): Promise<void> {
+  await safeExec("upsertPkiPublicKey", async (client) => {
+    await client.query(
+      `INSERT INTO musai.pki_public_keys (user_id, public_key_jwk, algorithm, fingerprint, created_at, updated_at)
+       VALUES ($1, $2::jsonb, $3, $4, $5, $6)
+       ON CONFLICT (user_id) DO UPDATE SET
+         public_key_jwk = EXCLUDED.public_key_jwk,
+         algorithm = EXCLUDED.algorithm,
+         fingerprint = EXCLUDED.fingerprint,
+         updated_at = EXCLUDED.updated_at`,
+      [
+        record.userId,
+        JSON.stringify(record.publicKeyJwk ?? {}),
+        record.algorithm,
+        record.fingerprint,
+        new Date(record.createdAt),
+        new Date(record.updatedAt),
+      ],
+    );
+  });
+}
+
+/** 查询用户密钥备份记录 */
+export async function getPkiKeyBackup(userId: string): Promise<any | null> {
+  return await safeQuery("getPkiKeyBackup", null, async (client) => {
+    const res = await client.query(
+      `SELECT * FROM musai.pki_key_backups WHERE user_id = $1 LIMIT 1`,
+      [userId],
+    );
+    return res.rows[0] ? rowToKeyBackup(res.rows[0]) : null;
+  });
+}
+
+/** 写入/更新用户密钥备份记录 */
+export async function upsertPkiKeyBackup(record: {
+  userId: string;
+  encryptedPrivateKey: string;
+  salt: string;
+  iv: string;
+  publicKeyJwk: any;
+  createdAt: number;
+  updatedAt: number;
+}): Promise<void> {
+  await safeExec("upsertPkiKeyBackup", async (client) => {
+    await client.query(
+      `INSERT INTO musai.pki_key_backups (user_id, encrypted_private_key, salt, iv, public_key_jwk, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
+       ON CONFLICT (user_id) DO UPDATE SET
+         encrypted_private_key = EXCLUDED.encrypted_private_key,
+         salt = EXCLUDED.salt,
+         iv = EXCLUDED.iv,
+         public_key_jwk = EXCLUDED.public_key_jwk,
+         updated_at = EXCLUDED.updated_at`,
+      [
+        record.userId,
+        record.encryptedPrivateKey,
+        record.salt,
+        record.iv,
+        JSON.stringify(record.publicKeyJwk ?? {}),
+        new Date(record.createdAt),
+        new Date(record.updatedAt),
+      ],
+    );
+  });
+}
+
+/** 删除用户公钥与密钥备份（密钥轮换） */
+export async function deletePkiKeys(userId: string): Promise<void> {
+  await safeExec("deletePkiKeys", async (client) => {
+    await client.query(`DELETE FROM musai.pki_public_keys WHERE user_id = $1`, [userId]);
+    await client.query(`DELETE FROM musai.pki_key_backups WHERE user_id = $1`, [userId]);
+  });
+}
+
+/** 列出已登记公钥的用户 id（等价于 KV 的 enrollment-log） */
+export async function listPkiEnrolledUserIds(): Promise<string[]> {
+  return await safeQuery<string[]>("listPkiEnrolledUserIds", [], async (client) => {
+    const res = await client.query(
+      `SELECT user_id FROM musai.pki_public_keys ORDER BY created_at`,
+    );
+    return res.rows.map((r: any) => r.user_id);
+  });
+}
