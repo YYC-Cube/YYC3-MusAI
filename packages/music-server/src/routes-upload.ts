@@ -25,7 +25,7 @@
 import { ROUTE_PREFIX, kv, registerSongId, queryCache, createAdminClient } from "./server-utils.ts";
 import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate } from "./validation.ts";
-import { z } from "npm:zod@3.23.8";
+import { z } from "zod";
 import {
   getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
 } from "./db.ts";

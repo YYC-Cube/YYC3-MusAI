@@ -8,7 +8,7 @@
  */
 
 import { ROUTE_PREFIX, kv, queryCache, requireAuth, createAdminClient } from "./server-utils.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 
 // KV prefix groups for statistics
 const KV_PREFIX_GROUPS = [
@@ -48,8 +48,8 @@ export function registerDiagnosticsRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/diagnostics/kv-stats`, async (c: any) => {
     try {
       const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
       );
 
       // 1. Total row count
@@ -173,8 +173,8 @@ export function registerDiagnosticsRoutes(app: any) {
     const authStart = Date.now();
     try {
       const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
       );
       const { error } = await supabase.auth.getSession();
       checks.auth = { status: error ? 'degraded' : 'ok', latencyMs: Date.now() - authStart };
@@ -201,7 +201,7 @@ export function registerDiagnosticsRoutes(app: any) {
 
     // 5. OpenAI key presence
     checks.openAI = {
-      status: Deno.env.get('OPENAI_API_KEY') ? 'configured' : 'missing',
+      status: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
     };
 
     const allOk = Object.values(checks).every(c => c.status === 'ok' || c.status === 'configured');
@@ -211,11 +211,11 @@ export function registerDiagnosticsRoutes(app: any) {
       timestamp: new Date().toISOString(),
       checks,
       environment: {
-        supabaseUrl: Deno.env.get('SUPABASE_URL') ? 'configured' : 'missing',
-        serviceRoleKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'configured' : 'missing',
-        anonKey: Deno.env.get('SUPABASE_ANON_KEY') ? 'configured' : 'missing',
-        dbUrl: Deno.env.get('SUPABASE_DB_URL') ? 'configured' : 'missing',
-        openAiKey: Deno.env.get('OPENAI_API_KEY') ? 'configured' : 'missing',
+        supabaseUrl: process.env.SUPABASE_URL ? 'configured' : 'missing',
+        serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'missing',
+        anonKey: process.env.SUPABASE_ANON_KEY ? 'configured' : 'missing',
+        dbUrl: process.env.SUPABASE_DB_URL ? 'configured' : 'missing',
+        openAiKey: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
       },
       routeModules: 15,
       version: 'v11.1+',

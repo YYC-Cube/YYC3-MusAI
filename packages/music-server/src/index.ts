@@ -23,9 +23,10 @@
  *   - ROUTE_PREFIX, kv, requireAuth, wilsonScore, song index, shared work helpers
  */
 
-import { Hono } from "npm:hono";
-import { cors } from "npm:hono/cors";
-import { logger } from "npm:hono/logger";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { serve } from "@hono/node-server";
 
 // §2.2 Route modules
 import { registerAuthRoutes } from "./routes-auth.ts";
@@ -94,4 +95,14 @@ registerMarketRoutes(app);
 registerDiagnosticsRoutes(app);
 registerUploadRoutes(app);
 
-Deno.serve(app.fetch);
+// ==========================================
+// Node 20+ 运行时入口（@hono/node-server）
+// ==========================================
+const port = Number(process.env.PORT ?? 8080);
+const hostname = process.env.HOST ?? '0.0.0.0';
+
+serve({ fetch: app.fetch, port, hostname }, (info) => {
+  console.log(`[Server] YYC³ MusAI API listening on http://${info.address}:${info.port}`);
+});
+
+export { app };

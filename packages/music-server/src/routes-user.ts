@@ -3,7 +3,7 @@
  * Routes: profile, creators, role, preferences, themes, export, error-report
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import {
   ROUTE_PREFIX, kv, requireAuth, getUserFromRequest, getAllSharedWorks,
 } from "./server-utils.ts";
@@ -291,8 +291,8 @@ export function registerUserRoutes(app: any) {
 
       const accessToken = c.req.header('Authorization')?.split(' ')[1];
       const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
       );
       const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
       if (authErr || !user || user.id !== userId) {

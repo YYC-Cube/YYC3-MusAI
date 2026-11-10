@@ -9,7 +9,7 @@
  *   - Route prefix constant
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import * as kvSupabase from "./kv_store.ts";
 import * as kvPg from "./kv_store_pg.ts";
 
@@ -17,7 +17,7 @@ import * as kvPg from "./kv_store_pg.ts";
 // 路由层 0 改动，均通过 server-utils.ts 导出的 kv 使用。
 // 惰性分发：每次调用再读取 KV_DRIVER，以便测试在 import 后再设置环境变量。
 function currentKvDriver() {
-  return Deno.env.get("KV_DRIVER") ?? "pg";
+  return process.env.KV_DRIVER ?? "pg";
 }
 
 function kvImpl() {
@@ -244,8 +244,8 @@ export async function getUserFromRequest(c: any): Promise<{ id: string; email: s
   if (!accessToken) return null;
   try {
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
     const { data, error } = await supabase.auth.getUser(accessToken);
     if (error || !data?.user) return null;
@@ -271,8 +271,8 @@ export async function requireAuth(c: any, next: () => Promise<void>) {
 
 export function createAdminClient() {
   return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 }
 

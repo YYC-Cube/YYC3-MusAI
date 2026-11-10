@@ -9,7 +9,7 @@
 // 连接串：PG_* 环境变量（与 kv_store_pg.ts 一致），默认本机 PG15:5433 yyc3_music musai schema
 // ==========================================
 
-import pg from "npm:pg@8.13.1";
+import pg from "pg";
 
 const { Pool } = pg as any;
 
@@ -18,11 +18,11 @@ let _pool: any = null;
 function getPool() {
   if (!_pool) {
     _pool = new Pool({
-      host: Deno.env.get("PG_HOST") ?? "localhost",
-      port: Number(Deno.env.get("PG_PORT") ?? "5433"),
-      user: Deno.env.get("PG_USER") ?? "musai_app_rw",
-      password: Deno.env.get("PG_PASSWORD") ?? "",
-      database: Deno.env.get("PG_DATABASE") ?? "yyc3_music",
+      host: process.env.PG_HOST ?? "localhost",
+      port: Number(process.env.PG_PORT ?? "5433"),
+      user: process.env.PG_USER ?? "musai_app_rw",
+      password: process.env.PG_PASSWORD ?? "",
+      database: process.env.PG_DATABASE ?? "yyc3_music",
       max: 10,
       connectionTimeoutMillis: 3000,
     });
@@ -35,7 +35,7 @@ function getPool() {
  * 保证关系表未就绪阶段仍可由 KV 提供服务。
  */
 async function safeQuery<T>(label: string, fallback: T, fn: (client: any) => Promise<T>): Promise<T> {
-  if (Deno.env.get("DB_DISABLED") === "1") return fallback;
+  if (process.env.DB_DISABLED === "1") return fallback;
   let client: any = null;
   try {
     client = await getPool().connect();
@@ -50,7 +50,7 @@ async function safeQuery<T>(label: string, fallback: T, fn: (client: any) => Pro
 
 /** 安全写入：失败仅告警，不影响 KV 主链路 */
 async function safeExec(label: string, fn: (client: any) => Promise<void>): Promise<void> {
-  if (Deno.env.get("DB_DISABLED") === "1") return;
+  if (process.env.DB_DISABLED === "1") return;
   let client: any = null;
   try {
     client = await getPool().connect();

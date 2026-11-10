@@ -8,7 +8,7 @@
  * - 超限时返回 429 Too Many Requests
  * - 支持不同端点配置不同速率
  */
-import type { Context, Next } from "npm:hono";
+import type { Context, Next } from "hono";
 
 // ============================================================
 // Rate Limit Store (sliding window)

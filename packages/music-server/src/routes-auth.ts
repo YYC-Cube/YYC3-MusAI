@@ -3,7 +3,7 @@
  * Routes: /health, /signup
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import { ROUTE_PREFIX, kv } from "./server-utils.ts";
 import { rateLimit, RATE_AUTH } from "./rate-limit.ts";
 
@@ -24,8 +24,8 @@ export function registerAuthRoutes(app: any) {
       }
 
       const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
       );
 
       const { data, error } = await supabase.auth.admin.createUser({

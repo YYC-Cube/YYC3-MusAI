@@ -5,7 +5,7 @@
  * Extracted from index.tsx for modularization.
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import * as kv from "./kv_store.ts";
 import { requireAuth, ROUTE_PREFIX } from "./server-utils.ts";
 import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
@@ -23,7 +23,7 @@ let voiceBucketReady = false;
 async function ensureVoiceBucket() {
   if (voiceBucketReady) return;
   try {
-    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data: buckets } = await sb.storage.listBuckets();
     if (!buckets?.some((b: any) => b.name === VOICE_BUCKET)) {
       await sb.storage.createBucket(VOICE_BUCKET, { public: false });
@@ -288,7 +288,7 @@ export function registerSpacetimeRoutes(app: any) {
       const { userId, audioBase64, mimeType } = body;
       if (!userId || !audioBase64) return c.json({ error: 'userId and audioBase64 required' }, 400);
       await ensureVoiceBucket();
-      const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const base64Data = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
       const binaryStr = atob(base64Data);
       const bytes = new Uint8Array(binaryStr.length);
@@ -309,7 +309,7 @@ export function registerSpacetimeRoutes(app: any) {
       const filePath = c.req.query("path");
       if (!filePath) return c.json({ error: 'path query required' }, 400);
       await ensureVoiceBucket();
-      const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const { data, error } = await sb.storage.from(VOICE_BUCKET).createSignedUrl(filePath, 3600);
       if (error) return c.json({ error: `URL failed: ${error.message}` }, 500);
       return c.json({ signedUrl: data?.signedUrl });
@@ -322,7 +322,7 @@ export function registerSpacetimeRoutes(app: any) {
       const body = await c.req.json();
       const { audioBase64, language } = body;
       if (!audioBase64) return c.json({ error: 'audioBase64 required' }, 400);
-      const localApiUrl = Deno.env.get('DMUSIC_LOCAL_API');
+      const localApiUrl = process.env.DMUSIC_LOCAL_API;
       if (localApiUrl) {
         try {
           const resp = await fetch(`${localApiUrl}/api/v1/stt/transcribe`, {

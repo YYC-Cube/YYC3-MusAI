@@ -2,7 +2,7 @@
  * D-Music §5.2 — Zod Validation Schemas
  * 关键写操作的输入验证，防止脏数据、注入攻击和边界溢出
  */
-import { z } from 'npm:zod@3.23.8';
+import { z } from 'zod';
 
 // ============================================================
 // Shared / Reusable Schemas
@@ -307,7 +307,7 @@ export function validate<T extends z.ZodTypeAny>(schema: T, data: unknown):
     return { success: true, data: result.data };
   }
   const issues = result.error.issues
-    .map(i => `${i.path.join('.')}: ${i.message}`)
+    .map((i: { path: (string | number)[]; message: string }) => `${i.path.join('.')}: ${i.message}`)
     .join('; ');
   return { success: false, error: `Validation failed: ${issues}` };
 }

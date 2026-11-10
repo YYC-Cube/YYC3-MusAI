@@ -137,12 +137,12 @@ class OpenAIProvider implements ModelProvider {
   name = 'openai';
 
   isAvailable(): boolean {
-    const key = Deno.env.get('OPENAI_API_KEY');
+    const key = process.env.OPENAI_API_KEY;
     return !!key && key.length > 10 && key !== 'sk-placeholder';
   }
 
   async generateLyrics(req: LyricsRequest): Promise<string[]> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
 
     const themeLabels: Record<string, string> = {
@@ -202,7 +202,7 @@ The lyrics should be poetic, rhythmic, and emotionally resonant.`;
   }
 
   async analyzeEmotion(req: EmotionAnalysisRequest): Promise<EmotionAnalysisResponse> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
 
     const lyricsText = req.workLyrics && req.workLyrics.length > 0
@@ -284,7 +284,7 @@ Provide your JSON evaluation.`;
   }
 
   async transcribeAudio(req: TranscribeRequest): Promise<TranscribeResponse> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
 
     // Decode base64 audio to binary
@@ -665,7 +665,7 @@ class AIModelManagerImpl {
 
   /** GPT-powered user preference analysis */
   private async gptAnalyzePreferences(req: UserPreferenceAnalysisRequest): Promise<UserPreferenceAnalysisResponse> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
 
     const prefsSummary = Object.entries(req.emotionPrefs)

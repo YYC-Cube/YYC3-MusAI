@@ -21,7 +21,7 @@
 
 import { ROUTE_PREFIX, kv, requireAuth, queryCache } from "./server-utils.ts";
 import { rateLimit, RATE_STARPOWER } from "./rate-limit.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import { validate, albumCreateSchema, albumPurchaseSchema } from "./validation.ts";
 import {
   getAlbumByLegacyId, listAlbums as listAlbumsFromDb, listAlbumsByCreator,
