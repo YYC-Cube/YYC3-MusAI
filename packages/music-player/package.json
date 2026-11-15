@@ -15,7 +15,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@radix-ui/react-slider": "1.2.3",
+    "@radix-ui/react-slider": "1.6.1",
     "@yyc3/music-hooks": "workspace:*",
     "@yyc3/music-lyrics": "workspace:*",
     "@yyc3/music-ui": "workspace:*",
