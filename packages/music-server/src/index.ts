@@ -28,6 +28,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
 import { apiError, ERROR_CODES } from "./api-contract.ts";
+import { closePool } from "./db.ts";
+import { closeKvPool } from "./kv_store_pg.ts";
 
 // §2.2 Route modules
 import { registerAuthRoutes } from "./routes-auth.ts";
@@ -86,6 +88,20 @@ app.use(
 );
 
 // ==========================================
+// 存活探针（供 Docker / 网关直接使用，不经过 ROUTE_PREFIX）
+// ==========================================
+const startedAt = Date.now();
+
+app.get('/health', (c) =>
+  c.json({
+    status: 'ok',
+    service: 'musai-server',
+    version: process.env.APP_VERSION ?? '11.2.0',
+    uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
+  }),
+);
+
+// ==========================================
 // Register all route modules
 // ==========================================
 registerAuthRoutes(app);
@@ -111,8 +127,24 @@ registerUploadRoutes(app);
 const port = Number(process.env.PORT ?? 8080);
 const hostname = process.env.HOST ?? '0.0.0.0';
 
-serve({ fetch: app.fetch, port, hostname }, (info) => {
+const server = serve({ fetch: app.fetch, port, hostname }, (info) => {
   console.log(`[Server] YYC³ MusAI API listening on http://${info.address}:${info.port}`);
 });
+
+// 优雅停机：停止接收新请求 → 关闭连接池 → 退出（10s 兜底强退）
+let shuttingDown = false;
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[Server] ${signal} received, shutting down...`);
+  setTimeout(() => process.exit(1), 10_000).unref();
+  server.close();
+  await Promise.allSettled([closePool(), closeKvPool()]);
+  console.log('[Server] Shutdown complete');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
 
 export { app };

@@ -1,0 +1,36 @@
+# ================================================================================
+# YYC³ MusAI —— systemd 备选方案（不引入容器时使用）
+#
+# 安装：
+#   sudo cp deploy/systemd/musai-server.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now musai-server
+#
+# 前置：
+#   - /opt/musai 为仓库检出目录，已执行 pnpm --filter @yyc3/music-server build
+#   - /etc/musai/server.env 存放生产环境变量（参考 deploy/musai-server.env.example）
+# ================================================================================
+[Unit]
+Description=YYC³ MusAI Server (Hono + PostgreSQL 15)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=musai
+Group=musai
+WorkingDirectory=/opt/musai/packages/music-server
+EnvironmentFile=/etc/musai/server.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=15
+LimitNOFILE=65535
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

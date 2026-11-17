@@ -32,6 +32,14 @@ function getPool() {
 
 const DEFAULT_NAMESPACE = "";
 
+/** 关闭 KV 连接池（优雅停机用；可重复调用） */
+export async function closeKvPool(): Promise<void> {
+  if (!pool) return;
+  const current = pool;
+  pool = null;
+  await current.end().catch(() => {});
+}
+
 /**
  * 写入前统一序列化：
  * 调用方常用 `JSON.stringify(payload)` 传字符串，若直接作为 jsonb 参数，驱动会再解析一次

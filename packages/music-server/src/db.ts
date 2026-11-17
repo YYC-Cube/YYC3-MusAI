@@ -30,6 +30,14 @@ function getPool() {
   return _pool;
 }
 
+/** 关闭关系表连接池（优雅停机用；可重复调用） */
+export async function closePool(): Promise<void> {
+  if (!_pool) return;
+  const pool = _pool;
+  _pool = null;
+  await pool.end().catch(() => {});
+}
+
 /**
  * 安全执行：PG 不可用（未部署 / 无凭证 / 网络异常 / 显式禁用）时返回 fallback，
  * 保证关系表未就绪阶段仍可由 KV 提供服务。

@@ -1,0 +1,22 @@
+# 构建上下文裁剪（deploy/Dockerfile 只需根 workspace 清单 + music-server）
+.git
+.github
+.turbo
+.screenshots
+.vscode
+node_modules
+**/node_modules
+**/dist
+coverage
+coverage-all
+docs
+data
+archive
+supabase
+test
+apps
+**/*.log
+.env
+.env.*
+deploy/.state
+deploy/musai-server.env
