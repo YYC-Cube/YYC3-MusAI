@@ -199,3 +199,7 @@ yyc3-musai-dist.tar.gz
 # 本地工具/代理缓存（非产品资产）
 .v2c/
 .video_agent/
+
+# 学习与研究文档（本地资料，不入库）
+docs/YYC3-全能AI-应用学习/
+docs/YYC3-Muse-AI-应用学习/

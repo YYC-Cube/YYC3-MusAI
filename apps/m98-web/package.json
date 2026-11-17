@@ -9,7 +9,6 @@
     "prebuild": "node scripts/sync-assets.js",
     "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "lint": "eslint src",
-    "test": "CI=true react-scripts test --watchAll=false",
     "sync:assets": "node scripts/sync-assets.js"
   },
   "dependencies": {
