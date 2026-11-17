@@ -1,10 +1,11 @@
 // =============================================
-// 本地模式声明
+// API 传输层
 // 项目已停用 Supabase，浏览器端不再创建任何云端客户端。
-// 如需接入新后端，仅需配置 VITE_API_BASE（形如 https://api.example.com/functions/v1/xxx）。
+// 仅需配置 VITE_API_BASE（形如 https://api.example.com/functions/v1/xxx）。
 // =============================================
 
 import { isLocalMode, localApiFetch } from './localMode';
+import { getAccessToken } from './session';
 
 const API_ORIGIN = ((import.meta.env.VITE_API_BASE as string | undefined) ?? '').trim();
 
@@ -13,53 +14,6 @@ export const API_BASE = API_ORIGIN.replace(/\/+$/, '');
 
 /** 是否为本地模式（未配置后端） */
 export const LOCAL_MODE = API_BASE === '';
-
-// ---------------------------------------------------------------------------
-// 本地占位客户端
-// 保持与原 Supabase 客户端一致的调用签名，使既有业务代码无需改动；
-// 本地模式下所有查询返回 { data: null, error: null }，不产生任何网络流量。
-// ---------------------------------------------------------------------------
-function createLocalQueryBuilder(): any {
-  const result = { data: null as any, error: null as any };
-  const builder: any = new Proxy(
-    {},
-    {
-      get(_target, prop) {
-        if (prop === 'then') {
-          return (resolve: (value: typeof result) => void) => resolve(result);
-        }
-        return () => builder;
-      },
-    }
-  );
-  return builder;
-}
-
-const localAuth = {
-  getSession: async () => ({ data: { session: null }, error: null }),
-  getUser: async () => ({ data: { user: null }, error: null }),
-  signOut: async () => ({ error: null }),
-  signInWithPassword: async () => ({
-    data: { user: null, session: null },
-    error: { message: '本地模式：账号服务未启用' },
-  }),
-  signUp: async () => ({
-    data: { user: null, session: null },
-    error: { message: '本地模式：账号服务未启用' },
-  }),
-  onAuthStateChange: (_cb?: unknown) => ({
-    data: { subscription: { unsubscribe() {} } },
-  }),
-};
-
-export const supabase: any = {
-  auth: localAuth,
-  from: () => createLocalQueryBuilder(),
-  storage: { from: () => createLocalQueryBuilder() },
-  functions: { invoke: async () => ({ data: null, error: { message: '本地模式未配置后端' } }) },
-  channel: () => createLocalQueryBuilder(),
-  removeChannel: () => {},
-};
 
 // =============================================
 // §L-3 — ApiError: structured error class
@@ -153,10 +107,7 @@ function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
 async function getAuthToken(): Promise<string> {
   if (LOCAL_MODE) return '';
   try {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session?.access_token) {
-      return data.session.access_token;
-    }
+    return getAccessToken();
   } catch {
     // Fall through to anonymous access
   }
@@ -251,8 +202,8 @@ function fallbackToLocal<T>(path: string): Promise<T | null> {
  * Resilient fetch wrapper — retries once on network failure,
  * handles 429 rate-limit with Retry-After back-off,
  * and validates the response before parsing JSON.
- * Automatically attaches the user's session token when available,
- * falling back to publicAnonKey for unauthenticated requests.
+ * Automatically attaches the current session token when available,
+ * falling back to anonymous requests.
  *
  * Returns `null` on any error (backward-compatible behavior).
  * For strict error handling, use `apiFetchStrict` instead.

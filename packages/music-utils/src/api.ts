@@ -1,9 +1,9 @@
 /**
  * D-Music API Service Layer
  * Typed, domain-grouped API functions wrapping apiFetch.
- * 闭环架构: UI → api.ts → apiFetch → Supabase Edge Functions
+ * 闭环架构: UI → api.ts → apiFetch → Hono API
  */
-import { apiFetch } from './supabase';
+import { apiFetch } from './apiClient';
 
 // ============================================================
 // Type Definitions
@@ -460,7 +460,7 @@ export const spaceTimeApi = {
 // ============================================================
 
 export const voiceApi = {
-  /** Upload voice to Supabase Storage */
+  /** Upload voice to storage */
   upload: (userId: string, audioBase64: string, mimeType: string, signal?: AbortSignal) =>
     apiFetch<{ success: boolean; filePath: string; signedUrl: string }>('/voice/upload', {
       method: 'POST',

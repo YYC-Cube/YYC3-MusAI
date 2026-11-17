@@ -8,7 +8,7 @@
  *   - 系统健康检查
  */
 
-import { supabase } from './supabase.js'
+import { apiFetch } from './apiClient.js'
 
 // ========================================
 // 监控配置
@@ -64,8 +64,8 @@ export function captureError(error, context = {}) {
     monitoringData.errors.shift()
   }
 
-  // 发送到 Supabase
-  sendToSupabase('errors', errorData)
+  // 发送到 API
+  sendToApi('errors', errorData)
 
   console.error('[Monitoring] Error captured:', errorData)
 }
@@ -116,8 +116,8 @@ export function trackPerformance(name, duration, metadata = {}) {
     monitoringData.performance.shift()
   }
 
-  // 发送到 Supabase
-  sendToSupabase('performance', perfData)
+  // 发送到 API
+  sendToApi('performance', perfData)
 
   console.log('[Monitoring] Performance tracked:', perfData)
 }
@@ -175,8 +175,8 @@ export function trackEvent(name, properties = {}) {
     monitoringData.events.shift()
   }
 
-  // 发送到 Supabase
-  sendToSupabase('events', eventData)
+  // 发送到 API
+  sendToApi('events', eventData)
 
   console.log('[Monitoring] Event tracked:', eventData)
 }
@@ -204,23 +204,15 @@ export async function performHealthCheck() {
     id: generateId(),
     timestamp: new Date().toISOString(),
     checks: {
-      supabase: false,
-      database: false,
       api: false
     },
     status: 'unknown'
   }
 
   try {
-    // 检查 Supabase 连接
-    const { error } = await supabase.from('kv_store_f626b673').select('key').limit(1)
-    healthCheck.checks.supabase = !error
-
-    // 检查数据库连接（通过 Supabase）
-    healthCheck.checks.database = !error
-
-    // 检查 API 连接
-    healthCheck.checks.api = true
+    // 探测后端健康检查端点
+    const health = await apiFetch('/health')
+    healthCheck.checks.api = !!health
 
     // 确定整体状态
     const allPassed = Object.values(healthCheck.checks).every(check => check)
@@ -260,16 +252,18 @@ function generateId() {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-async function sendToSupabase(type, data) {
+async function sendToApi(type, data) {
   try {
-    const tableName = `monitoring_${type}`
-
-    // 在生产环境中发送到 Supabase
+    // 在生产环境中上报到后端
     if (MONITORING_CONFIG.environment === 'production') {
-      await supabase.from(tableName).insert(data)
+      await apiFetch(`/monitoring/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
     }
   } catch (error) {
-    console.error('[Monitoring] Failed to send to Supabase:', error)
+    console.error('[Monitoring] Failed to send to API:', error)
   }
 }
 

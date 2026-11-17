@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 type LocalMod = typeof import('../src/localMode')
-type SupabaseMod = typeof import('../src/supabase')
+type ApiClientMod = typeof import('../src/apiClient')
 
 interface MockResponse {
   ok: boolean
@@ -29,13 +29,13 @@ function makeResponse(partial: Partial<MockResponse> = {}): MockResponse {
 /** 以远端模式加载模块，确保 apiFetch 具备网络分支 */
 async function loadModules(apiBase = 'https://api.example.com/v1'): Promise<{
   local: LocalMod
-  supabase: SupabaseMod
+  apiClient: ApiClientMod
 }> {
   vi.resetModules()
   vi.stubEnv('VITE_API_BASE', apiBase)
   const local = await import('../src/localMode')
-  const supabase = await import('../src/supabase')
-  return { local, supabase }
+  const apiClient = await import('../src/apiClient')
+  return { local, apiClient }
 }
 
 let warnSpy: ReturnType<typeof vi.spyOn>
@@ -115,24 +115,24 @@ describe('本地缓存读写契约', () => {
 
 describe('模式开关与 apiFetch 降级', () => {
   it('setLocalMode(true) 后 apiFetch 不发网络请求，读写全部走本地', async () => {
-    const { local, supabase } = await loadModules()
+    const { local, apiClient } = await loadModules()
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
 
     local.setLocalMode(true)
     expect(local.isLocalMode()).toBe(true)
 
-    const created = await supabase.apiFetch<{ id: string; n: number }>('/likes/s1', {
+    const created = await apiClient.apiFetch<{ id: string; n: number }>('/likes/s1', {
       method: 'POST',
       body: JSON.stringify({ n: 1 }),
     })
     expect(created).toEqual({ n: 1, id: expect.any(String) })
-    await expect(supabase.apiFetch('/likes/s1')).resolves.toEqual(created)
+    await expect(apiClient.apiFetch('/likes/s1')).resolves.toEqual(created)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('远端失败（非中止）时命中本地缓存', async () => {
-    const { local, supabase } = await loadModules()
+    const { local, apiClient } = await loadModules()
     local.setLocalMode(false)
 
     await local.localApiFetch('/likes/s1', { method: 'POST', body: JSON.stringify({ likes: 7 }) })
@@ -141,41 +141,41 @@ describe('模式开关与 apiFetch 降级', () => {
     )
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(supabase.apiFetch('/likes/s1')).resolves.toEqual({ likes: 7, id: expect.any(String) })
+    await expect(apiClient.apiFetch('/likes/s1')).resolves.toEqual({ likes: 7, id: expect.any(String) })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('responded 500'))
   })
 
   it('远端失败且无缓存时维持返回 null', async () => {
-    const { supabase } = await loadModules()
+    const { apiClient } = await loadModules()
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       makeResponse({ ok: false, status: 503, statusText: 'Service Unavailable' })
     ))
 
-    await expect(supabase.apiFetch('/likes/unknown')).resolves.toBeNull()
+    await expect(apiClient.apiFetch('/likes/unknown')).resolves.toBeNull()
   })
 
   it('4xx 属确定性错误，有缓存也不降级', async () => {
-    const { local, supabase } = await loadModules()
+    const { local, apiClient } = await loadModules()
     local.setLocalMode(false)
     await local.localApiFetch('/likes/s2', { method: 'POST', body: JSON.stringify({ likes: 1 }) })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       makeResponse({ ok: false, status: 401, statusText: 'Unauthorized', text: async () => 'denied' })
     ))
 
-    await expect(supabase.apiFetch('/likes/s2')).resolves.toBeNull()
+    await expect(apiClient.apiFetch('/likes/s2')).resolves.toBeNull()
   })
 
   it('apiFetchStrict 不降级：有缓存仍抛 ApiError', async () => {
-    const { local, supabase } = await loadModules()
+    const { local, apiClient } = await loadModules()
     local.setLocalMode(false)
     await local.localApiFetch('/likes/s1', { method: 'POST', body: JSON.stringify({ likes: 7 }) })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       makeResponse({ ok: false, status: 500, statusText: 'Internal Server Error' })
     ))
 
-    const err = await supabase.apiFetchStrict('/likes/s1').catch((e) => e)
-    expect(err).toBeInstanceOf(supabase.ApiError)
+    const err = await apiClient.apiFetchStrict('/likes/s1').catch((e) => e)
+    expect(err).toBeInstanceOf(apiClient.ApiError)
     expect(err.status).toBe(500)
   })
 })

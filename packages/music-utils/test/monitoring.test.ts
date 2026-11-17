@@ -2,7 +2,13 @@
 // 覆盖错误捕获 / 全局错误处理器 / 性能与事件采集 / 健康检查 / 生产上报 / 数量上限 / 初始化分支
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
+vi.mock('../src/apiClient.js', () => ({ apiFetch: vi.fn() }))
+
+import { apiFetch } from '../src/apiClient.js'
+
 type Mon = typeof import('../src/monitoring.js')
+
+const apiFetchMock = apiFetch as unknown as ReturnType<typeof vi.fn>
 
 const TIMING = {
   navigationStart: 1000,
@@ -51,6 +57,8 @@ async function load(opts: LoadOptions = {}): Promise<Mon> {
 
 beforeEach(() => {
   vi.useFakeTimers()
+  apiFetchMock.mockReset()
+  apiFetchMock.mockResolvedValue({ status: 'ok' })
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -247,7 +255,8 @@ describe('健康检查', () => {
     const result = await mod.performHealthCheck()
 
     expect(result.status).toBe('healthy')
-    expect(result.checks).toEqual({ supabase: true, database: true, api: true })
+    expect(result.checks).toEqual({ api: true })
+    expect(apiFetchMock).toHaveBeenCalledWith('/health')
     const summary = mod.getMonitoringSummary()
     expect(summary.healthChecks).toBe(1)
     expect(summary.lastHealthCheck).toEqual(result)
@@ -256,14 +265,11 @@ describe('健康检查', () => {
 
   it('查询抛错时返回 unhealthy 并捕获异常', async () => {
     const mod = await load()
-    const { supabase } = await import('../src/supabase.js')
-    vi.spyOn(supabase, 'from').mockImplementation(() => {
-      throw new Error('db down')
-    })
+    apiFetchMock.mockRejectedValue(new Error('db down'))
 
     const result = await mod.performHealthCheck()
     expect(result.status).toBe('unhealthy')
-    expect(result.checks).toEqual({ supabase: false, database: false, api: false })
+    expect(result.checks).toEqual({ api: false })
 
     const summary = mod.getMonitoringSummary()
     expect(summary.errors).toBe(1)
@@ -292,47 +298,41 @@ describe('健康检查', () => {
 })
 
 describe('生产环境上报', () => {
-  it('production 时将事件写入 monitoring_events 表', async () => {
+  it('production 时将事件上报到 /monitoring/events', async () => {
     const mod = await load({ env: 'production' })
-    const { supabase } = await import('../src/supabase.js')
-    const insert = vi.fn()
-    const fromSpy = vi.spyOn(supabase, 'from').mockReturnValue({ insert } as any)
 
     mod.trackEvent('purchase', { amount: 1 })
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(fromSpy).toHaveBeenCalledWith('monitoring_events')
-    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ name: 'purchase' }))
+    expect(apiFetchMock).toHaveBeenCalledWith(
+      '/monitoring/events',
+      expect.objectContaining({ method: 'POST', body: expect.stringContaining('purchase') })
+    )
   })
 
   it('上报写入失败时记录错误但不抛出', async () => {
     const mod = await load({ env: 'production' })
-    const { supabase } = await import('../src/supabase.js')
-    vi.spyOn(supabase, 'from').mockReturnValue({
-      insert: () => { throw new Error('insert failed') },
-    } as any)
+    apiFetchMock.mockRejectedValue(new Error('insert failed'))
 
     expect(() => mod.trackEvent('purchase')).not.toThrow()
     await Promise.resolve()
     await Promise.resolve()
 
     expect(console.error).toHaveBeenCalledWith(
-      '[Monitoring] Failed to send to Supabase:',
+      '[Monitoring] Failed to send to API:',
       expect.any(Error)
     )
   })
 
-  it('非 production 环境不发起 Supabase 写入', async () => {
+  it('非 production 环境不发起远写', async () => {
     const mod = await load({ env: 'development' })
-    const { supabase } = await import('../src/supabase.js')
-    const fromSpy = vi.spyOn(supabase, 'from')
 
     mod.trackEvent('e')
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(fromSpy).not.toHaveBeenCalled()
+    expect(apiFetchMock).not.toHaveBeenCalled()
   })
 })
 

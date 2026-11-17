@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { supabase, API_BASE } from '@yyc3/music-utils';
+import { apiFetchStrict, ApiError, setSession, type SessionUser } from '@yyc3/music-utils';
 import { X, Mail, Lock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const dMusicGold = '/assets/dmusic-gold.png';
 import { useI18n } from '@yyc3/music-hooks';
 
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_ANON_KEY_HERE';
+interface SignupResponse {
+  success: boolean;
+  user?: SessionUser;
+  accessToken?: string;
+}
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -33,45 +37,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onUserCha
 
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        if (data.user) {
-          onUserChange(data.user);
-          onClose();
-        }
-      } else {
-        // Use server-side signup for email confirmation
-        const res = await fetch(`${API_BASE}/signup`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        });
-        const result = await res.json();
-        
-        if (result.error) {
-          throw new Error(result.error);
-        }
+        // 服务端尚未提供登录 / 会话签发端点（P1-5 接入）
+        throw new Error('账号服务未启用：登录接口尚未开放');
+      }
 
-        // Auto sign-in after signup
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (signInError) throw signInError;
-        if (signInData.user) {
-          onUserChange(signInData.user);
-          setSuccess('Account created successfully!');
-          setTimeout(onClose, 500);
-        }
+      // 注册走 REST 契约（POST /signup）
+      const result = await apiFetchStrict<SignupResponse>('/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, displayName: email.split('@')[0] }),
+      });
+
+      if (result.accessToken && result.user) {
+        setSession({ accessToken: result.accessToken, user: result.user });
+        onUserChange(result.user);
+        setSuccess('Account created successfully!');
+        setTimeout(onClose, 500);
+      } else {
+        // 注册成功但服务端未签发会话：不伪造登录态
+        setSuccess('账号已创建，登录接口接入后即可登录');
+        setTimeout(onClose, 1200);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err instanceof ApiError
+        ? (err.data?.error ?? err.message)
+        : err.message);
     } finally {
       setLoading(false);
     }

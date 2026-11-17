@@ -2,11 +2,11 @@
 // api.ts 为纯委托层：断言每个封装方法生成的请求路径 / 方法 / 请求头 / 请求体
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-vi.mock('../src/supabase', () => ({
+vi.mock('../src/apiClient', () => ({
   apiFetch: vi.fn(),
 }))
 
-import { apiFetch } from '../src/supabase'
+import { apiFetch } from '../src/apiClient'
 import {
   playerApi,
   commentApi,

@@ -30,7 +30,6 @@ export default defineConfig({
           if (pkgName.startsWith('@radix-ui/')) return 'vendor-radix'
           // cmdk / vaul 依赖 @radix-ui/react-dialog，并入同组避免环形 chunk
           if (pkgName === 'cmdk' || pkgName === 'vaul') return 'vendor-radix'
-          if (pkgName.startsWith('@supabase/')) return 'vendor-supabase'
           if (
             pkgName === 'recharts' ||
             pkgName === 'victory-vendor' ||

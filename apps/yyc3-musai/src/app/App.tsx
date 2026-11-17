@@ -1,7 +1,7 @@
 import { useState, useReducer, useRef, useCallback, useEffect, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams, RouterProvider, createBrowserRouter } from 'react-router';
 import { clsx } from 'clsx';
-import { supabase, apiFetch, API_BASE } from '@yyc3/music-utils';
+import { apiFetch, API_BASE, getSession, clearSession } from '@yyc3/music-utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogOut, User, Star, Users, UserCircle, BarChart3, Wand2, Trophy, MessageCircle, SkipBack, SkipForward, Globe, Sparkles, Palette, Film, Radio, Bell, GitBranch, Heart, Brain, Disc3, Shield, Upload } from 'lucide-react';
 import { useAudioEngine, type Emotion } from '@yyc3/music-hooks';
@@ -516,25 +516,24 @@ export function AppInner() {
   // Auth
   // ==========================================
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setUser(data.user);
-        // §13.x — Pull remote preferences on login
-        pullPrefsFromKV(apiFetch, data.user.id).then((prefs) => {
-          setShuffleEnabled(prefs.shuffleEnabled);
-          setRepeatMode(prefs.repeatMode);
-          setMode(prefs.mode);
-          audio.setVolume(prefs.volume);
-          if (prefs.theme) { setCurrentTheme(prefs.theme as ThemeId); applyTheme(prefs.theme as ThemeId); }
-        });
-      }
-    });
+    const session = getSession();
+    if (session?.user) {
+      setUser(session.user);
+      // §13.x — Pull remote preferences on login
+      pullPrefsFromKV(apiFetch, session.user.id).then((prefs) => {
+        setShuffleEnabled(prefs.shuffleEnabled);
+        setRepeatMode(prefs.repeatMode);
+        setMode(prefs.mode);
+        audio.setVolume(prefs.volume);
+        if (prefs.theme) { setCurrentTheme(prefs.theme as ThemeId); applyTheme(prefs.theme as ThemeId); }
+      });
+    }
     // audio 由 useAudioEngine 返回，每次渲染都是新对象；补进依赖会导致登录态拉取与音量设置反复执行
     // eslint-disable-next-line react-hooks/exhaustive-deps -- audio 每次渲染都是新对象，补依赖会重复拉取用户与偏好
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    clearSession();
     setUser(null);
     setShowUserMenu(false);
     setUserProfile(null);

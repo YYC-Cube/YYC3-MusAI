@@ -13,7 +13,7 @@ const MODE_ON = '1';
 /** SSR / 测试等无 localStorage 环境的内存兜底 */
 const memoryStore = new Map<string, string>();
 
-/** 与 supabase.ts 保持相同的 AbortError 形状；本地定义以避免与 supabase 双向 import */
+/** 与 apiClient.ts 保持相同的 AbortError 形状；本地定义以避免与传输层双向 import */
 function throwIfAborted(signal?: AbortSignal): void {
   if (!signal?.aborted) return;
   const error = new Error('The operation was aborted');

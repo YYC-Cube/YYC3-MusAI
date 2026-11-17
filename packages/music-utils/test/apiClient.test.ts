@@ -1,8 +1,9 @@
-// YYC³ music-utils — supabase/apiFetch 传输层测试
-// 本地模式占位客户端 + 网络模式（fetch mock：成功/失败/超时重试/429 退避/鉴权头/JSON 解析）
+// YYC³ music-utils — API 传输层测试
+// 网络模式（fetch mock：成功/失败/超时重试/429 退避/鉴权头/JSON 解析）+ 本地模式短路 + 会话存储
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-type Mod = typeof import('../src/supabase')
+type Mod = typeof import('../src/apiClient')
+type SessionMod = typeof import('../src/session')
 
 interface MockResponse {
   ok: boolean
@@ -28,18 +29,19 @@ function makeResponse(partial: Partial<MockResponse> = {}): MockResponse {
 async function loadLocal(): Promise<Mod> {
   vi.resetModules()
   vi.stubEnv('VITE_API_BASE', '')
-  return import('../src/supabase')
+  return import('../src/apiClient')
 }
 
 async function loadRemote(base = 'https://api.example.com/v1/'): Promise<Mod> {
   vi.resetModules()
   vi.stubEnv('VITE_API_BASE', base)
-  return import('../src/supabase')
+  return import('../src/apiClient')
 }
 
 let warnSpy: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
+  localStorage.clear()
   warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
@@ -84,44 +86,31 @@ describe('本地模式（未配置 VITE_API_BASE）', () => {
   })
 })
 
-describe('本地占位客户端', () => {
-  it('auth 各方法返回本地模式结果', async () => {
-    const { supabase } = await loadLocal()
+describe('会话存储', () => {
+  it('setSession 后 getSession / getAccessToken 可读回', async () => {
+    const session: SessionMod = await import('../src/session')
+    session.setSession({ accessToken: 'jwt-1', user: { id: 'u1', email: 'a@b.c' } })
 
-    await expect(supabase.auth.getSession()).resolves.toEqual({ data: { session: null }, error: null })
-    await expect(supabase.auth.getUser()).resolves.toEqual({ data: { user: null }, error: null })
-    await expect(supabase.auth.signOut()).resolves.toEqual({ error: null })
-
-    const signIn = await supabase.auth.signInWithPassword({ email: 'a@b.c', password: 'x' })
-    expect(signIn.data).toEqual({ user: null, session: null })
-    expect(signIn.error.message).toContain('本地模式')
-
-    const signUp = await supabase.auth.signUp({ email: 'a@b.c', password: 'x' })
-    expect(signUp.error.message).toContain('本地模式')
-
-    const unsubscribe = vi.fn()
-    const { data } = supabase.auth.onAuthStateChange(() => {})
-    data.subscription.unsubscribe = unsubscribe
-    data.subscription.unsubscribe()
-    expect(unsubscribe).toHaveBeenCalledTimes(1)
+    expect(session.getSession()?.user.id).toBe('u1')
+    expect(session.getAccessToken()).toBe('jwt-1')
   })
 
-  it('from / storage / channel 查询构造器为 thenable 且返回空结果', async () => {
-    const { supabase } = await loadLocal()
+  it('clearSession 清空会话', async () => {
+    const session: SessionMod = await import('../src/session')
+    session.setSession({ accessToken: 'jwt-1', user: { id: 'u1' } })
+    session.clearSession()
 
-    const table = supabase.from('kv')
-    expect(table.select('*')).toBe(table)
-    expect(table.eq('a', 1)).toBe(table)
-    await expect(table).resolves.toEqual({ data: null, error: null })
+    expect(session.getSession()).toBeNull()
+    expect(session.getAccessToken()).toBe('')
+  })
 
-    await expect(supabase.storage.from('bucket').upload('p', {})).resolves.toEqual({ data: null, error: null })
-    await expect(supabase.channel('room')).resolves.toEqual({ data: null, error: null })
+  it('过期或损坏的会话视为未登录', async () => {
+    const session: SessionMod = await import('../src/session')
+    session.setSession({ accessToken: 'jwt-1', user: { id: 'u1' }, expiresAt: Date.now() - 1 })
+    expect(session.getSession()).toBeNull()
 
-    const fn = await supabase.functions.invoke('edge-fn')
-    expect(fn.data).toBeNull()
-    expect(fn.error.message).toContain('本地模式未配置后端')
-
-    expect(supabase.removeChannel('room')).toBeUndefined()
+    localStorage.setItem('yyc3:music:session', '{bad')
+    expect(session.getSession()).toBeNull()
   })
 })
 
@@ -175,10 +164,8 @@ describe('网络模式 · 请求构造与鉴权', () => {
 
   it('已登录会话注入 access_token 作为 Bearer', async () => {
     const mod = await loadRemote()
-    vi.spyOn(mod.supabase.auth, 'getSession').mockResolvedValue({
-      data: { session: { access_token: 'jwt-123' } },
-      error: null,
-    } as any)
+    const session: SessionMod = await import('../src/session')
+    session.setSession({ accessToken: 'jwt-123', user: { id: 'u1' } })
     const fetchMock = vi.fn().mockResolvedValue(makeResponse())
     vi.stubGlobal('fetch', fetchMock)
 
@@ -186,9 +173,9 @@ describe('网络模式 · 请求构造与鉴权', () => {
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer jwt-123')
   })
 
-  it('会话获取异常时降级为匿名请求', async () => {
+  it('会话数据损坏时降级为匿名请求', async () => {
     const mod = await loadRemote()
-    vi.spyOn(mod.supabase.auth, 'getSession').mockRejectedValue(new Error('no session store'))
+    localStorage.setItem('yyc3:music:session', '{oops')
     const fetchMock = vi.fn().mockResolvedValue(makeResponse())
     vi.stubGlobal('fetch', fetchMock)
 

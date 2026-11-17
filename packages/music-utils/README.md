@@ -1,6 +1,6 @@
 # @yyc3/music-utils
 
-> 本地/远端 API 适配、Supabase 客户端、端到端加密、偏好同步、Canvas 性能注册表与监控。
+> 本地/远端 API 适配、会话存储、端到端加密、偏好同步、Canvas 性能注册表与监控。
 
 | 属性 | 值 |
 | --- | --- |
@@ -18,17 +18,18 @@ pnpm add @yyc3/music-utils
 ## 快速开始
 
 ```tsx
-import { apiFetch, supabase, loadPrefs, savePref } from '@yyc3/music-utils'
+import { apiFetch, getSession, loadPrefs, savePref } from '@yyc3/music-utils'
 
 const stats = await apiFetch<{ plays: number }>('/api/stats')
 savePref('theme', 'aurora')
 const prefs = loadPrefs()
-const session = await supabase.auth.getSession()
+const session = getSession()
 ```
 
 ## 导出清单
 
-- supabase：API_BASE、LOCAL_MODE、apiFetch、apiFetchStrict、ApiError、supabase 客户端门面
+- apiClient：API_BASE、LOCAL_MODE、apiFetch、apiFetchStrict、ApiError、isAbortError
+- session：getSession、setSession、clearSession、getAccessToken
 - crypto：generateKeyPair、encryptMessage、decryptMessage、createKeyBackup 等 E2E 密钥 API
 - preferences：loadPrefs、loadPref、savePref、savePrefs、pullPrefsFromKV
 - canvasPerfRegistry：getCanvasPerf、setCanvasPerf
@@ -41,12 +42,15 @@ const session = await supabase.auth.getSession()
 | --- | --- |
 | `apiFetch<T>(path, init?)` | 统一请求封装；支持 `signal` 取消，未配置后端时进入 LOCAL_MODE |
 | `apiFetchStrict<T>(path, init?)` | 同上，失败抛出 `ApiError`；中止时抛出 `AbortError` |
+| `getSession()` | 读取当前会话（localStorage 持久化，无环境退回内存） |
+| `setSession(session)` | 登录成功后写入 `{ accessToken, user }` |
+| `clearSession()` | 登出时清除会话 |
 | `isAbortError(error)` | 判断请求是否被主动中止 |
 | `getSharedAudioContext()` | 全应用共享 AudioContext（懒创建、自动重建） |
 | `resumeSharedAudioContext()` | 在用户手势内 resume；被浏览器拒绝时保留 suspended |
 | `disposeSharedAudioContext()` | 关闭并释放共享上下文，可重复调用 |
 | `encryptMessage / decryptMessage` | 基于 WebCrypto 的端到端加解密，密钥本地持久化 |
-| `savePref(key, value)` | 本地优先写入并按需同步到 Supabase KV |
+| `savePref(key, value)` | 本地优先写入并按需同步到后端 KV |
 | `getCanvasPerf / setCanvasPerf` | 跨组件共享 Canvas 帧率与耗时指标 |
 | `getOllamaUrl(subPath, opts?)` | 解析 Ollama 端点：本地部署走同源代理（`VITE_OLLAMA_PROXY_PATH`），远端走直连（`VITE_OLLAMA_BASE_URL`） |
 

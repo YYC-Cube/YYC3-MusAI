@@ -1,5 +1,6 @@
-// YYC³ music-utils — 基础工具层（Supabase 客户端 / API / 加密 / 偏好 / 性能注册表）
-export * from './supabase';
+// YYC³ music-utils — 基础工具层（API 传输 / 会话 / 加密 / 偏好 / 性能注册表）
+export * from './apiClient';
+export * from './session';
 export * from './api';
 export * from './localMode';
 export * from './audioContext';
