@@ -24,6 +24,10 @@ async function ensureTable(): Promise<void> {
   if (tableEnsured) return;
   tableEnsured = true;
   await safeExecResult('audit.ensure', async (client) => {
+    // 表已存在时直接复用（musai_app_rw 无 schema CREATE 权限，避免重复 DDL 报错）
+    const exists = await client.query(`SELECT to_regclass('musai.audit_logs') AS t`);
+    if (exists.rows[0]?.t) return;
+
     await client.query(
       `CREATE TABLE IF NOT EXISTS musai.audit_logs (
          id BIGSERIAL PRIMARY KEY,
