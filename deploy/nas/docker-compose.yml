@@ -1,0 +1,36 @@
+# ================================================================================
+# YYC³ MusAI Server · NAS 部署编排（/Volume3/docker/yyc3-musai-server/）
+#
+# 规范依据：/Volume3/docker/docker项目-容器-镜像说明及命名说明规范.md
+#   - 三名合一：项目名 = 容器名 = yyc3-musai-server
+#   - host 网络：与 yyc3-music-api 一致，避免 bridge SNAT 导致 PG pg_hba 拒绝
+#   - 显式容器名 / restart / healthcheck / 日志轮转
+#   - 数据库：主库 = NAS 本机 192.168.3.45:5433（PG17.11），账号 musai_app_rw（scram）
+#
+# 启动（NAS 上）：
+#   runuser -u YYC3 -- /Volume3/@apps/DockerEngine/dockerd/bin/docker-compose \
+#     -p yyc3-musai-server -f /Volume3/docker/yyc3-musai-server/docker-compose.yml \
+#     --env-file /tmp/empty.env up -d --no-build
+# ================================================================================
+services:
+  yyc3-musai-server:
+    image: yyc3-musai-server:${MUSAI_TAG:-11.2.0}
+    container_name: yyc3-musai-server
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ./musai-server.env
+    environment:
+      PORT: "3250"
+      HOST: "0.0.0.0"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3250/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
