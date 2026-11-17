@@ -1,0 +1,43 @@
+{
+  "name": "@yyc3/m98-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "M98 音乐宇宙后端 API 服务（Express + PostgreSQL，双产品线独立包，禁止与 @yyc3/music-* 业务包互相引用）",
+  "main": "src/server-postgres.js",
+  "scripts": {
+    "build": "node --check src/server-postgres.js && node --check src/db/postgres.js && node --check src/middleware/auth.js && node --check src/repositories/adminRepository.js && node --check src/repositories/artistRepository.js && node --check src/repositories/contentRepository.js && node --check src/repositories/fanRepository.js && node --check src/repositories/musicRepository.js && node --check src/routes/authRoutes.js && node --check src/routes/pg/adminRoutes.js && node --check src/routes/pg/artistRoutes.js && node --check src/routes/pg/contentRoutes.js && node --check src/routes/pg/fanRoutes.js && node --check src/routes/pg/musicRoutes.js && node --check scripts/pg-import-sqlite.js && node --check scripts/pg-migrate.js && node --check scripts/pg-seed-content.js && node --check scripts/pg-test-db.js && node --check scripts/pg-verify.js",
+    "start": "node src/server-postgres.js",
+    "start:postgres": "node src/server-postgres.js",
+    "dev": "nodemon src/server-postgres.js",
+    "lint": "eslint src scripts tests",
+    "test": "jest --runInBand --testPathIgnorePatterns tests/pgApi.test.js tests/helpers",
+    "test:pg": "jest --runInBand",
+    "test:pg:setup": "node scripts/pg-test-db.js",
+    "pg:migrate": "node scripts/pg-migrate.js",
+    "pg:import": "node scripts/pg-import-sqlite.js",
+    "pg:seed:content": "node scripts/pg-seed-content.js",
+    "pg:verify": "node scripts/pg-verify.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.6.0",
+    "helmet": "^6.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.23.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.0"
+  },
+  "optionalDependencies": {
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "jest": "^29.3.1",
+    "nodemon": "^2.0.20",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

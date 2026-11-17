@@ -1,0 +1,25 @@
+{
+  "short_name": "M98 董小姐",
+  "name": "M98 董小姐 · 音乐宇宙",
+  "description": "董小姐（M98）官方音乐人应用 · 电子 × 东方 × 未来",
+  "icons": [
+    {
+      "src": "D-Music-icons/android/mipmap-xxxhdpi/ic_launcher.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "D-Music-icons/android/playstore-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0D1117",
+  "background_color": "#0D1117",
+  "lang": "zh-CN"
+}

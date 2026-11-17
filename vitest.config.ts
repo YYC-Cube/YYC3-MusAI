@@ -22,6 +22,8 @@ export default defineConfig({
         'packages/music-testing/src/full-test-suite.ts',
         // Deno 运行时后端，由 deno coverage 独立门禁
         'packages/music-server/src/**',
+        // M98 独立产品线（Express + Jest），由包内 `pnpm --filter @yyc3/m98-server test` 独立门禁
+        'packages/m98-server/src/**',
       ],
       thresholds: {
         lines: 80,

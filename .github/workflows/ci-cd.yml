@@ -39,6 +39,9 @@ jobs:
       - name: Unit tests + coverage gate (>=80%)
         run: pnpm test:coverage
 
+      - name: M98 server tests (Jest)
+        run: pnpm test:m98
+
       - name: Build
         run: pnpm build
 

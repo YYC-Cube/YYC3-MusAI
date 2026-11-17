@@ -19,6 +19,19 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // 测试文件注入 Jest 全局（M98 产品线用 Jest；Vitest 套件同样兼容这些全局名）
+    files: [
+      '**/test/**/*.{js,jsx,ts,tsx}',
+      '**/tests/**/*.{js,jsx,ts,tsx}',
+      '**/__tests__/**/*.{js,jsx,ts,tsx}',
+      '**/*.test.{js,jsx,ts,tsx}',
+      '**/*.spec.{js,jsx,ts,tsx}',
+    ],
+    languageOptions: {
+      globals: { ...globals.jest },
+    },
+  },
+  {
     files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 2022,

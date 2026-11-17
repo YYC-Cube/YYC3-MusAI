@@ -195,3 +195,7 @@ data/**/!.env.example
 
 # CI 构建产物归档
 yyc3-musai-dist.tar.gz
+
+# 本地工具/代理缓存（非产品资产）
+.v2c/
+.video_agent/
