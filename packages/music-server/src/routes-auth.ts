@@ -1,11 +1,32 @@
 /**
  * D-Music §2.2 — Auth Routes
- * Routes: /health, /signup
+ * Routes: /health, /signup, /login, /session
+ *
+ * 注：已去 Supabase 化。注册/登录/会话均走应用层 JWT（auth.ts），
+ * 密码以 PBKDF2-SHA256 存储于 musai.users.password_hash。
  */
 
-import { createClient } from "@supabase/supabase-js";
-import { ROUTE_PREFIX, kv } from "./server-utils.ts";
+import { ROUTE_PREFIX, kv, requireAuth } from "./server-utils.ts";
 import { rateLimit, RATE_AUTH } from "./rate-limit.ts";
+import {
+  registerUser,
+  loginUser,
+  signAccessToken,
+  getUserFromRequest,
+  type AuthedUser,
+} from "./auth.ts";
+import { apiError, ERROR_CODES } from "./api-contract.ts";
+
+interface SignupBody {
+  email: string;
+  password: string;
+  displayName?: string;
+}
+
+interface LoginBody {
+  email: string;
+  password: string;
+}
 
 export function registerAuthRoutes(app: any) {
   // Health check
@@ -13,57 +34,83 @@ export function registerAuthRoutes(app: any) {
     return c.json({ status: "ok" });
   });
 
-  // Signup
+  // Session（当前登录用户，供前端刷新会话）
+  app.get(`${ROUTE_PREFIX}/session`, rateLimit(RATE_AUTH), async (c: any) => {
+    try {
+      const auth = c.req.header("Authorization");
+      const user = await getUserFromRequest(auth ?? null);
+      if (!user) {
+        return apiError(c, 401, "未登录或会话已过期", undefined, ERROR_CODES.UNAUTHORIZED);
+      }
+      return c.json({ success: true, user });
+    } catch (error) {
+      return apiError(c, 500, "会话查询失败", undefined, ERROR_CODES.INTERNAL);
+    }
+  });
+
+  // Signup（应用层注册，签发 JWT）
   app.post(`${ROUTE_PREFIX}/signup`, rateLimit(RATE_AUTH), async (c: any) => {
     try {
-      const body = await c.req.json();
+      const body = (await c.req.json()) as SignupBody;
       const { email, password, displayName } = body;
 
       if (!email || !password) {
-        return c.json({ error: "Email and password are required" }, 400);
+        return apiError(c, 400, "邮箱和密码为必填项", undefined, ERROR_CODES.VALIDATION_FAILED);
       }
 
-      const supabase = createClient(
-        process.env.SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      );
-
-      const { data, error } = await supabase.auth.admin.createUser({
+      const { userId, accessToken, user } = await registerUser({
         email,
         password,
-        user_metadata: { name: displayName || email.split('@')[0] },
-        email_confirm: true,
+        displayName: displayName || email.split("@")[0],
       });
 
-      if (error) {
-        console.log(`Signup error for ${email}: ${error.message}`);
-        return c.json({ error: error.message }, 400);
-      }
+      // 写入 KV 星力与角色（与原逻辑保持一致）
+      await kv.set(`user:${userId}:starpower`, "100");
+      await kv.set(`user:${userId}:role`, user.role || "user");
 
-      if (data.user) {
-        await kv.set(`user:${data.user.id}:starpower`, "100");
-        await kv.set(`user:${data.user.id}:role`, "user");
-        const profile = {
-          userId: data.user.id,
-          email,
-          displayName: displayName || email.split('@')[0],
-          starPower: 100,
-          totalListeningTime: 0,
-          totalAnnotations: 0,
-          totalLikes: 0,
-          achievements: [],
-          joinedAt: new Date().toISOString(),
-          streak: 0,
-          role: 'user',
-        };
-        await kv.set(`user:${data.user.id}:profile`, JSON.stringify(profile));
-        console.log(`New user created: ${email} (${data.user.id}), role=user, 100 SP`);
-      }
-
-      return c.json({ success: true, user: data.user });
+      return c.json({
+        success: true,
+        user,
+        accessToken,
+        tokenType: "Bearer",
+        expiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
+      });
     } catch (error) {
       console.log(`Signup error: ${error}`);
-      return c.json({ error: `Signup failed: ${error}` }, 500);
+      return apiError(c, 500, "注册失败", undefined, ERROR_CODES.INTERNAL);
     }
+  });
+
+  // Login（应用层登录，验证 password_hash，签发 JWT）
+  app.post(`${ROUTE_PREFIX}/login`, rateLimit(RATE_AUTH), async (c: any) => {
+    try {
+      const body = (await c.req.json()) as LoginBody;
+      const { email, password } = body;
+
+      if (!email || !password) {
+        return apiError(c, 400, "邮箱和密码为必填项", undefined, ERROR_CODES.VALIDATION_FAILED);
+      }
+
+      const result = await loginUser({ email, password });
+      if (!result) {
+        return apiError(c, 401, "邮箱或密码错误", undefined, ERROR_CODES.UNAUTHORIZED);
+      }
+
+      return c.json({
+        success: true,
+        user: result.user,
+        accessToken: result.accessToken,
+        tokenType: "Bearer",
+        expiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
+      });
+    } catch (error) {
+      console.log(`Login error: ${error}`);
+      return apiError(c, 500, "登录失败", undefined, ERROR_CODES.INTERNAL);
+    }
+  });
+
+  // Logout（无状态 JWT：客户端丢弃 token 即可；服务端返回成功）
+  app.post(`${ROUTE_PREFIX}/logout`, rateLimit(RATE_AUTH), async (c: any) => {
+    return c.json({ success: true, message: "已退出登录，请客户端清除 token" });
   });
 }

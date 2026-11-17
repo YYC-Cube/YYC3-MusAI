@@ -6,6 +6,7 @@
 import { ROUTE_PREFIX, kv, requireAuth } from "./server-utils.ts";
 import { rateLimit, RATE_STARPOWER } from "./rate-limit.ts";
 import { validate, starPowerAddSchema, starPowerConsumeSchema, leaderboardBoostSchema, shopPurchaseSchema } from "./validation.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "./api-contract.ts";
 
 // ==========================================
 // VIP Level Definitions (exported for cross-module use)
@@ -143,32 +144,21 @@ export function registerStarpowerRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/starpower/:userId/transactions`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
-      // §L-5 — Proper pagination instead of hard slice truncation
-      const page = Math.max(1, parseInt(c.req.query('page') || '1'));
-      const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20')));
-      const offset = (page - 1) * limit;
+      // A3：统一分页（替代原有手动分页）
+      const pager = parsePagination(c, { defaultLimit: 20, maxLimit: 100 });
 
       const txnKey = `user:${userId}:transactions`;
       const raw = await kv.get(txnKey);
       const allTransactions = raw ? JSON.parse(raw as string) : [];
       const total = allTransactions.length;
-      const transactions = allTransactions.slice(offset, offset + limit);
-      const totalPages = Math.ceil(total / limit);
+      const transactions = allTransactions.slice(pager.offset, pager.offset + pager.limit);
 
       return c.json({
         transactions,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+        ...pageMeta(total, pager),
       });
     } catch (error) {
-      console.log(`Error fetching transactions for ${userId}:`, error);
-      return c.json({ transactions: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false } }, 500);
+      return apiError(c, 500, `Failed to fetch transactions for ${userId}`, { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 

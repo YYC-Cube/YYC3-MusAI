@@ -9,9 +9,9 @@
  *   - Route prefix constant
  */
 
-import { createClient } from "@supabase/supabase-js";
 import * as kvSupabase from "./kv_store.ts";
 import * as kvPg from "./kv_store_pg.ts";
+import { getUserFromRequest as getUserFromAuth } from "./auth.ts";
 
 // KV 双驱开关：KV_DRIVER=pg（默认，落 musai.kv_store）| supabase（legacy 回退）
 // 路由层 0 改动，均通过 server-utils.ts 导出的 kv 使用。
@@ -240,20 +240,8 @@ export async function registerSongId(songId: string): Promise<void> {
 // ==========================================
 
 export async function getUserFromRequest(c: any): Promise<{ id: string; email: string; role?: string } | null> {
-  const accessToken = c.req.header('Authorization')?.split(' ')[1];
-  if (!accessToken) return null;
-  try {
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-    const { data, error } = await supabase.auth.getUser(accessToken);
-    if (error || !data?.user) return null;
-    const roleVal = await kv.get(`user:${data.user.id}:role`);
-    return { id: data.user.id, email: data.user.email || '', role: (roleVal as string) || 'user' };
-  } catch {
-    return null;
-  }
+  const authorization = c.req.header('Authorization') ?? null;
+  return getUserFromAuth(authorization);
 }
 
 export async function requireAuth(c: any, next: () => Promise<void>) {
@@ -263,17 +251,6 @@ export async function requireAuth(c: any, next: () => Promise<void>) {
   }
   c.set('authedUser', user);
   return next();
-}
-
-// ==========================================
-// Supabase Admin Client Factory
-// ==========================================
-
-export function createAdminClient() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
 }
 
 // kv 已在顶部按 KV_DRIVER 双驱导出，路由层直接从 server-utils 导入使用

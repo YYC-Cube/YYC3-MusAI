@@ -22,10 +22,12 @@
  *   lyrics:{mediaId}            -- Lyrics array (JSON)
  */
 
-import { ROUTE_PREFIX, kv, registerSongId, queryCache, createAdminClient } from "./server-utils.ts";
+import { ROUTE_PREFIX, kv, registerSongId, queryCache } from "./server-utils.ts";
 import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate } from "./validation.ts";
 import { z } from "zod";
+import * as fs from "fs";
+import * as path from "path";
 import {
   getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
 } from "./db.ts";
@@ -38,6 +40,7 @@ import { apiError, parsePagination, pageMeta } from "./api-contract.ts";
 const MEDIA_BUCKET = 'make-f626b673-media';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const SIGNED_URL_EXPIRY = 3600; // 1 hour
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
 const ALLOWED_AUDIO_TYPES = [
   'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/flac',
@@ -167,16 +170,11 @@ let bucketEnsured = false;
 async function ensureMediaBucket(): Promise<void> {
   if (bucketEnsured) return;
   try {
-    const sb = createAdminClient();
-    const { data: buckets } = await sb.storage.listBuckets();
-    const exists = buckets?.some((b: any) => b.name === MEDIA_BUCKET);
-    if (!exists) {
-      await sb.storage.createBucket(MEDIA_BUCKET, { public: false });
-      console.log(`[Upload] Created media bucket: ${MEDIA_BUCKET}`);
-    }
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    console.log(`[Upload] Ensured local media dir: ${UPLOAD_DIR}`);
     bucketEnsured = true;
   } catch (err) {
-    console.log(`[Upload] Error ensuring bucket: ${err}`);
+    console.log(`[Upload] Error ensuring media dir: ${err}`);
   }
 }
 
@@ -226,18 +224,16 @@ async function finalizeUpload(
     tags: string[]; coverBase64?: string; coverMimeType?: string;
   }
 ): Promise<{ media: MediaMeta & { signedUrl: string | null; coverSignedUrl: string | null } }> {
-  const sb = createAdminClient();
   const mediaId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ext = getExtension(opts.mimeType);
-  const filePath = `${userId}/${mediaId}.${ext}`;
+  const filePath = path.join(UPLOAD_DIR, userId, `${mediaId}.${ext}`);
 
-  // Upload to Storage
-  const { error: uploadErr } = await sb.storage
-    .from(MEDIA_BUCKET)
-    .upload(filePath, fileBytes, { contentType: opts.mimeType, upsert: false });
-
-  if (uploadErr) {
-    throw new Error(`Storage upload error: ${uploadErr.message}`);
+  // Write to local filesystem
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, fileBytes);
+  } catch (err) {
+    throw new Error(`Local storage write error: ${err}`);
   }
 
   // Upload cover if provided
@@ -247,10 +243,8 @@ async function finalizeUpload(
       const coverBytes = base64ToUint8Array(opts.coverBase64);
       if (coverBytes.length <= 2 * 1024 * 1024) {
         const coverExt = opts.coverMimeType.includes('png') ? 'png' : 'jpg';
-        coverPath = `${userId}/${mediaId}-cover.${coverExt}`;
-        await sb.storage
-          .from(MEDIA_BUCKET)
-          .upload(coverPath, coverBytes, { contentType: opts.coverMimeType, upsert: false });
+        coverPath = path.join(UPLOAD_DIR, userId, `${mediaId}-cover.${coverExt}`);
+        fs.writeFileSync(coverPath, coverBytes);
       }
     } catch (err) {
       console.log(`[Upload] Cover upload error (non-fatal):`, err);
@@ -292,17 +286,11 @@ async function finalizeUpload(
   // P1b: 关系表侧尽力同步元数据
   await upsertMedia(meta);
 
-  // Generate signed URLs
-  const { data: signedData } = await sb.storage
-    .from(MEDIA_BUCKET)
-    .createSignedUrl(filePath, SIGNED_URL_EXPIRY);
-
+  // Signed URL (local filesystem, no expiration enforcement)
+  const signedUrl = `file://${filePath}`;
   let coverSignedUrl: string | null = null;
   if (coverPath) {
-    const { data: coverSigned } = await sb.storage
-      .from(MEDIA_BUCKET)
-      .createSignedUrl(coverPath, SIGNED_URL_EXPIRY);
-    coverSignedUrl = coverSigned?.signedUrl || null;
+    coverSignedUrl = `file://${coverPath}`;
   }
 
   queryCache.invalidate('cache:song-index');
@@ -312,7 +300,7 @@ async function finalizeUpload(
   return {
     media: {
       ...meta,
-      signedUrl: signedData?.signedUrl || null,
+      signedUrl,
       coverSignedUrl,
     },
   };
@@ -560,22 +548,11 @@ export function registerUploadRoutes(app: any) {
         return c.json({ error: 'Media not found' }, 404);
       }
 
-      const sb = createAdminClient();
-      const { data: signedData, error } = await sb.storage
-        .from(MEDIA_BUCKET)
-        .createSignedUrl(meta.filePath, SIGNED_URL_EXPIRY);
-
-      if (error) {
-        console.log(`[Upload] Signed URL error for ${mediaId}:`, error);
-        return c.json({ error: 'Failed to generate playback URL' }, 500);
-      }
-
+      // Local filesystem signed URL
+      const signedUrl = `file://${meta.filePath}`;
       let coverSignedUrl = null;
       if (meta.coverPath) {
-        const { data: coverSigned } = await sb.storage
-          .from(MEDIA_BUCKET)
-          .createSignedUrl(meta.coverPath, SIGNED_URL_EXPIRY);
-        coverSignedUrl = coverSigned?.signedUrl || null;
+        coverSignedUrl = `file://${meta.coverPath}`;
       }
 
       // Also include lyrics if available
@@ -585,7 +562,7 @@ export function registerUploadRoutes(app: any) {
       return c.json({
         media: {
           ...meta,
-          signedUrl: signedData?.signedUrl || null,
+          signedUrl,
           coverSignedUrl,
           lyrics,
         },
@@ -625,28 +602,15 @@ export function registerUploadRoutes(app: any) {
       // Fetch metadata for each (A3：统一分页)
       const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
       const limited = mediaIds.slice(pager.offset, pager.offset + pager.limit);
-      const sb = createAdminClient();
       const mediaList: any[] = [];
 
       for (const id of limited) {
         const meta = await getMediaMeta(id);
         if (meta) {
-          const { data: signedData } = await sb.storage
-            .from(MEDIA_BUCKET)
-            .createSignedUrl(meta.filePath, SIGNED_URL_EXPIRY);
-
-          let coverSignedUrl = null;
-          if (meta.coverPath) {
-            const { data: coverSigned } = await sb.storage
-              .from(MEDIA_BUCKET)
-              .createSignedUrl(meta.coverPath, SIGNED_URL_EXPIRY);
-            coverSignedUrl = coverSigned?.signedUrl || null;
-          }
-
           mediaList.push({
             ...meta,
-            signedUrl: signedData?.signedUrl || null,
-            coverSignedUrl,
+            signedUrl: `file://${meta.filePath}`,
+            coverSignedUrl: meta.coverPath ? `file://${meta.coverPath}` : null,
           });
         }
       }
@@ -669,11 +633,12 @@ export function registerUploadRoutes(app: any) {
         return c.json({ error: 'Media not found' }, 404);
       }
 
-      // Delete from Storage
-      const sb = createAdminClient();
-      await sb.storage.from(MEDIA_BUCKET).remove([meta.filePath]);
-      if (meta.coverPath) {
-        await sb.storage.from(MEDIA_BUCKET).remove([meta.coverPath]);
+      // Delete from local filesystem
+      try {
+        if (meta.filePath) fs.unlinkSync(meta.filePath);
+        if (meta.coverPath) fs.unlinkSync(meta.coverPath);
+      } catch {
+        // file may already be absent; ignore
       }
 
       // Delete KV metadata + lyrics

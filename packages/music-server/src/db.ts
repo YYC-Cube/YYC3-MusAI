@@ -74,6 +74,18 @@ async function safeExec(label: string, fn: (client: any) => Promise<void>): Prom
 // User 域查询（映射 musai 现有关系表，不重复建表）
 // ==========================================
 
+/** 按邮箱查用户（含 password_hash，用于登录鉴权） */
+export async function getUserByEmail(email: string): Promise<any | null> {
+  return await safeQuery("getUserByEmail", null, async (client) => {
+    const res = await client.query(
+      `SELECT id, username, email, password_hash, nickname, avatar, role, status, created_at
+       FROM musai.users WHERE email = $1 LIMIT 1`,
+      [email],
+    );
+    return res.rows[0] || null;
+  });
+}
+
 /** 查询用户基础信息（含 role / nickname / avatar / email） */
 export async function getUserProfile(userId: string): Promise<any> {
   return await safeQuery("getUserProfile", null, async (client) => {

@@ -3,7 +3,6 @@
  * Routes: profile, creators, role, preferences, themes, export, error-report
  */
 
-import { createClient } from "@supabase/supabase-js";
 import {
   ROUTE_PREFIX, kv, requireAuth, getUserFromRequest, getAllSharedWorks,
 } from "./server-utils.ts";
@@ -12,6 +11,7 @@ import {
   getUserProfile, getUserStarPower, getUserPreferences, getUserUnlockedThemes,
   upsertUserProfile, upsertUserStarPower, upsertUserPreferences, addUserUnlockedTheme,
 } from "./db.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "./api-contract.ts";
 
 export function registerUserRoutes(app: any) {
   // ==========================================
@@ -29,10 +29,13 @@ export function registerUserRoutes(app: any) {
         creatorsMap[name].latestWork = Math.max(creatorsMap[name].latestWork, w.createdAt || 0);
       }
       const creators = Object.values(creatorsMap).sort((a, b) => b.totalLikes - a.totalLikes);
-      return c.json({ creators });
+
+      // A3：统一分页
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
+      const limited = creators.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ creators: limited, ...pageMeta(creators.length, pager) });
     } catch (error) {
-      console.log("Creators list error:", error);
-      return c.json({ creators: [] }, 500);
+      return apiError(c, 500, 'Failed to list creators', { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 
@@ -41,10 +44,13 @@ export function registerUserRoutes(app: any) {
     try {
       const works = await getAllSharedWorks(1, 1000);
       const creatorWorks = works.filter((w: any) => w.userName === userName);
-      return c.json({ works: creatorWorks });
+
+      // A3：统一分页
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
+      const limited = creatorWorks.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ works: limited, ...pageMeta(creatorWorks.length, pager) });
     } catch (error) {
-      console.log(`Creator works error for ${userName}:`, error);
-      return c.json({ works: [] }, 500);
+      return apiError(c, 500, `Failed to list works for ${userName}`, { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 
@@ -289,13 +295,8 @@ export function registerUserRoutes(app: any) {
       const userId = c.req.param('userId');
       if (!userId) return c.json({ error: 'userId required' }, 400);
 
-      const accessToken = c.req.header('Authorization')?.split(' ')[1];
-      const supabase = createClient(
-        process.env.SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      );
-      const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
-      if (authErr || !user || user.id !== userId) {
+      const user = await getUserFromRequest(c);
+      if (!user || user.id !== userId) {
         return c.json({ error: 'Unauthorized - can only export your own data' }, 401);
       }
 

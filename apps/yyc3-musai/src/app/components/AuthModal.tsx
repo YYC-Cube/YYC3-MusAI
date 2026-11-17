@@ -12,6 +12,14 @@ interface SignupResponse {
   accessToken?: string;
 }
 
+interface LoginResponse {
+  success: boolean;
+  user?: SessionUser;
+  accessToken?: string;
+  tokenType?: string;
+  expiresIn?: string;
+}
+
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,8 +45,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onUserCha
 
     try {
       if (isLogin) {
-        // 服务端尚未提供登录 / 会话签发端点（P1-5 接入）
-        throw new Error('账号服务未启用：登录接口尚未开放');
+        // 登录走 REST 契约（POST /login），签发应用层 JWT
+        const result = await apiFetchStrict<LoginResponse>('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (result.accessToken && result.user) {
+          setSession({ accessToken: result.accessToken, user: result.user });
+          onUserChange(result.user);
+          setSuccess('Logged in successfully!');
+          setTimeout(onClose, 500);
+        } else {
+          setError('登录失败：未收到会话令牌');
+        }
+        return;
       }
 
       // 注册走 REST 契约（POST /signup）

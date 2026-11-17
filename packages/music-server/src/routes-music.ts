@@ -8,6 +8,7 @@ import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate, annotationSchema, commentSchema, songRegisterSchema } from "./validation.ts";
 import { requireAuth } from "./server-utils.ts";
 import { getSongStatsByLegacyId, updateSongStats } from "./db.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "./api-contract.ts";
 
 export function registerMusicRoutes(app: any) {
   // ==========================================
@@ -221,10 +222,12 @@ export function registerMusicRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/songs/index`, async (c: any) => {
     try {
       const songIds = await getAllSongIds();
-      return c.json({ songIds, total: songIds.length });
+      // A3：统一分页
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 200 });
+      const limited = songIds.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ songIds: limited, ...pageMeta(songIds.length, pager) });
     } catch (error) {
-      console.log("Error fetching song index:", error);
-      return c.json({ error: `Song index failed: ${error}` }, 500);
+      return apiError(c, 500, 'Song index failed', { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 
