@@ -9,36 +9,10 @@
  *   - Route prefix constant
  */
 
-import * as kvSupabase from "./kv_store.ts";
-import * as kvPg from "./kv_store_pg.ts";
-import * as kvMemory from "./kv_store_memory.ts";
+import { kv } from "./kv.ts";
 import { getUserFromRequest as getUserFromAuth } from "./auth.ts";
 
-// KV 双驱开关：KV_DRIVER=pg（默认，落 musai.kv_store）| supabase（legacy 回退）| memory（本地联调）
-// 路由层 0 改动，均通过 server-utils.ts 导出的 kv 使用。
-// 惰性分发：每次调用再读取 KV_DRIVER，以便测试在 import 后再设置环境变量。
-function currentKvDriver() {
-  return process.env.KV_DRIVER ?? "pg";
-}
-
-function kvImpl() {
-  const driver = currentKvDriver();
-  if (driver === "memory") return kvMemory;
-  if (driver === "supabase") return kvSupabase;
-  return kvPg;
-}
-
-export const kv = {
-  set: (key: string, value: any): Promise<void> => kvImpl().set(key, value),
-  get: (key: string): Promise<any> => kvImpl().get(key),
-  del: (key: string): Promise<void> => kvImpl().del(key),
-  mset: (keys: string[], values: any[]): Promise<void> =>
-    kvImpl().mset(keys, values),
-  mget: (keys: string[]): Promise<any[]> => kvImpl().mget(keys),
-  mdel: (keys: string[]): Promise<void> => kvImpl().mdel(keys),
-  getByPrefix: (prefix: string): Promise<any[]> =>
-    kvImpl().getByPrefix(prefix),
-};
+export { kv };
 
 // ==========================================
 // Constants

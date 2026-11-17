@@ -14,7 +14,7 @@
 # ================================================================================
 services:
   yyc3-musai-server:
-    image: yyc3-musai-server:${MUSAI_TAG:-11.2.0}
+    image: yyc3-musai-server:${MUSAI_TAG:-11.3.0}
     container_name: yyc3-musai-server
     restart: unless-stopped
     network_mode: host
@@ -23,6 +23,11 @@ services:
     environment:
       PORT: "3250"
       HOST: "0.0.0.0"
+      APP_VERSION: "${MUSAI_TAG:-11.3.0}"
+      UPLOAD_DIR: "/app/uploads"
+      WS_ALLOW_ANONYMOUS: "0"
+    volumes:
+      - ./uploads:/app/uploads
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3250/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
@@ -39,6 +44,8 @@ services:
     image: nginx:1.27-alpine
     container_name: yyc3-musai-nginx
     restart: unless-stopped
+    # 仅在证书就绪后显式启用：docker compose --profile nginx up -d
+    profiles: ["nginx"]
     network_mode: host
     ports:
       - "80:80"

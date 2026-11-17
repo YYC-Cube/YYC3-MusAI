@@ -10,8 +10,10 @@ import * as crypto from "crypto";
 import {
   getUserProfile,
   getUserByEmail,
+  emailExists,
   createUser,
 } from "./db.ts";
+import { kv } from "./kv.ts";
 
 // ----------------------------------------------------------
 // 常量
@@ -64,6 +66,7 @@ function signJwt(payload: Record<string, unknown>, expiresInSec: number): string
   const now = Math.floor(Date.now() / 1000);
   const payloadWithIat = {
     ...payload,
+    jti: payload.jti ?? crypto.randomUUID(),
     iat: now,
     exp: now + expiresInSec,
     iss: ISSUER,
@@ -79,8 +82,7 @@ function signJwt(payload: Record<string, unknown>, expiresInSec: number): string
   return `${signingInput}.${base64UrlEncode(sig)}`;
 }
 
-function verifyJwt(token: string): Record<string, unknown> | null {
-  try {
+export function verifyJwt(token: string): Record<string, unknown> | null {  try {
     const [headerB64, bodyB64, sigB64] = token.split(".");
     if (!headerB64 || !bodyB64 || !sigB64) return null;
 
@@ -116,13 +118,13 @@ const PBKDF2_ITERATIONS = 100_000;
 const PBKDF2_SALT_LEN = 16;
 const PBKDF2_KEY_LEN = 32;
 
-function hashPassword(password: string): string {
+export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(PBKDF2_SALT_LEN);
   const hash = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEY_LEN, "sha256");
   return `pbkdf2$sha256$${PBKDF2_ITERATIONS}$${base64UrlEncode(salt)}$${base64UrlEncode(hash)}`;
 }
 
-function verifyPassword(password: string, stored: string): boolean {
+export function verifyPassword(password: string, stored: string): boolean {
   try {
     const parts = stored.split("$");
     if (parts.length !== 5 || parts[0] !== "pbkdf2") return false;
@@ -138,7 +140,7 @@ function verifyPassword(password: string, stored: string): boolean {
 }
 
 // ----------------------------------------------------------
-// 会话签发
+// 会话签发与吊销（jti + KV 会话表）
 // ----------------------------------------------------------
 
 export interface JWTPayload {
@@ -147,6 +149,25 @@ export interface JWTPayload {
   role?: string;
 }
 
+export interface AuthedUser {
+  id: string;
+  email: string;
+  role?: string;
+}
+
+export class AuthError extends Error {
+  code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = 'AuthError';
+    this.code = code;
+  }
+}
+
+const SESSION_PREFIX = "auth:session:";
+const sessionKey = (jti: string) => `${SESSION_PREFIX}${jti}`;
+
+/** 仅签名（不写会话表），用于单元测试/短期令牌 */
 export function signAccessToken(payload: JWTPayload): string {
   const expiresInSec = parseExpiresIn(process.env.JWT_EXPIRES_IN ?? "7d");
   return signJwt(
@@ -155,26 +176,52 @@ export function signAccessToken(payload: JWTPayload): string {
   );
 }
 
-// ----------------------------------------------------------
-// 从请求中解析当前用户（JWT 版，取代 supabase.auth.getUser）
-// ----------------------------------------------------------
-
-export interface AuthedUser {
-  id: string;
-  email: string;
-  role?: string;
+/** 签发并登记会话（登出可吊销） */
+export async function issueAccessToken(
+  payload: JWTPayload,
+): Promise<{ accessToken: string; jti: string; expiresInSec: number }> {
+  const expiresInSec = parseExpiresIn(process.env.JWT_EXPIRES_IN ?? "7d");
+  const jti = crypto.randomUUID();
+  const accessToken = signJwt(
+    { sub: payload.userId, email: payload.email, role: payload.role, jti },
+    expiresInSec,
+  );
+  await kv.set(
+    sessionKey(jti),
+    JSON.stringify({
+      userId: payload.userId,
+      exp: Math.floor(Date.now() / 1000) + expiresInSec,
+    }),
+  );
+  return { accessToken, jti, expiresInSec };
 }
 
-export async function getUserFromRequest(
-  authorization: string | null,
-): Promise<AuthedUser | null> {
-  if (!authorization) return null;
-  const match = authorization.match(/^Bearer\s+(.+)$/i);
-  if (!match) return null;
-  const payload = verifyJwt(match[1]);
+/** 吊销令牌（登出） */
+export async function revokeToken(token: string): Promise<void> {
+  const payload = verifyJwt(token);
+  const jti = payload?.jti as string | undefined;
+  if (jti) await kv.del(sessionKey(jti));
+}
+
+/** 校验令牌：签名 + 过期 + 会话存在 + 用户存在 */
+export async function verifyAccessToken(token: string): Promise<AuthedUser | null> {
+  const payload = verifyJwt(token);
   if (!payload) return null;
   const userId = (payload.sub as string) || "";
   if (!userId) return null;
+
+  const jti = payload.jti as string | undefined;
+  if (jti) {
+    const raw = await kv.get(sessionKey(jti));
+    if (!raw) return null; // 已登出 / 已吊销
+    try {
+      const session = JSON.parse(raw as string);
+      if (session?.userId && session.userId !== userId) return null;
+    } catch {
+      return null;
+    }
+  }
+
   // 以关系表 users 作为权威来源，确保用户存在且角色最新
   const profile = await getUserProfile(userId);
   if (!profile) return null;
@@ -183,6 +230,19 @@ export async function getUserFromRequest(
     email: (profile.email as string) || (payload.email as string) || "",
     role: ((profile.role as string) || (payload.role as string) || "user"),
   };
+}
+
+// ----------------------------------------------------------
+// 从请求中解析当前用户
+// ----------------------------------------------------------
+
+export async function getUserFromRequest(
+  authorization: string | null,
+): Promise<AuthedUser | null> {
+  if (!authorization) return null;
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+  return verifyAccessToken(match[1]);
 }
 
 // ----------------------------------------------------------
@@ -198,16 +258,22 @@ export async function registerUser({
   password: string;
   displayName: string;
 }): Promise<{ userId: string; accessToken: string; user: AuthedUser }> {
+  const exists = await emailExists(email);
+  if (exists === null) {
+    throw new AuthError('DB_UNAVAILABLE', '数据库不可用，暂时无法注册');
+  }
+  if (exists) {
+    throw new AuthError('EMAIL_TAKEN', '该邮箱已注册');
+  }
+
   const userId = crypto.randomUUID();
   const passwordHash = hashPassword(password);
+  const created = await createUser(userId, { email, passwordHash, displayName });
+  if (!created) {
+    throw new AuthError('DB_WRITE_FAILED', '账号写入失败，请稍后重试');
+  }
 
-  await createUser(userId, {
-    email,
-    passwordHash,
-    displayName,
-  });
-
-  const accessToken = signAccessToken({ userId, email, role: "user" });
+  const { accessToken } = await issueAccessToken({ userId, email, role: "user" });
   const user: AuthedUser = { id: userId, email, role: "user" };
   return { userId, accessToken, user };
 }
@@ -230,7 +296,7 @@ export async function loginUser({
 
   const userId = (profile.id as string) || "";
   const role = ((profile.role as string) || "user");
-  const accessToken = signAccessToken({ userId, email, role });
+  const { accessToken } = await issueAccessToken({ userId, email, role });
   const user: AuthedUser = { id: userId, email, role };
   return { userId, accessToken, user };
 }

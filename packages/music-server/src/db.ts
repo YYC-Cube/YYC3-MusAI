@@ -102,6 +102,17 @@ export async function getUserByEmail(email: string): Promise<any | null> {
   });
 }
 
+/** 邮箱是否已存在；null 表示数据库不可用（无法判定） */
+export async function emailExists(email: string): Promise<boolean | null> {
+  return await safeQuery<boolean | null>("emailExists", null, async (client) => {
+    const res = await client.query(
+      `SELECT 1 FROM musai.users WHERE email = $1 LIMIT 1`,
+      [email],
+    );
+    return res.rows.length > 0;
+  });
+}
+
 /** 查询用户基础信息（含 role / nickname / avatar / email） */
 export async function getUserProfile(userId: string): Promise<any> {
   return await safeQuery("getUserProfile", null, async (client) => {
@@ -248,30 +259,36 @@ export async function addUserUnlockedTheme(userId: string, themeId: string): Pro
   });
 }
 
-/** 创建用户（signup 双写配套） */
+/** 创建用户（事务写入 users + star_power + preferences）；返回是否成功 */
 export async function createUser(
   userId: string,
   data: { email: string; passwordHash: string; displayName: string },
-): Promise<void> {
-  await safeExec("createUser", async (client) => {
-    await client.query(
-      `INSERT INTO musai.users (id, username, email, password_hash, nickname, role, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, 'user', 'active', now(), now())
-       ON CONFLICT (id) DO NOTHING`,
-      [userId, data.displayName || data.email.split('@')[0], data.email, data.passwordHash, data.displayName || data.email.split('@')[0]],
-    );
-    await client.query(
-      `INSERT INTO musai.user_star_power (user_id, total_star_power, available_star_power)
-       VALUES ($1, 100, 100)
-       ON CONFLICT (user_id) DO NOTHING`,
-      [userId],
-    );
-    await client.query(
-      `INSERT INTO musai.user_preferences (user_id)
-       VALUES ($1)
-       ON CONFLICT (user_id) DO NOTHING`,
-      [userId],
-    );
+): Promise<boolean> {
+  return await safeExecResult("createUser", async (client) => {
+    await client.query("BEGIN");
+    try {
+      await client.query(
+        `INSERT INTO musai.users (id, username, email, password_hash, nickname, role, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, 'user', 'active', now(), now())`,
+        [userId, data.displayName || data.email.split('@')[0], data.email, data.passwordHash, data.displayName || data.email.split('@')[0]],
+      );
+      await client.query(
+        `INSERT INTO musai.user_star_power (user_id, total_star_power, available_star_power)
+         VALUES ($1, 100, 100)
+         ON CONFLICT (user_id) DO NOTHING`,
+        [userId],
+      );
+      await client.query(
+        `INSERT INTO musai.user_preferences (user_id)
+         VALUES ($1)
+         ON CONFLICT (user_id) DO NOTHING`,
+        [userId],
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    }
   });
 }
 

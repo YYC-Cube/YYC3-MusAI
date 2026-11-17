@@ -11,8 +11,9 @@ import { rateLimit, RATE_AUTH } from "./rate-limit.ts";
 import {
   registerUser,
   loginUser,
-  signAccessToken,
   getUserFromRequest,
+  revokeToken,
+  AuthError,
   type AuthedUser,
 } from "./auth.ts";
 import { apiError, ERROR_CODES } from "./api-contract.ts";
@@ -84,6 +85,21 @@ export function registerAuthRoutes(app: any) {
         expiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
       });
     } catch (error) {
+      if (error instanceof AuthError) {
+        const status = error.code === 'EMAIL_TAKEN'
+          ? 409
+          : error.code === 'DB_UNAVAILABLE'
+            ? 503
+            : 500;
+        const code = error.code === 'EMAIL_TAKEN' ? ERROR_CODES.CONFLICT : ERROR_CODES.INTERNAL;
+        await recordAudit({
+          action: 'auth.signup',
+          ip: clientIp(c),
+          success: false,
+          detail: { code: error.code },
+        });
+        return apiError(c, status, error.message, undefined, code);
+      }
       console.log(`Signup error: ${error}`);
       return apiError(c, 500, "注册失败", undefined, ERROR_CODES.INTERNAL);
     }
@@ -125,8 +141,18 @@ export function registerAuthRoutes(app: any) {
     }
   });
 
-  // Logout（无状态 JWT：客户端丢弃 token 即可；服务端返回成功）
+  // Logout（服务端吊销会话：删除 jti 对应的会话记录）
   app.post(`${ROUTE_PREFIX}/logout`, rateLimit(RATE_AUTH), async (c: any) => {
-    return c.json({ success: true, message: "已退出登录，请客户端清除 token" });
+    const auth = c.req.header('Authorization') ?? '';
+    const token = auth.match(/^Bearer\s+(.+)$/i)?.[1];
+    if (token) {
+      try {
+        await revokeToken(token);
+      } catch (error) {
+        console.log(`Logout revoke error: ${error}`);
+      }
+    }
+    await recordAudit({ action: 'auth.logout', ip: clientIp(c), success: true });
+    return c.json({ success: true, message: "已退出登录" });
   });
 }

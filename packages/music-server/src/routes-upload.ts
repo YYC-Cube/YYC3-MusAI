@@ -22,16 +22,17 @@
  *   lyrics:{mediaId}            -- Lyrics array (JSON)
  */
 
-import { ROUTE_PREFIX, kv, registerSongId, queryCache } from "./server-utils.ts";
+import { ROUTE_PREFIX, kv, registerSongId, queryCache, getUserFromRequest } from "./server-utils.ts";
 import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate } from "./validation.ts";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
+import { Readable } from "node:stream";
 import {
   getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
 } from "./db.ts";
-import { apiError, parsePagination, pageMeta } from "./api-contract.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "./api-contract.ts";
 
 // ==========================================
 // Constants
@@ -41,6 +42,13 @@ const MEDIA_BUCKET = 'make-f626b673-media';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const SIGNED_URL_EXPIRY = 3600; // 1 hour
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
+
+/** 媒体播放地址（相对/绝对，由 PUBLIC_BASE_URL 决定） */
+function mediaFileUrl(mediaId: string, variant?: 'cover'): string {
+  const base = (process.env.PUBLIC_BASE_URL ?? '').replace(/\/+$/, '');
+  const suffix = variant === 'cover' ? '?variant=cover' : '';
+  return `${base}${ROUTE_PREFIX}/upload/media/${mediaId}/file${suffix}`;
+}
 
 const ALLOWED_AUDIO_TYPES = [
   'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/flac',
@@ -286,12 +294,9 @@ async function finalizeUpload(
   // P1b: 关系表侧尽力同步元数据
   await upsertMedia(meta);
 
-  // Signed URL (local filesystem, no expiration enforcement)
-  const signedUrl = `file://${filePath}`;
-  let coverSignedUrl: string | null = null;
-  if (coverPath) {
-    coverSignedUrl = `file://${coverPath}`;
-  }
+  // 播放地址（相对/绝对由 PUBLIC_BASE_URL 决定）
+  const signedUrl = mediaFileUrl(mediaId);
+  const coverSignedUrl: string | null = coverPath ? mediaFileUrl(mediaId, 'cover') : null;
 
   queryCache.invalidate('cache:song-index');
 
@@ -536,6 +541,60 @@ export function registerUploadRoutes(app: any) {
     }
   });
 
+  // ---- GET /upload/media/:mediaId/file -- 流式播放（支持 Range）----
+  app.get(`${ROUTE_PREFIX}/upload/media/:mediaId/file`, async (c: any) => {
+    const mediaId = c.req.param('mediaId');
+    try {
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) return apiError(c, 404, 'Media not found', undefined, ERROR_CODES.NOT_FOUND);
+
+      const user = await getUserFromRequest(c);
+      if (!meta.isPublic && user?.id !== meta.userId) {
+        return apiError(c, 403, '无权访问该媒体', undefined, ERROR_CODES.FORBIDDEN);
+      }
+
+      const variant = c.req.query('variant');
+      const isCover = variant === 'cover';
+      const filePath = isCover ? meta.coverPath : meta.filePath;
+      if (!filePath || !fs.existsSync(filePath)) {
+        return apiError(c, 404, 'Media file not found', undefined, ERROR_CODES.NOT_FOUND);
+      }
+
+      const stat = fs.statSync(filePath);
+      const contentType = isCover
+        ? (filePath.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg')
+        : (meta.mimeType || 'application/octet-stream');
+
+      c.header('Content-Type', contentType);
+      c.header('Accept-Ranges', 'bytes');
+      c.header('Cache-Control', 'private, max-age=3600');
+
+      const range = c.req.header('range');
+      if (range) {
+        const m = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+        if (m) {
+          const start = m[1] ? parseInt(m[1], 10) : 0;
+          const end = m[2] ? Math.min(parseInt(m[2], 10), stat.size - 1) : stat.size - 1;
+          if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= stat.size) {
+            c.status(416);
+            c.header('Content-Range', `bytes */${stat.size}`);
+            return c.body(null);
+          }
+          c.status(206);
+          c.header('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+          c.header('Content-Length', String(end - start + 1));
+          return c.body(Readable.toWeb(fs.createReadStream(filePath, { start, end })) as any);
+        }
+      }
+
+      c.header('Content-Length', String(stat.size));
+      return c.body(Readable.toWeb(fs.createReadStream(filePath)) as any);
+    } catch (error) {
+      console.log(`[Upload] Stream error ${mediaId}:`, error);
+      return apiError(c, 500, '读取媒体失败', { detail: String(error) }, ERROR_CODES.INTERNAL);
+    }
+  });
+
   // ---- GET /upload/media/:mediaId -- Get media info + signed URL ----
   app.get(`${ROUTE_PREFIX}/upload/media/:mediaId`, async (c: any) => {
     const mediaId = c.req.param('mediaId');
@@ -548,12 +607,9 @@ export function registerUploadRoutes(app: any) {
         return c.json({ error: 'Media not found' }, 404);
       }
 
-      // Local filesystem signed URL
-      const signedUrl = `file://${meta.filePath}`;
-      let coverSignedUrl = null;
-      if (meta.coverPath) {
-        coverSignedUrl = `file://${meta.coverPath}`;
-      }
+      // 播放地址
+      const signedUrl = mediaFileUrl(mediaId);
+      const coverSignedUrl = meta.coverPath ? mediaFileUrl(mediaId, 'cover') : null;
 
       // Also include lyrics if available
       const lyricsRaw = await kv.get(`lyrics:${mediaId}`);
@@ -609,8 +665,8 @@ export function registerUploadRoutes(app: any) {
         if (meta) {
           mediaList.push({
             ...meta,
-            signedUrl: `file://${meta.filePath}`,
-            coverSignedUrl: meta.coverPath ? `file://${meta.coverPath}` : null,
+            signedUrl: mediaFileUrl(meta.id),
+            coverSignedUrl: meta.coverPath ? mediaFileUrl(meta.id, 'cover') : null,
           });
         }
       }

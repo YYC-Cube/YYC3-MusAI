@@ -1,147 +1,17 @@
 /**
- * D-Music Server — Entry Point (§2.2 Modularized)
+ * D-Music Server — Runtime Entry
  *
- * All route handlers are organized into domain-specific modules:
- *   routes-auth.ts       — /health, /signup
- *   routes-music.ts      — /likes, /annotations, /play, /comments, /songs
- *   routes-starpower.ts  — /starpower (CRUD, checkin, consume, leaderboard boost, shop)
- *   routes-user.ts       — /profile, /creators, /role, /preferences, /themes, /export, /error-report
- *   routes-community.ts  — /community, /shared-works, /works/fork, /copyright
- *   routes-ai.ts         — /ai/lyrics, /ai/compose
- *   routes-analytics.ts  — /leaderboard, /analytics, /listening-history, /recommendations, /smart-playlist
- *   routes-social.ts     — /achievements, /notifications, /timeline-comments, /fork-tree, /mheart
- *   routes-spacetime.ts  — /spacetime (capsules, messages, location)
- *   routes-challenge.ts  — /challenges (CRUD, submit, finalize, leaderboard)
- *   routes-live.ts       — /live (sessions, presence, danmaku)
- *   routes-albums.ts     — /albums (CRUD, tracks, artwork)
- *   routes-pki.ts        — /pki (certificate management, key exchange)
- *   routes-market.ts     — /market (store, purchase, inventory)
- *   routes-diagnostics.ts— /diagnostics (health checks, performance metrics)
- *   routes-upload.ts     — /upload (file upload, management)
- *
- * Shared utilities in server-utils.ts:
- *   - ROUTE_PREFIX, kv, requireAuth, wilsonScore, song index, shared work helpers
+ * 仅负责：HTTP serve、WebSocket 实时通道、优雅停机。
+ * 应用组装见 app.ts（可被测试直接 import，不监听端口）。
  */
 
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
 import { createRequire } from "node:module";
-import { apiError, ERROR_CODES } from "./api-contract.ts";
+import { app } from "./app.ts";
 import { closePool } from "./db.ts";
 import { closeKvPool } from "./kv_store_pg.ts";
-import { recordRequest, renderMetrics } from "./metrics.ts";
+import { verifyAccessToken } from "./auth.ts";
 
-// §2.2 Route modules
-import { registerAuthRoutes } from "./routes-auth.ts";
-import { registerMusicRoutes } from "./routes-music.ts";
-import { registerStarpowerRoutes } from "./routes-starpower.ts";
-import { registerUserRoutes } from "./routes-user.ts";
-import { registerCommunityRoutes } from "./routes-community.ts";
-import { registerAiRoutes } from "./routes-ai.ts";
-import { registerAnalyticsRoutes } from "./routes-analytics.ts";
-import { registerSocialRoutes } from "./routes-social.ts";
-import { registerSpacetimeRoutes } from "./routes-spacetime.ts";
-import { registerChallengeRoutes } from "./routes-challenge.ts";
-import { registerLiveSessionRoutes } from "./routes-live.ts";
-import { registerAlbumRoutes } from "./routes-albums.ts";
-import { registerPkiRoutes } from "./routes-pki.ts";
-import { registerMarketRoutes } from "./routes-market.ts";
-import { registerDiagnosticsRoutes } from "./routes-diagnostics.ts";
-import { registerUploadRoutes } from "./routes-upload.ts";
-import { registerPlaylistRoutes } from "./routes-playlist.ts";
-import { registerFollowRoutes } from "./routes-follow.ts";
-
-const app = new Hono();
-
-// A4：统一 404 / 未捕获异常的错误体
-app.notFound((c) =>
-  apiError(c, 404, `Route not found: ${c.req.method} ${new URL(c.req.url).pathname}`, undefined, ERROR_CODES.NOT_FOUND),
-);
-app.onError((err, c) => {
-  console.error(`[Server] Unhandled error on ${c.req.method} ${new URL(c.req.url).pathname}:`, err);
-  return apiError(c, 500, 'Internal server error', { detail: String(err) }, ERROR_CODES.INTERNAL);
-});
-
-app.use('*', logger(console.log));
-
-// 指标采集（在响应后计数）
-app.use('*', async (c, next) => {
-  await next();
-  recordRequest(c.req.method, c.res.status);
-});
-
-// §8.5 — CORS configuration (domain whitelist for security hardening)
-app.use(
-  "/*",
-  cors({
-    origin: (origin: string) => {
-      // Allow Figma Make proxy domains and local development
-      if (!origin) return '*';
-      if (
-        origin.endsWith('.figma.site') ||
-        origin.endsWith('.supabase.co') ||
-        origin.startsWith('http://localhost:')
-      ) {
-        return origin;
-      }
-      // Fallback: allow with log for auditing (can tighten to reject later)
-      console.log(`[CORS] Unrecognized origin: ${origin}`);
-      return origin;
-    },
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    exposeHeaders: ["Content-Length"],
-    maxAge: 600,
-  }),
-);
-
-// ==========================================
-// 存活探针（供 Docker / 网关直接使用，不经过 ROUTE_PREFIX）
-// ==========================================
-const startedAt = Date.now();
-
-app.get('/health', (c) =>
-  c.json({
-    status: 'ok',
-    service: 'musai-server',
-    version: process.env.APP_VERSION ?? '11.2.0',
-    uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
-  }),
-);
-
-// Prometheus 指标（供抓取；不含业务敏感数据）
-app.get('/metrics', (c) => {
-  c.header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
-  return c.body(renderMetrics());
-});
-
-// ==========================================
-// Register all route modules
-// ==========================================
-registerAuthRoutes(app);
-registerMusicRoutes(app);
-registerStarpowerRoutes(app);
-registerUserRoutes(app);
-registerCommunityRoutes(app);
-registerAiRoutes(app);
-registerAnalyticsRoutes(app);
-registerSocialRoutes(app);
-registerSpacetimeRoutes(app);
-registerChallengeRoutes(app);
-registerLiveSessionRoutes(app);
-registerAlbumRoutes(app);
-registerPkiRoutes(app);
-registerMarketRoutes(app);
-registerDiagnosticsRoutes(app);
-registerUploadRoutes(app);
-registerPlaylistRoutes(app);
-registerFollowRoutes(app);
-
-// ==========================================
-// Node 20+ 运行时入口（@hono/node-server）
-// ==========================================
 const port = Number(process.env.PORT ?? 8080);
 const hostname = process.env.HOST ?? '0.0.0.0';
 
@@ -150,18 +20,48 @@ const server = serve({ fetch: app.fetch, port, hostname }, (info) => {
 });
 
 // ==========================================
-// WebSocket 实时通道（/ws/live）：实时弹幕与在线房间
+// WebSocket 实时通道（/ws/live）
+// 默认要求 ?token=<JWT>；本地可用 WS_ALLOW_ANONYMOUS=1 放开
 // 依赖 ws；缺失时自动降级（HTTP 轮询仍可用）
 // ==========================================
+const wsRequireAuth = process.env.WS_ALLOW_ANONYMOUS !== '1';
 let wssRef: any = null;
+
 try {
   const require = createRequire(import.meta.url);
   const { WebSocketServer } = require('ws');
-  const wss = new WebSocketServer({ server: server as any, path: '/ws/live' });
+  const wss = new WebSocketServer({
+    server: server as any,
+    path: '/ws/live',
+    verifyClient: (info: any, cb: any) => {
+      if (!wsRequireAuth) return cb(true);
+      try {
+        const token = new URL(info.req.url ?? '', 'http://localhost').searchParams.get('token') ?? '';
+        if (!token) return cb(false, 401, 'token required');
+        verifyAccessToken(token)
+          .then((user) => cb(!!user, user ? undefined : 401, user ? undefined : 'unauthorized'))
+          .catch(() => cb(false, 401, 'unauthorized'));
+      } catch {
+        cb(false, 401, 'unauthorized');
+      }
+      return undefined;
+    },
+  });
   const rooms = new Map<string, Set<any>>();
   wssRef = wss;
 
-  wss.on('connection', (socket: any) => {
+  wss.on('connection', async (socket: any, req: any) => {
+    let userId: string | null = null;
+    if (wsRequireAuth) {
+      const token = new URL(req.url ?? '', 'http://localhost').searchParams.get('token') ?? '';
+      const user = await verifyAccessToken(token);
+      if (!user) {
+        socket.close(4001, 'unauthorized');
+        return;
+      }
+      userId = user.id;
+    }
+
     let room = 'lobby';
     const join = (next: string) => {
       rooms.get(room)?.delete(socket);
@@ -170,7 +70,7 @@ try {
       rooms.get(room)!.add(socket);
     };
     join(room);
-    socket.send(JSON.stringify({ type: 'welcome', room }));
+    socket.send(JSON.stringify({ type: 'welcome', room, userId }));
 
     socket.on('message', (raw: any) => {
       let msg: any;
@@ -190,7 +90,7 @@ try {
           type: 'danmaku',
           room,
           text: String(msg.text ?? '').slice(0, 200),
-          user: msg.user ?? null,
+          user: userId ?? null,
           ts: Date.now(),
         });
         for (const peer of rooms.get(room) ?? []) {
@@ -204,12 +104,12 @@ try {
     });
   });
 
-  console.log('[WS] WebSocket server ready at /ws/live');
+  console.log(`[WS] WebSocket server ready at /ws/live (auth=${wsRequireAuth ? 'jwt' : 'anonymous'})`);
 } catch (error) {
   console.warn('[WS] disabled (ws 未安装):', error instanceof Error ? error.message : error);
 }
 
-// 优雅停机：停止接收新请求 → 关闭连接池 → 退出（10s 兜底强退）
+// 优雅停机：停止接收新请求 → 关闭 WS/连接池 → 退出（10s 兜底强退）
 let shuttingDown = false;
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;
