@@ -264,13 +264,17 @@ export async function createUser(
   userId: string,
   data: { email: string; passwordHash: string; displayName: string },
 ): Promise<boolean> {
+  const base = (data.displayName || data.email.split('@')[0] || 'user').slice(0, 40);
+  // username 有唯一约束：追加 userId 片段避免同名注册冲突
+  const username = `${base}-${userId.slice(0, 6)}`.slice(0, 50);
+
   return await safeExecResult("createUser", async (client) => {
     await client.query("BEGIN");
     try {
       await client.query(
         `INSERT INTO musai.users (id, username, email, password_hash, nickname, role, status, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, 'user', 'active', now(), now())`,
-        [userId, data.displayName || data.email.split('@')[0], data.email, data.passwordHash, data.displayName || data.email.split('@')[0]],
+        [userId, username, data.email, data.passwordHash, data.displayName || base],
       );
       await client.query(
         `INSERT INTO musai.user_star_power (user_id, total_star_power, available_star_power)
