@@ -1,12 +1,17 @@
 ---
-@file: README.md
-@description: YYC3-MusAI 文档架构总索引
-@author: YYC³
-@version: v2.0.0
-@created: 2026-02-25
-@updated: 2026-02-25
-@status: published
-@tags: [文档索引],[总览]
+file: README.md
+title: YYC3-MusAI 文档架构总索引
+description: YYC3-MusAI 文档体系总索引与目录导航
+author: YYC³ Team <admin@0379.email>
+version: v2.1.0
+created: 2026-02-25
+updated: 2026-11-18
+status: published
+tags: [文档索引, 总览]
+category: 项目总览索引
+language: zh-CN
+audience: team
+complexity: medium
 ---
 
 # YYC3-MusAI 文档架构总索引
@@ -191,6 +196,22 @@ YYC³（YanYuCloudCube）Music-player 是一个现代化的音乐创作与分享
 - 所有目录的 README.md 文件会自动同步显示当前目录下的所有文档
 - 根目录的 README.md 会自动同步显示所有子目录的结构
 - 每次运行脚本时，README 文件会自动更新以反映最新的文档结构
+
+## 2026-11-18 文档整理（根目录收敛）
+
+按《YYC3-团队通用-命名规范》《YYC3-团队通用-标头标尾》《YYC3-团队通用-文档闭环》完成 docs 根目录散落文档迁移。根目录现仅保留本索引、`assets/`、`YYC3-团队通用-标规文档/` 与 `YYC3-MusAI-TraeCode-20261109/`。
+
+| 归入位置 | 收录内容 |
+|---|---|
+| `00-…/006-009` | 当前状态报告、项目进度追踪、阶段进度报告、运营进度报告 |
+| `01-…/0105-YYC3-MusAI-推进规划` | 项目推进方案、下一轮主线规划、全维度补全与生产就绪计划、智能运营计划 |
+| `02-…/0208-YYC3-MusAI-评估与对标` | 开源对标、组件注册表、设计系统审计、音乐场景差异矩阵、Figma 交互、执行提示词 |
+| `03-…/0308-YYC3-MusAI-架构与契约` | Monorepo 架构、REST API 契约、数据链路、数据库共享评估、Supabase 清单/状态/验收、PG 迁移分析 |
+| `04-…/0407-YYC3-MusAI-审计与评估` | 上线前深度测试报告、全量审计快照、深度评估报告、版本状态对比 |
+| `05-…/0508-YYC3-MusAI-发布与运维` | 发布操作手册 |
+| `08-…/0805-YYC3-MusAI-规范与指南` | 通用/D-Music 指南、项目规则与标准、音乐领域说明、时空喊话说明、Wilson 评分算法 |
+
+> 迁移使用 `git mv` 保留历史；迁移文档已统一补写 YAML 标头与「变更历史」标尾。历史快照类文档保留原文，仅做归档式归类。
 
 
 

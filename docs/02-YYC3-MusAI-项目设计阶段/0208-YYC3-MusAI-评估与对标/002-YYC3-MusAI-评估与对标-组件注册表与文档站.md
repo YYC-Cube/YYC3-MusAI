@@ -1,0 +1,125 @@
+---
+file: 002-YYC3-MusAI-评估与对标-组件注册表与文档站.md
+title: 组件注册表与文档站
+description: registry.json 生成规则、文档站使用方式、组件覆盖现状与扩展方法
+author: YYC³ Team <admin@0379.email>
+version: v1.0.0
+created: 2026-11-09
+updated: 2026-11-18
+status: active
+tags: [registry, docs-site, components, knowledge-base]
+category: 评估与对标
+language: zh-CN
+audience: developers,designers
+complexity: intermediate
+---
+
+# 组件注册表与文档站
+
+## 一、交付物
+
+| 交付物 | 路径 | 说明 |
+| --- | --- | --- |
+| 注册表 | `registry.json` | 15 个公开包、305 个组件、16 个带实时示例 |
+| 生成脚本 | `scripts/generate-registry.mjs` | 扫描源码导出与 Props，合并人工元数据 |
+| 人工元数据 | `scripts/component-registry.manifest.mjs` | 描述、示例代码、分类、演示映射 |
+| 文档站 | `apps/component-docs` | React + Vite + Tailwind，读取注册表渲染 |
+| 构建产物 | `apps/component-docs/dist` | 可静态部署 |
+| 部署流水线 | `.github/workflows/docs-pages.yml` | GitHub Pages 自动构建与发布 |
+
+## 二、命令
+
+```bash
+pnpm registry:build   # 生成 registry.json + 文档站数据副本
+pnpm docs:dev         # 本地开发（http://localhost:3200）
+pnpm docs:build       # 类型检查 + 构建静态站点
+pnpm --filter @yyc3/component-docs typecheck
+```
+
+CI 在 `pnpm build` 后执行 `pnpm docs:build`，注册表或文档站编译失败会阻断合并。
+
+## 三、注册表结构
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-09T…",
+  "totals": { "packages": 15, "components": 305, "curated": 8 },
+  "packages": [{ "name": "@yyc3/music-ui", "version": "2.0.0", "componentCount": 268 }],
+  "components": [{
+    "name": "DButton",
+    "package": "@yyc3/music-ui",
+    "version": "2.0.0",
+    "category": "UI 基础",
+    "description": "主操作按钮…",
+    "props": ["variant", "size", "loading"],
+    "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+    "demo": "DButton",
+    "example": "<DButton variant=\"primary\">开始播放</DButton>"
+  }]
+}
+```
+
+生成规则：
+
+1. 扫描 `packages/*/src/**/*.tsx`，识别 `export const/function Name`、`export default Name` 与 `export { A, B }`。
+2. 过滤 `*Props/*Context/*Config/*State/*Return/*Options` 等非组件导出与全大写常量。
+3. Props 从同文件 `XProps` 接口提取字段名；人工元数据可覆盖。
+4. 描述优先取人工元数据，其次取包 README 的引用行。
+5. 同名组件按「包 :: 名称」去重，输出按包与名称排序。
+
+## 四、文档站
+
+- 左侧：按包分组、支持名称/包/分类/描述搜索。
+- 右侧：组件描述、引入语句、实时示例、示例代码、Props 标签与源码位置。
+- 顶栏：主题切换，直接调用 `@yyc3/music-design-tokens` 的 `applyTheme`。
+- 移动端（`<md`）：顶栏「目录」按钮打开抽屉，支持搜索、选择后自动关闭、关闭按钮与 `Esc`。
+
+实时示例覆盖 16 个组件：DButton、DCard、DBadge、DProgress、DInput、DSpinner、DEmptyState、DAchievementCard、AchievementRing、StatCard、SparklineChart、StarPowerChart、XiaoyuCharacter、XiaoyuBubble、LyricsDisplay、EmotionRipple、AudioVisualizer。
+
+## 五、静态部署
+
+### 5.1 GitHub Pages（与主应用同站点）
+
+发布由 `.github/workflows/deploy-pages.yml` 统一负责，避免两个工作流争用同一 Pages 环境：
+
+1. 构建主应用（`apps/yyc3-musai/dist`）。
+2. 以 `DOCS_BASE=/docs/` 构建文档站。
+3. 将文档站产物复制到 `apps/yyc3-musai/dist/docs`。
+4. 上传 `apps/yyc3-musai/dist` 并部署。
+
+访问 `https://musai.yyc3.vip/`（主应用）与 `https://musai.yyc3.vip/docs/`（组件文档）。
+
+> 注意：`pnpm/action-setup@v4` 不再显式指定 `version`，统一由 `package.json` 的 `packageManager` 决定，避免版本冲突导致工作流启动失败。
+
+### 5.2 本地与任意静态托管
+
+```bash
+pnpm docs:build                 # 根路径部署
+DOCS_BASE=/子路径/ pnpm docs:build  # 子路径部署
+```
+
+`apps/component-docs/dist` 为纯静态产物，可直接放入 Nginx、OSS、Vercel、Netlify 等。
+
+## 六、验证记录
+
+| 项 | 结果 |
+| --- | --- |
+| `pnpm --filter @yyc3/component-docs typecheck` | 通过 |
+| `pnpm docs:build` | 通过；分块后最大 chunk 334 kB |
+| 子路径构建 | `DOCS_BASE=/YYC3-MusAI/` 后资源前缀正确 |
+| 桌面渲染 | 标题、305 个侧栏项、DButton 示例均可见，无 pageerror |
+| 移动端抽屉 | 390×844 下表单一可见、抽屉 305 项、选择后关闭、关闭按钮与 Esc 生效 |
+| 注册表 | 305 个组件，16 个示例 |
+
+## 七、扩展方法
+
+- 新增示例：在 `scripts/component-registry.manifest.mjs` 增加条目（name/package/description/props/example/demo），并在 `apps/component-docs/src/demos.tsx` 注册同名 demo。
+- 新增分类：在 `categoryByPackage` 增加映射。
+- 新增包：确保 `package.json` 非 private 且 `src` 下有 `.tsx`，重新运行 `pnpm registry:build`。
+
+## 七、已知边界
+
+- 只收录 `.tsx` 组件，Hooks 与纯函数工具不在注册表内。
+- Props 提取为静态正则，复杂交叉类型/泛型可能提取不全，需人工元数据补齐。
+- 文档站不做实时沙箱，示例在文档应用内直接渲染。

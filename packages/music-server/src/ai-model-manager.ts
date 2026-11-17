@@ -125,7 +125,7 @@ export interface ModelUsageStats {
 interface ModelProvider {
   name: string;
   isAvailable(): boolean;
-  generateLyrics(req: LyricsRequest): Promise<string[]>;
+  generateLyrics?(req: LyricsRequest): Promise<string[]>;
   analyzeEmotion?(req: EmotionAnalysisRequest): Promise<EmotionAnalysisResponse>;
   transcribeAudio?(req: TranscribeRequest): Promise<TranscribeResponse>;
 }
@@ -144,8 +144,11 @@ interface ChatOptions {
   baseUrl: string;
   apiKey?: string;
   model: string;
-  system: string;
-  user: string;
+  /** 单轮快捷写法 */
+  system?: string;
+  user?: string;
+  /** 多轮对话（优先于 system/user） */
+  messages?: Array<{ role: string; content: string }>;
   temperature: number;
   maxTokens: number;
 }
@@ -184,9 +187,9 @@ async function chatCompletion(opts: ChatOptions): Promise<string> {
     },
     body: JSON.stringify({
       model: opts.model,
-      messages: [
-        { role: 'system', content: opts.system },
-        { role: 'user', content: opts.user },
+      messages: opts.messages ?? [
+        { role: 'system', content: opts.system ?? '' },
+        { role: 'user', content: opts.user ?? '' },
       ],
       temperature: opts.temperature,
       max_tokens: opts.maxTokens,
@@ -473,6 +476,77 @@ class OpenAICompatibleProvider implements ModelProvider {
 }
 
 // ==========================================
+// Provider 1c: 自托管 STT（OpenAI 兼容 /v1/audio/transcriptions）
+//
+// 环境变量：
+//   STT_BASE_URL  形如 http://127.0.0.1:8001/v1（faster-whisper-server 等）
+//   STT_API_KEY   可选
+//   STT_MODEL     默认 whisper-1
+// ==========================================
+
+class OpenAICompatibleSTTProvider implements ModelProvider {
+  name = 'stt-local';
+
+  private baseUrl(): string {
+    return (process.env.STT_BASE_URL ?? '').replace(/\/+$/, '');
+  }
+
+  private apiKey(): string | undefined {
+    const key = process.env.STT_API_KEY;
+    return key && key.trim() ? key.trim() : undefined;
+  }
+
+  private model(): string {
+    return process.env.STT_MODEL?.trim() || 'whisper-1';
+  }
+
+  isAvailable(): boolean {
+    return this.baseUrl().length > 0;
+  }
+
+  async transcribeAudio(req: TranscribeRequest): Promise<TranscribeResponse> {
+    const binaryStr = atob(req.audioBase64);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    const mimeType = req.mimeType || 'audio/webm';
+    const extMap: Record<string, string> = {
+      'audio/webm': 'webm', 'audio/mp4': 'mp4', 'audio/mpeg': 'mp3',
+      'audio/wav': 'wav', 'audio/ogg': 'ogg', 'audio/flac': 'flac',
+    };
+    const ext = extMap[mimeType] || 'webm';
+
+    const formData = new FormData();
+    formData.append('file', new Blob([bytes], { type: mimeType }), `audio.${ext}`);
+    formData.append('model', this.model());
+    if (req.language) formData.append('language', req.language);
+    formData.append('response_format', 'json');
+
+    const response = await fetch(`${this.baseUrl()}/audio/transcriptions`, {
+      method: 'POST',
+      headers: this.apiKey() ? { Authorization: `Bearer ${this.apiKey()}` } : {},
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error(`STT error ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const result = await response.json();
+    return {
+      text: result.text || '',
+      language: result.language || req.language || 'unknown',
+      duration: result.duration,
+      provider: 'stt-local',
+      cached: false,
+    };
+  }
+}
+
+// ==========================================
 // Provider 2: Template Fallback
 // ==========================================
 
@@ -619,9 +693,10 @@ class AIModelManagerImpl {
   constructor() {
     // Order matters: first available provider is used
     this.providers = [
-      new OpenAICompatibleProvider(), // 本地/局域网推理优先（vLLM / NVIDIA Sync）
-      new OpenAIProvider(),           // 云端 OpenAI
-      new TemplateFallbackProvider(), // 零成本兜底
+      new OpenAICompatibleSTTProvider(), // 自托管 ASR（OpenAI 兼容）
+      new OpenAICompatibleProvider(),    // 本地/局域网推理优先（vLLM / NVIDIA Sync）
+      new OpenAIProvider(),              // 云端 OpenAI
+      new TemplateFallbackProvider(),    // 零成本兜底
     ];
     console.log('[AIModelManager] Initialized with providers:', this.providers.map(p => p.name));
   }
@@ -629,6 +704,7 @@ class AIModelManagerImpl {
   /** Check which provider will be used */
   getActiveProvider(): string {
     for (const p of this.providers) {
+      if (!p.generateLyrics) continue;
       if (p.isAvailable()) return p.name;
     }
     return 'none';
@@ -659,6 +735,34 @@ class AIModelManagerImpl {
     return null;
   }
 
+  /**
+   * 通用多轮对话（AI 助手）。
+   * 未配置任何对话模型时抛出 code=NO_MODEL，由路由层转 503。
+   */
+  async chat(
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+    opts: { temperature?: number; maxTokens?: number } = {},
+  ): Promise<{ content: string; provider: string }> {
+    const cfg = await this.chatConfig();
+    if (!cfg) {
+      const err: any = new Error('未配置可用的对话模型（VLLM_BASE_URL 或 OPENAI_API_KEY）');
+      err.code = 'NO_MODEL';
+      throw err;
+    }
+
+    const content = await chatCompletion({
+      baseUrl: cfg.baseUrl,
+      apiKey: cfg.apiKey,
+      model: cfg.model,
+      messages,
+      temperature: opts.temperature ?? 0.7,
+      maxTokens: opts.maxTokens ?? 800,
+    });
+
+    await this.recordUsage(cfg.provider);
+    return { content, provider: cfg.provider };
+  }
+
   /** Generate lyrics with automatic fallback + caching */
   async generateLyrics(req: LyricsRequest): Promise<LyricsResponse> {
     const cacheKey = `ai:lyrics:${req.theme}:${(req.keywords || []).sort().join(',')}:${req.lines || 8}:${req.language || 'en'}`;
@@ -679,6 +783,7 @@ class AIModelManagerImpl {
         console.log(`[AIModelManager] Provider '${provider.name}' not available, skipping`);
         continue;
       }
+      if (!provider.generateLyrics) continue;
 
       try {
         console.log(`[AIModelManager] Attempting lyrics generation with '${provider.name}'`);
@@ -781,8 +886,8 @@ class AIModelManagerImpl {
     }
 
     // Record usage (Whisper is ~$0.006/min, estimate 15s avg)
-    if (result.provider === 'openai') {
-      await this.recordUsage('openai');
+    if (result.provider !== 'template') {
+      await this.recordUsage(result.provider);
     }
 
     return result;

@@ -27,9 +27,11 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
+import { createRequire } from "node:module";
 import { apiError, ERROR_CODES } from "./api-contract.ts";
 import { closePool } from "./db.ts";
 import { closeKvPool } from "./kv_store_pg.ts";
+import { recordRequest, renderMetrics } from "./metrics.ts";
 
 // §2.2 Route modules
 import { registerAuthRoutes } from "./routes-auth.ts";
@@ -48,6 +50,8 @@ import { registerPkiRoutes } from "./routes-pki.ts";
 import { registerMarketRoutes } from "./routes-market.ts";
 import { registerDiagnosticsRoutes } from "./routes-diagnostics.ts";
 import { registerUploadRoutes } from "./routes-upload.ts";
+import { registerPlaylistRoutes } from "./routes-playlist.ts";
+import { registerFollowRoutes } from "./routes-follow.ts";
 
 const app = new Hono();
 
@@ -61,6 +65,12 @@ app.onError((err, c) => {
 });
 
 app.use('*', logger(console.log));
+
+// 指标采集（在响应后计数）
+app.use('*', async (c, next) => {
+  await next();
+  recordRequest(c.req.method, c.res.status);
+});
 
 // §8.5 — CORS configuration (domain whitelist for security hardening)
 app.use(
@@ -101,6 +111,12 @@ app.get('/health', (c) =>
   }),
 );
 
+// Prometheus 指标（供抓取；不含业务敏感数据）
+app.get('/metrics', (c) => {
+  c.header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  return c.body(renderMetrics());
+});
+
 // ==========================================
 // Register all route modules
 // ==========================================
@@ -120,6 +136,8 @@ registerPkiRoutes(app);
 registerMarketRoutes(app);
 registerDiagnosticsRoutes(app);
 registerUploadRoutes(app);
+registerPlaylistRoutes(app);
+registerFollowRoutes(app);
 
 // ==========================================
 // Node 20+ 运行时入口（@hono/node-server）
@@ -131,6 +149,66 @@ const server = serve({ fetch: app.fetch, port, hostname }, (info) => {
   console.log(`[Server] YYC³ MusAI API listening on http://${info.address}:${info.port}`);
 });
 
+// ==========================================
+// WebSocket 实时通道（/ws/live）：实时弹幕与在线房间
+// 依赖 ws；缺失时自动降级（HTTP 轮询仍可用）
+// ==========================================
+let wssRef: any = null;
+try {
+  const require = createRequire(import.meta.url);
+  const { WebSocketServer } = require('ws');
+  const wss = new WebSocketServer({ server: server as any, path: '/ws/live' });
+  const rooms = new Map<string, Set<any>>();
+  wssRef = wss;
+
+  wss.on('connection', (socket: any) => {
+    let room = 'lobby';
+    const join = (next: string) => {
+      rooms.get(room)?.delete(socket);
+      room = next.slice(0, 64) || 'lobby';
+      if (!rooms.has(room)) rooms.set(room, new Set());
+      rooms.get(room)!.add(socket);
+    };
+    join(room);
+    socket.send(JSON.stringify({ type: 'welcome', room }));
+
+    socket.on('message', (raw: any) => {
+      let msg: any;
+      try { msg = JSON.parse(String(raw)); } catch { return; }
+
+      if (msg.type === 'join' && typeof msg.room === 'string') {
+        join(msg.room);
+        socket.send(JSON.stringify({ type: 'joined', room }));
+        return;
+      }
+      if (msg.type === 'ping') {
+        socket.send(JSON.stringify({ type: 'pong', ts: Date.now() }));
+        return;
+      }
+      if (msg.type === 'danmaku') {
+        const payload = JSON.stringify({
+          type: 'danmaku',
+          room,
+          text: String(msg.text ?? '').slice(0, 200),
+          user: msg.user ?? null,
+          ts: Date.now(),
+        });
+        for (const peer of rooms.get(room) ?? []) {
+          if (peer.readyState === 1) peer.send(payload);
+        }
+      }
+    });
+
+    socket.on('close', () => {
+      rooms.get(room)?.delete(socket);
+    });
+  });
+
+  console.log('[WS] WebSocket server ready at /ws/live');
+} catch (error) {
+  console.warn('[WS] disabled (ws 未安装):', error instanceof Error ? error.message : error);
+}
+
 // 优雅停机：停止接收新请求 → 关闭连接池 → 退出（10s 兜底强退）
 let shuttingDown = false;
 async function shutdown(signal: string): Promise<void> {
@@ -138,6 +216,7 @@ async function shutdown(signal: string): Promise<void> {
   shuttingDown = true;
   console.log(`[Server] ${signal} received, shutting down...`);
   setTimeout(() => process.exit(1), 10_000).unref();
+  wssRef?.close();
   server.close();
   await Promise.allSettled([closePool(), closeKvPool()]);
   console.log('[Server] Shutdown complete');

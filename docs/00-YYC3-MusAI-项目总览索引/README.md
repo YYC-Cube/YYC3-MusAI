@@ -1,15 +1,29 @@
 ---
-@file: README.md
-@description: YYC3-MusAI 00-YYC3-MusAI-项目总览索引 目录文档索引
-@author: YYC³
-@version: v2.0.0
-@created: 2026-02-25
-@updated: 2026-02-25
-@status: published
-@tags: [00-YYC3-MusAI-项目总览索引],[文档索引]
+file: README.md
+title: 00-YYC3-MusAI-项目总览索引
+description: 00-YYC3-MusAI-项目总览索引（由 docs 根目录迁移并按团队标规规范化）
+author: YYC³ Team <admin@0379.email>
+version: v1.0.0
+created: 2026-11-18
+updated: 2026-11-18
+status: published
+tags: [文档迁移, 项目总览索引]
+category: 项目总览索引
+language: zh-CN
+audience: team
+complexity: medium
 ---
 
 # 00-YYC3-MusAI-项目总览索引
+
+> **_YYC³_**（YanYuCloudCube™ · 注册商标）
+> _言启象限 | 语枢未来_
+> **_Words Initiate Quadrants, Language Serves as Core for Future_**
+> _万象归元于云枢 | 深栈智启新纪元_
+> **_All things converge in cloud pivot; Deep stacks ignite a new era of intelligence_**
+
+---
+
 
 ## 概述
 
@@ -40,3 +54,11 @@ YYC³（YanYuCloudCube）Music-player 是一个现代化的音乐创作与分享
 > 「***<admin@0379.email>***」
 > 「***Words Initiate Quadrants, Language Serves as Core for the Future***」
 > 「***All things converge in cloud pivot; Deep stacks ignite a new era of intelligence***」
+
+---
+
+## 变更历史
+
+| 版本 | 日期 | 变更人 | 变更说明 |
+|------|------|--------|----------|
+| v1.0.0 | 2026-11-18 | YYC³ Team | 从 docs 根目录迁移至阶段目录，按团队标规统一命名与标头标尾 |

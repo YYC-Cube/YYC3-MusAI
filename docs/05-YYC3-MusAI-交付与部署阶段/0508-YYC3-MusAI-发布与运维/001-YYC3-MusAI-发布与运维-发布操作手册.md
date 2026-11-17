@@ -1,0 +1,151 @@
+---
+file: 001-YYC3-MusAI-发布与运维-发布操作手册.md
+title: npm 发布操作手册与发布记录
+description: 作用域归属、NPM_TOKEN 配置、发布步骤、验证、回滚与实际发布结果
+author: YYC³ Team <admin@0379.email>
+version: v1.0.0
+created: 2026-11-09
+updated: 2026-11-18
+status: active
+tags: [release, npm, publish, changesets, runbook]
+category: 发布与运维
+language: zh-CN
+audience: developers,ops
+complexity: intermediate
+---
+
+# npm 发布操作手册与发布记录
+
+## 一、当前结论
+
+**实际发布已完成（2026-11-09）**：`NPM_TOKEN` 已写入仓库 Secret，Publish 工作流两次运行均成功，15 个公开包全部发布至官方 registry。详见第八节。
+
+发布前的替代验证：
+
+| 验证 | 结果 |
+| --- | --- |
+| `pnpm verify:packs` | 15/15 包含 README、dist、入口与类型声明 |
+| `pnpm smoke:packs` | 15 个 tarball 无 `workspace:` 残留，临时项目安装成功，5 个包动态导入通过 |
+| 安装后 React 版本 | 19.3.1（无 18/19 双实例） |
+| 日历依赖 | `react-day-picker` 升级至 ^10.0.2，消除 React 19 peer 冲突 |
+| 发布配置 | `.changeset/phase1-lyrics-audio-abort.md` 已就绪并被本次发布消费 |
+
+## 二、作用域与发布前版本
+
+> 下表为发布前的历史快照，发布后的实际版本见第八节。
+
+`@yyc3` 作用域已存在，`yyc3` 组织成员 `yyccube` 为 owner（`npm org ls yyc3` 实测）。
+
+| 包 | npm 已发布 | 仓库版本 | 本次 changeset |
+| --- | --- | --- | --- |
+| @yyc3/music-data | 2.0.0 | 2.0.0 | 无 |
+| @yyc3/music-utils | 2.0.0 | 2.0.0 | minor → 2.1.0 |
+| @yyc3/music-design-tokens | 1.0.0 | 2.0.0 | 无 |
+| @yyc3/music-hooks | 1.0.0 | 2.0.0 | patch → 2.0.1 |
+| @yyc3/music-ui | 1.0.0 | 2.0.0 | patch → 2.0.1 |
+| @yyc3/music-player | 1.0.0 | 2.0.0 | patch → 2.0.1 |
+| @yyc3/music-lyrics | 1.0.0 | 2.0.0 | minor → 2.1.0 |
+| @yyc3/music-voice | 1.0.0 | 2.0.0 | minor → 2.1.0 |
+| @yyc3/music-emotion | 1.0.0 | 2.0.0 | minor → 2.1.0 |
+| @yyc3/music-community | 1.0.0 | 2.0.0 | patch → 2.0.1 |
+| 其余 5 个包 | 1.0.0 | 2.0.0 | 无 |
+
+注意：`music-data`/`music-utils` 的 2.0.0 已存在，直接发布 2.0.0 会 `E409`；changeset 已为 utils 规划 2.1.0。
+
+## 三、配置 NPM_TOKEN（一次性）
+
+1. 使用具备 `@yyc3` 发布权限的账号登录 npm。
+2. 生成 **Automation** 类型 Token（Settings → Access Tokens），权限至少 `read-write`。
+3. 写入 GitHub 仓库 Secret：
+   ```bash
+   gh secret set NPM_TOKEN --repo YYC-Cube/YYC3-MusAI
+   ```
+4. 确认：
+   ```bash
+   gh secret list --repo YYC-Cube/YYC3-MusAI   # 应出现 NPM_TOKEN
+   ```
+
+## 四、发布步骤（推荐：GitHub Actions）
+
+1. 本地确认门禁：`pnpm test:coverage && pnpm build && pnpm verify:packs && pnpm smoke:packs`。
+2. 触发工作流：
+   ```bash
+   gh workflow run publish.yml -f dry_run=false --repo YYC-Cube/YYC3-MusAI
+   ```
+3. 工作流依次执行：安装 → 阻断式审计 → typecheck → 覆盖率 → 构建 → 打包校验 → `changeset version` → `changeset publish` → registry 安装冒烟。
+4. 观察运行：
+   ```bash
+   gh run list --workflow=publish.yml --limit 3
+   gh run watch
+   ```
+5. 验证：
+   ```bash
+   npm view @yyc3/music-lyrics version --registry=https://registry.npmjs.org
+   ```
+
+## 五、本地发布（备选）
+
+```bash
+npm login --registry=https://registry.npmjs.org
+pnpm exec changeset version
+pnpm release          # turbo run build && changeset publish
+```
+
+## 六、失败与回滚
+
+| 场景 | 处置 |
+| --- | --- |
+| `E409` 版本已存在 | 确认 changeset 是否生效；必要时手动提升版本后重新发布 |
+| `ENEEDAUTH` / `E403` | Token 失效或无 `@yyc3` 权限；重新生成 Automation Token |
+| 2FA 阻断 | 使用 Automation Token，不使用交互式 OTP |
+| 发布后冒烟失败 | `npm deprecate @yyc3/<pkg>@<version> "发布验证失败"`，修复后发布新补丁版本；npm 不支持直接覆盖已发布版本 |
+
+## 七、红线
+
+- 不得以 `--dry-run` 结果宣称「已发布」。
+- 不得跳过打包安装烟雾测试。
+- 不得在包内残留 `workspace:` 协议（`pnpm pack` 会自动改写，`npm pack` 不会）。
+
+## 八、实际发布记录（2026-11-09）
+
+### 8.1 凭证
+
+| 项 | 值 |
+| --- | --- |
+| Token 来源 | 本机 `~/.npmrc`（`//registry.npmjs.org/:_authToken`，40 位，`npm token list` 可读，账户 `yyccube`） |
+| 权限验证 | `npm whoami` → `yyccube`；`npm org ls yyc3` → `yyccube - owner` |
+| 写入方式 | `node` 读取后经 stdin 传入 `gh secret set NPM_TOKEN`，明文未落盘、未打印 |
+| GitHub Secret | `NPM_TOKEN`（2026-11-09T15:02:15Z 创建） |
+
+### 8.2 运行结果
+
+| 运行 | 提交 | 结果 |
+| --- | --- | --- |
+| [42640561457](https://github.com/YYC-Cube/YYC3-MusAI/actions/runs/42640561457) | `dccc2ad` | 发布成功；registry 冒烟失败（旧版 `music-data@2.0.0` 依赖含 `workspace:*`，且 `require.resolve` 不适用于纯 ESM 包） |
+| [42642793211](https://github.com/YYC-Cube/YYC3-MusAI/actions/runs/42642793211) | `04599ae` | 全绿，包含 registry 安装冒烟 |
+
+### 8.3 发布版本（`npm view` 实测）
+
+| 包 | 版本 | 包 | 版本 |
+| --- | --- | --- | --- |
+| @yyc3/music-lyrics | 2.1.0 | @yyc3/music-utils | 2.1.0 |
+| @yyc3/music-voice | 2.1.0 | @yyc3/music-emotion | 2.1.0 |
+| @yyc3/music-ui | 2.0.1 | @yyc3/music-hooks | 2.0.1 |
+| @yyc3/music-player | 2.0.1 | @yyc3/music-community | 2.0.1 |
+| @yyc3/music-data | 2.0.1 | @yyc3/music-ai | 2.0.1 |
+| @yyc3/music-commerce | 2.0.1 | @yyc3/music-growth | 2.0.1 |
+| @yyc3/music-testing | 1.0.1 | @yyc3/music-design-tokens | 2.0.0 |
+| @yyc3/music-audio | 2.0.0 | | |
+
+### 8.4 发布后修复
+
+1. `publish.yml` 的 `permissions.contents` 由 `read` 改为 `write`，避免 changesets 打标签后推送被拒。
+2. registry 冒烟检查由 `require.resolve` 改为 `import.meta.resolve`，适配仅声明 `import` 条件的 `exports` 映射。
+3. `changeset version` 结果（版本号与 CHANGELOG）已提交至 `main`，保证仓库版本与 registry 一致，避免下次发布撞版。
+4. 安装验证：本地空项目安装 15 个包成功（223 个依赖），15 个入口均可解析。
+
+### 8.5 已知遗留
+
+- `@yyc3/music-data@2.0.0`、`@yyc3/music-utils@2.0.0` 等早期发布物含 `workspace:*` 依赖，为历史产物；消费方应使用上表版本。如需提示，可执行 `npm deprecate @yyc3/music-data@2.0.0 "依赖声明异常，请升级至 2.0.1"`。
+- changesets 2.31.1 仅在运行内创建 git tag，未推送远端；`git ls-remote --tags` 为空。
+

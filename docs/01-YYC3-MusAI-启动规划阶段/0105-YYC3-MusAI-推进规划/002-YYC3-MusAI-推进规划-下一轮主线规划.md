@@ -1,0 +1,357 @@
+---
+file: 002-YYC3-MusAI-推进规划-下一轮主线规划.md
+title: 下一轮主线规划
+description: 三项待批清单（命名映射/数据搬迁/服务端改造）与变量文档更新记录
+author: YYC³ Team <admin@0379.email>
+version: v1.0.0
+created: 2026-11-10
+updated: 2026-11-18
+status: active
+tags: [planning, naming, database, migration, server]
+category: 推进规划
+language: zh-CN
+audience: developers,architects
+complexity: advanced
+---
+
+# 下一轮主线规划
+
+> 本文只做**清单与方案**，除「变量文档更新」外**未执行任何改动**。三项待你逐项批准后按清单施工。
+
+## 〇、本轮决策记录
+
+| 决策 | 结论 | 依据 |
+| --- | --- | --- |
+| `pg_hba` 收紧 | **不做**，风险接受 | 用户明确：全端节点设备仅本人使用，无其他使用者。已在评估文档与记忆中将 R1 从「待整改」改为「已接受」 |
+| 包命名统一 | **已取消** | 用户 2026-11-10 裁定：「不用了，我失误」；现有 `@yyc3/music-*` 保持不动，§1 仅作历史记录 |
+| `musai` schema | 待批准，清单见 §2 | 涉及 33 张表搬迁与权限重划 |
+| 服务端迁移 | 定为下一轮主线，路线见 §3 | 8 文件 / 84 端点 / 305 处 KV 调用 |
+| 变量文档 | **已执行**，见 §4 | `.env.example`、`config/*`、PG 审计文档 |
+
+---
+
+## 一、包命名统一清单（**已取消**，保留作历史记录）
+
+> 2026-11-10 用户裁定：不改名，现有 `@yyc3/music-*` 保持不动。以下内容仅供追溯，不执行。
+
+### 1.1 现状问题
+
+| 问题 | 证据 |
+| --- | --- |
+| 16 个包名以 `music-` 为前缀 | `@yyc3/music-ai` … `@yyc3/music-voice` |
+| 与正仓 `@yyc3/music`（单包）命名空间撞车 | Component-Library `packages/music` 已占用 `@yyc3/music` |
+| 主应用名重复品牌 | `@yyc3/yyc3-musai`（scope 里已含 yyc3） |
+| 文档站名与域无关 | `@yyc3/component-docs` |
+
+命名规范（[YYC3-团队通用-命名规范.md](file:///Users/yanyu/YYC-Cube/personal/YYC3-MusAI/docs/YYC3-%E5%9B%A2%E9%98%9F%E9%80%9A%E7%94%A8-%E6%A0%87%E8%A7%84%E6%96%87%E6%A1%A3/YYC3-%E5%9B%A2%E9%98%9F%E9%80%9A%E7%94%A8-%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83.md#L194-L206)）只规定「包名用 ASCII `@yyc3/*`」，**未规定域前缀**，因此需要本次裁定补齐。
+
+### 1.2 三个方案
+
+| 方案 | 形态 | 依据 | 代价 | 风险 |
+| --- | --- | --- | --- | --- |
+| **A（推荐）** | `@yyc3/musai-*` | 仓库即域，`musai` 为本仓唯一前缀；与正仓 `@yyc3/music` 彻底区分；后续 `video-*` 可平行扩展 | 948 处引用 + 16 目录重命名 | 机械改动，靠 typecheck/test/build 兜底 |
+| B（最小） | 保留 `music-*`，仅改主应用为 `@yyc3/musai-app` | 改动最小 | 与正仓命名空间仍混淆 | 低 |
+| C（不改） | 维持现状 | 零成本 | 域边界与正仓无法从包名分辨 | 长期混淆 |
+
+**推荐 A 的理由**：本仓已被裁定为「YYC³ 音视频唯一集中仓」，包名必须能独立表达域归属；`music-*` 是正仓旧命名空间，继续沿用会让后续「CL 冻结、MusAI 接管」的裁决在包名层面无法体现。
+**反方意见**：A 有 948 处机械改动，若近期无发布计划，收益偏"整洁"而非"功能"；B 可用一行改动拿到 60% 收益。若你更看重当轮风险最小，选 B 也成立。
+
+### 1.3 A 方案映射表
+
+| 现包名 | 新包名 | 现目录 | 新目录 |
+| --- | --- | --- | --- |
+| `@yyc3/music-ai` | `@yyc3/musai-ai` | `packages/music-ai` | `packages/musai-ai` |
+| `@yyc3/music-audio` | `@yyc3/musai-audio` | `packages/music-audio` | `packages/musai-audio` |
+| `@yyc3/music-commerce` | `@yyc3/musai-commerce` | `packages/music-commerce` | `packages/musai-commerce` |
+| `@yyc3/music-community` | `@yyc3/musai-community` | `packages/music-community` | `packages/musai-community` |
+| `@yyc3/music-data` | `@yyc3/musai-data` | `packages/music-data` | `packages/musai-data` |
+| `@yyc3/music-design-tokens` | `@yyc3/musai-design-tokens` | `packages/music-design-tokens` | `packages/musai-design-tokens` |
+| `@yyc3/music-emotion` | `@yyc3/musai-emotion` | `packages/music-emotion` | `packages/musai-emotion` |
+| `@yyc3/music-growth` | `@yyc3/musai-growth` | `packages/music-growth` | `packages/musai-growth` |
+| `@yyc3/music-hooks` | `@yyc3/musai-hooks` | `packages/music-hooks` | `packages/musai-hooks` |
+| `@yyc3/music-lyrics` | `@yyc3/musai-lyrics` | `packages/music-lyrics` | `packages/musai-lyrics` |
+| `@yyc3/music-player` | `@yyc3/musai-player` | `packages/music-player` | `packages/musai-player` |
+| `@yyc3/music-server` | `@yyc3/musai-server` | `packages/music-server` | `packages/musai-server` |
+| `@yyc3/music-testing` | `@yyc3/musai-testing` | `packages/music-testing` | `packages/musai-testing` |
+| `@yyc3/music-ui` | `@yyc3/musai-ui` | `packages/music-ui` | `packages/musai-ui` |
+| `@yyc3/music-utils` | `@yyc3/musai-utils` | `packages/music-utils` | `packages/musai-utils` |
+| `@yyc3/music-voice` | `@yyc3/musai-voice` | `packages/music-voice` | `packages/musai-voice` |
+| `@yyc3/yyc3-musai` | `@yyc3/musai-app` | `apps/yyc3-musai` | `apps/musai-app` |
+| `@yyc3/component-docs` | `@yyc3/musai-docs` | `apps/component-docs` | `apps/musai-docs` |
+
+> 版本号保持不变，全部走 `minor` changeset（仅改名，无 API 变更）。
+
+### 1.4 影响面（实测）
+
+| 位置 | 数量 |
+| --- | --- |
+| `packages/*/package.json` + `apps/*/package.json` | 18 个文件 |
+| `.ts` / `.tsx` 引用 | 102 个文件 / 316 处 |
+| 根 `package.json`、`turbo.json`、`scripts/*.mjs`、`.github/workflows/*.yml` | 4 个文件 |
+| `registry.json` | 321 处 |
+| Markdown 文档 | 47 个文件 |
+| 目录重命名 | 18 个 |
+
+### 1.5 施工步骤（批准后执行）
+
+```bash
+# 1) 基线
+pnpm install && pnpm typecheck && pnpm test && pnpm build
+
+# 2) 目录重命名（git mv 保留历史）
+git mv packages/music-ai packages/musai-ai   # ×16
+git mv apps/yyc3-musai apps/musai-app
+git mv apps/component-docs apps/musai-docs
+
+# 3) 全量替换（按最长匹配优先，避免 music-server 误伤）
+#    @yyc3/music-design-tokens → @yyc3/musai-design-tokens
+#    @yyc3/music-*             → @yyc3/musai-*
+#    @yyc3/yyc3-musai          → @yyc3/musai-app
+#    @yyc3/component-docs      → @yyc3/musai-docs
+
+# 4) 重建注册表与锁文件
+pnpm registry:build && pnpm install --lockfile-only
+
+# 5) 门禁
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm verify:packs
+env -u CI pnpm e2e
+```
+
+**终止条件（任一不满足即回滚）**：typecheck 17/17、test 1488 例、build 全绿、E2E 13/13、`verify:packs` 15/15。
+
+**回滚**：`git revert` 单笔提交即可（一次提交完成，不拆分）。
+
+---
+
+## 二、`musai` Schema 迁移清单（待批准）
+
+### 2.1 目标
+
+`yyc3_music` 内**一域一 schema**：MusAI 独占 `musai`；`public` 冻结为只读历史；`m98` 与平台底座（`core/ai/workflow/audit/monitor/extension`）不动。
+
+### 2.2 搬迁清单（public → musai，33 张表）
+
+**A 组 · 有数据，必须搬（16 张 / 合计 851 行）**
+
+| 表 | 行数 | 备注 |
+| --- | --- | --- |
+| `style_analysis` | 308 | 无来源脚本，见 §2.5 决策点 D1 |
+| `musics` | 165 | 核心曲库 |
+| `scan_staging` | 155 | 导入暂存，见 D1 |
+| `scan_staging2` | 155 | 重复暂存表，见 D1 |
+| `albums` | 14 | |
+| `theme_templates` | 11 | |
+| `playlist_musics` | 11 | |
+| `star_power_rules` | 10 | |
+| `achievements` | 6 | |
+| `playlists` | 3 | |
+| `users` | 3 | 与 `core.users` 双体系，见 D2 |
+| `user_star_power` | 3 | |
+| `comments` | 2 | |
+| `play_history` | 2 | |
+| `user_preferences` | 2 | |
+| `checkins` | 1 | |
+
+**B 组 · 空表，结构搬迁（17 张）**
+
+`ai_works` `favorite_items` `favorites` `follows` `likes` `messages` `notifications` `playlist_collaborators` `ranking_data` `shares` `spacetime_capsules` `star_power_transactions` `user_achievement_stats` `user_achievements` `user_social` `user_unlocked_themes` `voice_files`
+
+> 实际清单以 `pg_tables` 导出为准，施工前生成 CSV 附在本文末尾。
+
+### 2.3 角色与权限
+
+```sql
+-- 三档角色，应用永不使用 owner 连接
+CREATE ROLE musai_owner   LOGIN;                 -- DDL / 迁移
+CREATE ROLE musai_app_rw  LOGIN;                 -- 应用读写
+CREATE ROLE musai_app_ro  LOGIN;                 -- 报表只读
+
+CREATE SCHEMA musai AUTHORIZATION musai_owner;
+
+GRANT USAGE ON SCHEMA musai TO musai_app_rw, musai_app_ro;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA musai TO musai_app_rw;
+GRANT SELECT ON ALL TABLES IN SCHEMA musai TO musai_app_ro;
+ALTER DEFAULT PRIVILEGES FOR ROLE musai_owner IN SCHEMA musai
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO musai_app_rw;
+ALTER DEFAULT PRIVILEGES FOR ROLE musai_owner IN SCHEMA musai
+  GRANT SELECT ON TABLES TO musai_app_ro;
+```
+
+连接串固定 `?options=-csearch_path%3Dmusai,public`，禁止依赖默认。
+
+### 2.4 施工步骤（推荐 `SET SCHEMA`，不复制数据）
+
+| 步 | 动作 | 验证 |
+| --- | --- | --- |
+| M0 | `pg_dump -Fc yyc3_music` 全库 + `--schema-only` 结构快照存 `data/backup/` | 备份文件 hash + 可 `pg_restore -l` 列表 |
+| M1 | 按 §2.3 建角色与 schema | `\dn` 可见 `musai` |
+| M2 | 逐表 `ALTER TABLE public.x SET SCHEMA musai`（先 A 组后 B 组） | 每表迁移前后 `count(*)` 相等 |
+| M3 | 同步迁移序列：`ALTER SEQUENCE public.x_id_seq SET SCHEMA musai` | `pg_depend` 无残留 cross-schema 依赖 |
+| M4 | 建 `musai.schema_migrations`（Prisma Migrate 接管），把 `database/d_music_postgres.sql` 作为 baseline 记录 | 迁移表有 baseline 行 |
+| M5 | 冻结 public：`REVOKE CREATE ON SCHEMA public FROM PUBLIC`；`ALTER SCHEMA public OWNER TO musai_owner`（仅保留只读） | 应用以 `musai_app_rw` 连接，写 public 报权限错 |
+| M6 | 应用切 `search_path=musai,public`，跑全链路回归 | 1488 例 + E2E 13 条 |
+
+**为什么用 `SET SCHEMA` 而不是建新表 + 复制**：33 张表全部自包含（零跨 schema 外键），`SET SCHEMA` 在同一实例内原子移动，保留数据、索引、序列、触发器，避免"复制—校验—切流"三段式带来的双写窗口。
+**代价**：M2–M4 需在维护窗口内完成（预计分钟级），期间写入会失败。
+**回滚**：逆向 `SET SCHEMA public`，脚本随 M0 一并生成并演练一次。
+
+### 2.5 三个决策点（需你拍板）
+
+| 编号 | 议题 | 选项 | 推荐 |
+| --- | --- | --- | --- |
+| D1 | `scan_staging` / `scan_staging2` / `style_analysis` 三张无来源表 | ① 一并搬入 musai ② 搬到 `musai_legacy` 只读归档 ③ 直接丢弃 | **②**：无迁移脚本支撑，保留可追溯但不进入正式模型 |
+| D2 | `public.users`(3 行) 与 `core.users` 双体系 | ① 保留双表 ② 统一到 `core.users` ③ 先只做隔离 | **②的目标，但拆两步**：见 §2.6 实测 |
+| D3 | 是否同时纠正平台底座的 RLS 缺口（4/85） | ① 本轮只做 musai ② 同步给 musai 全表启用 RLS + 按 `app.current_user_id` 策略 | **①**：先隔离，RLS 单独一轮，避免一次改两层 |
+
+### 2.6 D2 实测与结论（2026-11-10）
+
+| 判据 | 实测 | 含义 |
+| --- | --- | --- |
+| `core.users` 行数 | **0** | 从未写入任何真实用户 |
+| `core.users` 累计插入 | `n_tup_ins = 0` | 建库至今零插入，非「被其他项目占用」 |
+| 被引用情况 | 57 条外键来自 `core/ai/workflow/extension` | 平台侧已把它设计成身份中枢 |
+| `public.users` 行数 | 3（`admin` / `creator` / `demo` @yyc3.ai，2026-05-27 种子） | 真正的数据在业务表 |
+
+**结论**：`core.users` 是「设计态身份中枢」，**没有任何其他项目在写它**；因此「统一到 core.users」不存在跨项目冲突风险。
+
+但直接合并仍有三个必须先处理的差异：
+
+| 差异 | 现状 | 处理 |
+| --- | --- | --- |
+| 字段命名 | `nickname`/`avatar`/`role`(varchar)↔`full_name`/`avatar_url`/`core.roles` 关联表 | 写一次性映射脚本，`role` 落 `core.user_roles` |
+| 状态类型 | `public.users.status` 为 varchar，`core.users.status` 为 ENUM | 先确认 ENUM 值域，再映射 |
+| 时间类型 | `public.users` 用 `timestamp`，`core.users` 用 `timestamptz` | 迁移时按 Asia/Shanghai 显式转换 |
+
+**建议**：D2-a 本轮把 3 条种子用户迁入 `core.users`（含角色映射），musai 只保留 `user_id`；D2-b 下一轮补 RLS 与 `core.sessions` 验证。**不迁移则等于平台有身份中枢却长期双源。**
+
+---
+
+## 三、P1 服务端迁移路线（下一轮主线）
+
+### 3.1 现状实测
+
+| 项 | 数值 |
+| --- | --- |
+| 服务端文件 | 8 个使用 `supabase-js`（`index.tsx` `kv_store.tsx` `server-utils.ts` `routes-auth/user/albums/spacetime/diagnostics`） |
+| 端点 | **84 个**（GET 64 / POST 56 / DELETE 3 / PUT 1，含前缀重复计数） |
+| 存储调用 | `kv.get` 179 次 / `kv.set` 120 次 / `kv.del` 6 次 / `kv.getByPrefix` 2 次 |
+| KV 命名空间 | `user:`51 `album:`28 `song:`25 `media:`11 `pki:`10 `market:`4 `lyrics:`4 `copyright:`4 `challenges:`3 `work:`2 `profile:`2 `prefs:`2 等 |
+| 运行时 | Deno + Hono（`npm:hono`），部署单元 `make-server-f626b673` |
+| 客户端 | 已本地优先；`packages/music-utils/src/supabase.ts` 仍存在 |
+
+### 3.2 关键判断：不能一步到位做关系建模
+
+305 处 KV 调用、15+ 命名空间，如果直接改成 Prisma 关系表，等于**在没有领域模型的前提下重写整个后端**，必然失控。
+
+**分两步走**：
+
+**P1a · 存储替换（不改路由，1–2 天量级）**
+
+| 动作 | 说明 |
+| --- | --- |
+| 新增 `musai.kv_store(key text PK, value jsonb, namespace text, updated_at timestamptz)` + `(namespace, key)` 索引 | 承接现有 KV 语义 |
+| 新增 `packages/musai-server/src/kv_store_pg.ts` | 用 `postgres`（Deno npm:）实现 `get/set/del/getByPrefix`，签名与 `kv_store.tsx` 完全一致 |
+| 只改 `server-utils.ts` 的 `kv` 导入 | 路由文件 0 改动 |
+| 保留 `kv_store.tsx` 作为回退开关（环境变量 `KV_DRIVER=pg\|supabase`） | 可灰度、可回滚 |
+
+收益：8 个文件 → 2 个文件真正改；84 个端点行为不变；E2E 可回归。
+代价：暂时保留 JSONB 大表，查询性能与关系约束仍缺。
+风险：`getByPrefix` 语义（按前缀扫描）需走 `LIKE` + 索引，热点前缀需监控。
+
+**P1b · 领域建表（按域推进，每域一个 PR）**
+
+优先级按 KV 调用量：`user`(51) → `album`(28) → `song`(25) → `media`(11) → `pki`(10) → 其余。
+每域：Prisma model → 迁移 → 双写/回填 → 读切换 → KV 清理。**不做大爆炸切换。**
+
+### 3.3 目标形态
+
+```text
+apps/musai-app (Vite)  ──REST/JSON──>  musai-server (Hono)
+                                          ├─ Prisma Client
+                                          └─ PostgreSQL 15 (schema: musai)
+                                               └─ Redis（会话/限流/热点缓存）
+```
+
+- 运行时二选一：继续 Deno（改动最小）或 Node 20（与 Prisma 生态最顺）。**推荐 Node**：Prisma 在 Deno 下需 `--unstable` 或 edge client，稳定性和 CI 成本都更高。
+- 迁移期 `KV_DRIVER` 双驱并存；迁移完成后删除 Supabase 依赖与 `supabase/functions/` 目录。
+
+### 3.4 交付物
+
+| 编号 | 交付物 | 验收 |
+| --- | --- | --- |
+| P1-1 | `musai.schema` Prisma baseline（33 表 + kv_store） | `prisma migrate dev` 可重放 |
+| P1-2 | `kv_store_pg.ts` + 双驱开关 | 现有 Deno 测试全过 |
+| P1-3 | REST 契约文档（84 端点，统一响应/错误码/Zod） | 与 `config/API_Local.md` 逐条对齐 |
+| P1-4 | 客户端 `supabase.ts` 下线，改走 `apiFetch` | 本地模式与远端模式均可用 |
+| P1-5 | 部署：`musai-server` 上 yyc3-45，PM2/systemd + 健康检查 + 回滚脚本 | `/health` 200，滚动回滚演练通过 |
+
+### 3.5 运行时选型：Deno 还是 Node 20（技术分析）
+
+| 维度 | 继续 Deno | 切 Node 20 | 权重 |
+| --- | --- | --- | --- |
+| Prisma 支持 | 需 `--unstable` 或 edge client（`@prisma/adapter-pg`）；`prisma generate` 产物在 Deno 需额外适配 | 官方一等公民，`prisma migrate` / `generate` / studio 全可用 | 🔴 决定性 |
+| 现有资产 | 22 个服务端文件 + 6 个 `test-deno` 文件零改动 | 需替换 `Deno.env.get` → `process.env`、`Deno.serve` → `@hono/node-server`、`npm:` 前缀 → 普通 import | 🟡 一次性 |
+| CI 成本 | 已接 `denoland/setup-deno`，覆盖率脚本已跑通 | 复用现有 Node 矩阵，减少一套工具链 | 🟢 Node 略优 |
+| 团队栈一致性 | 全仓其余 16 包均为 Node 工具链 | 与 monorepo 统一，`turbo` 缓存可复用 | 🟢 Node 优 |
+| 生态/排障 | Deno 生态小，第三方库兼容需试 | 主流 | 🟢 Node 优 |
+| 冷启动/部署 | Deno 单文件部署轻 | Node 需构建或 tsx 运行 | 🟢 Deno 略优 |
+
+**结论：选 Node 20。**
+决定性理由：P1 的核心交付是 **Prisma + PG15**。Deno 下的 Prisma 仍属非稳定路径，会让"迁移"这件本就有风险的事叠加第二层不确定性；而切 Node 的工作量是一次性的（8 个文件的环境变量与导入语法），且可与 P1a 的存储替换同批完成。
+反方意见：若近期要把服务端部署到 Deno Deploy / 边缘运行时，Deno 才有不可替代的价值；当前部署目标是 yyc3-45 的 Docker，不成立。
+折中方案（若你想零风险试水）：P1a 先在 Deno 完成存储替换并灰度，P1b 再切 Node——但会多一次适配成本，不推荐。
+
+### 3.6 本轮抽取记录（自 CloudPivot / CL 两仓）
+
+| 来源 | 抽取物 | 落点 | 测试 | 结论 |
+| --- | --- | --- | --- | --- |
+| `YYC3-CloudPivot-Intelli-Matrix-apps/apps/yyc3-music` | `library-scanner.ts`（175 行，零依赖） | `packages/music-data/src/libraryScanner.ts` | 14 例 | ✅ 抽取（去掉对 UI 模型的耦合，补去重/统计口径） |
+| 同上 | `ollama-url.ts`（12 行壳 + shared 实现） | `packages/music-utils/src/aiEndpoints.ts` | 8 例 | ✅ 抽取（去 `@yyc3/shared` 依赖，改 `VITE_*` 注入） |
+| 同上 | `crypto-vault.ts`（217 行 AES-GCM） | — | — | ❌ 不抽：密钥派生自设备指纹（含 `screen.colorDepth`、`hardwareConcurrency`），换显示器/浏览器即无法解密；且本仓已有更强的 `music-utils/crypto.ts`（RSA-OAEP + AES-GCM + 密钥备份） |
+| 同上 | `MusicEventBus.ts` / `EmotionMusicBridge.ts` | — | — | ❌ 不抽：全局单例事件总线与单向数据流（Zustand/Context）冲突 |
+| 同上 | MUI / Emotion / CodeMirror 组件（182 个 tsx） | — | — | ❌ 不抽：重型第三方 UI 库，违反 Radix + Tailwind 约束 |
+| `YYC3-Component-Library/packages/music` | 99 个组件 | — | — | ⏸ 暂缓：该包公开面仅 6 文件、386 文件未随迁债；抽取需逐文件判读，按评估文档 S1 分批执行 |
+
+---
+
+## 四、变量文档更新（已执行）
+
+| 文件 | 变更 |
+| --- | --- |
+| `.env.example` | 从「只有 Supabase 两项」重写为完整模板：环境、PG15 主备、Redis、API、JWT、日志；Supabase 降级为 legacy 段并标注废弃 |
+| `config/dmusic_variables.json` | 移除明文口令（`mysql.password`、`jwt.secret` → 环境变量占位符）；`_meta` 更正为 PG15 / `yyc3_music` / `musai` schema；`server.name` 改 `YYC³ MusAI` |
+| `config/API_Local.md` | 头部标注「legacy：Supabase Edge Function 45 条路由」，指向本文 §3 |
+| `data/00-PG15-审计总览.md` | NAS 段更正为 PG 15.15 / 5433 / 热备（`pg_is_in_recovery=t`），补主备复制关系 |
+
+---
+
+## 五、验收自检
+
+| 判据 | 本轮 |
+| --- | --- |
+| 技术栈匹配 | ✅ 未引入新依赖 |
+| 无循环依赖 / 隐式 any | ✅ 未改源码 |
+| 无硬编码密钥 | ⚠️ 发现 `config/dmusic_variables.json` 明文口令，**已脱敏**；git 历史仍留痕，需你决定是否轮换口令 |
+| 部署可落地 | ✅ 方案落在现有节点（45 承载 server，本机/NAS 承载 PG） |
+| 回滚方案 | ✅ schema：逆向 SET SCHEMA；服务端：`KV_DRIVER` 开关；抽取：两文件删除 + changeset 回退 |
+| 测试覆盖 | ✅ 新增 22 例（libraryScanner 14 / aiEndpoints 8），全绿 |
+| 门禁 | ✅ `music-data` + `music-utils` typecheck / lint 6/6 通过 |
+
+---
+
+## 六、待批准项汇总
+
+| # | 事项 | 需要你的回答 |
+| --- | --- | --- |
+| ~~1~~ | ~~包命名~~ | **已取消（用户裁定不改名）** |
+| 2 | `musai` schema | D1 三张无来源表怎么处置（推荐 `musai_legacy` 只读归档） |
+| 3 | `musai` schema | D2 双 users：实测 `core.users` 为 0 行、无其他项目写入 → 是否按 §2.6 两步走 |
+| 4 | `musai` schema | D3 是否本轮同步做 RLS（推荐本轮只做隔离） |
+| 5 | 服务端 | 运行时：技术分析结论 **Node 20**（§3.5）；确认后即按 P1a 开工 |
+| 6 | 安全 | `config/dmusic_variables.json` 的明文口令是否轮换（该文件已跟踪进 git） |
+
+## 变更历史
+
+| 版本 | 日期 | 变更内容 | 作者 |
+| --- | --- | --- | --- |
+| v1.0.0 | 2026-11-10 | 初版：三项清单、变量文档更新记录、待批准项汇总 | YYC³ Team |

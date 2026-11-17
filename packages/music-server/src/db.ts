@@ -70,6 +70,22 @@ async function safeExec(label: string, fn: (client: any) => Promise<void>): Prom
   }
 }
 
+/** 安全写入（返回是否成功）：供审计等需要感知失败并降级的场景使用 */
+export async function safeExecResult(label: string, fn: (client: any) => Promise<void>): Promise<boolean> {
+  if (process.env.DB_DISABLED === "1") return false;
+  let client: any = null;
+  try {
+    client = await getPool().connect();
+    await fn(client);
+    return true;
+  } catch (error) {
+    console.log(`[DB] ${label} skipped: ${error instanceof Error ? error.message : error}`);
+    return false;
+  } finally {
+    client?.release();
+  }
+}
+
 // ==========================================
 // User 域查询（映射 musai 现有关系表，不重复建表）
 // ==========================================

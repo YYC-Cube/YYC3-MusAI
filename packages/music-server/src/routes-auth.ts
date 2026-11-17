@@ -16,6 +16,12 @@ import {
   type AuthedUser,
 } from "./auth.ts";
 import { apiError, ERROR_CODES } from "./api-contract.ts";
+import { recordAudit } from "./audit.ts";
+
+function clientIp(c: any): string | null {
+  const forwarded = c.req.header('x-forwarded-for');
+  return forwarded?.split(',')[0]?.trim() || c.req.header('x-real-ip') || null;
+}
 
 interface SignupBody {
   email: string;
@@ -68,6 +74,8 @@ export function registerAuthRoutes(app: any) {
       await kv.set(`user:${userId}:starpower`, "100");
       await kv.set(`user:${userId}:role`, user.role || "user");
 
+      await recordAudit({ action: 'auth.signup', actorId: userId, ip: clientIp(c), success: true });
+
       return c.json({
         success: true,
         user,
@@ -93,8 +101,16 @@ export function registerAuthRoutes(app: any) {
 
       const result = await loginUser({ email, password });
       if (!result) {
+        await recordAudit({
+          action: 'auth.login',
+          ip: clientIp(c),
+          success: false,
+          detail: { reason: 'invalid_credentials' },
+        });
         return apiError(c, 401, "邮箱或密码错误", undefined, ERROR_CODES.UNAUTHORIZED);
       }
+
+      await recordAudit({ action: 'auth.login', actorId: result.userId, ip: clientIp(c), success: true });
 
       return c.json({
         success: true,

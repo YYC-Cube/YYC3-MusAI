@@ -1,12 +1,17 @@
 ---
-@file: 001-Music-player-项目总览索引-项目总览手册.md
-@description: YYC3-MusAI 项目立项核心依据，明确项目目标、范围、权责与立项审批标准
-@author: YanYuCloudCube Team
-@version: v2.0.0
-@created: 2026-02-25
-@updated: 2026-02-25
-@status: published
-@tags: [项目总览],[项目立项],[权责划分]
+file: 001-Music-player-项目总览索引-项目总览手册.md
+title: 00-YYC3-MusAI-项目总览索引 - 项目总览手册
+description: 00-YYC3-MusAI-项目总览索引 - 项目总览手册（由 docs 根目录迁移并按团队标规规范化）
+author: YYC³ Team <admin@0379.email>
+version: v1.0.0
+created: 2026-11-18
+updated: 2026-11-18
+status: published
+tags: [文档迁移, 项目总览索引]
+category: 项目总览索引
+language: zh-CN
+audience: team
+complexity: medium
 ---
 
 > ***YanYuCloudCube***
@@ -122,3 +127,11 @@ YYC³（YanYuCloudCube）Music-player 是一个现代化的音乐创作与分享
 > 「***All things converge in cloud pivot; Deep stacks ignite a new era of intelligence***」
 
 </div>
+
+---
+
+## 变更历史
+
+| 版本 | 日期 | 变更人 | 变更说明 |
+|------|------|--------|----------|
+| v1.0.0 | 2026-11-18 | YYC³ Team | 从 docs 根目录迁移至阶段目录，按团队标规统一命名与标头标尾 |
