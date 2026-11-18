@@ -1,4 +1,5 @@
 // YYC³ music-community — 社区组件
+export * from './components/AnalyticsDashboard';
 export * from './components/CommunityFeed';
 export * from './components/CommentSystem';
 export * from './components/TimelineComments';

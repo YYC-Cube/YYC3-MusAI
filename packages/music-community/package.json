@@ -15,8 +15,10 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@visx/visx": "^4.0.0",
     "@yyc3/music-data": "workspace:*",
     "@yyc3/music-hooks": "workspace:*",
+    "@yyc3/music-ui": "workspace:*",
     "@yyc3/music-utils": "workspace:*",
     "clsx": "2.1.1",
     "lucide-react": "0.577.0",

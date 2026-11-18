@@ -302,6 +302,8 @@ export interface CommunityActivity {
   songTitle: string;
   detail: string;
   timestamp: number;
+  /** Misskey 风格表情反应：emoji -> 用户 ID 集合（借鉴，不引入 AGPL 代码） */
+  reactions?: Record<string, string[]>;
 }
 
 /** Comment on a song */

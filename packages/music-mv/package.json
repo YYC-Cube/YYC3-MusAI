@@ -1,0 +1,32 @@
+{
+  "name": "@yyc3/music-mv",
+  "version": "0.1.0",
+  "private": true,
+  "description": "YYC³ 音乐 MV 程序化生成包（W4 适用选配）：基于 revideo (Apache-2.0) 的代码驱动视频编辑",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0",
+    "revideo": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.19"
+  }
+}

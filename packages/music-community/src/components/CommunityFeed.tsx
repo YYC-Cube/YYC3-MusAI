@@ -59,10 +59,35 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
+  const [reactionOpen, setReactionOpen] = useState<string | null>(null);
+  const [myReaction, setMyReaction] = useState<string>('');
   const feedRef = useRef<HTMLDivElement>(null);
   const pullStartY = useRef(0);
   const pullActive = useRef(false);
   const { t } = useI18n();
+
+  const REACTION_EMOJIS = ['❤️', '🔥', '😂', '👏', '🎵', '✨'];
+
+  // Misskey 风格表情反应切换
+  const toggleReaction = useCallback(
+    (activityId: string, emoji: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (myReaction === emoji) {
+        setMyReaction('');
+        setReactionOpen(null);
+        return;
+      }
+      setMyReaction(emoji);
+      setReactionOpen(null);
+      // 生产环境应调用 API 持久化反应；此处仅本地乐观更新
+      const activity = activities.find((a) => a.id === activityId);
+      if (!activity) return;
+      const reactions = { ...(activity.reactions ?? {}) };
+      reactions[emoji] = [...(reactions[emoji] ?? []), 'me'];
+      // 注意：此处仅演示，实际需通过 onReactionChange 回调由父层持久化
+    },
+    [activities, myReaction]
+  );
 
   // §9.3 — Incremental rendering for large activity feeds
   const { visibleCount, sentinelRef, hasMore } = useVirtualList(activities.length, {
@@ -361,6 +386,36 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
                                 {formatTimeAgo(activity.timestamp)}
                               </time>
                             </p>
+                            {/* Misskey 风格表情反应（借鉴，不引入 AGPL 代码） */}
+                            <div className="flex items-center gap-1 mt-2">
+                              {REACTION_EMOJIS.map((emoji) => {
+                                const count =
+                                  activity.reactions?.[emoji]?.filter(
+                                    (u) => u !== 'me'
+                                  ).length ?? 0;
+                                const hasMine =
+                                  activity.reactions?.[emoji]?.includes('me') ??
+                                  myReaction === emoji;
+                                return (
+                                  <button
+                                    key={emoji}
+                                    onClick={(e) =>
+                                      toggleReaction(activity.id, emoji, e)
+                                    }
+                                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
+                                      hasMine
+                                        ? 'bg-white/20 text-white border border-white/30'
+                                        : 'bg-white/[0.04] text-white/40 hover:bg-white/10'
+                                    }`}
+                                  >
+                                    <span>{emoji}</span>
+                                    {count > 0 && (
+                                      <span className="text-[10px]">{count}</span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
                       </motion.div>
