@@ -203,3 +203,8 @@ yyc3-musai-dist.tar.gz
 # 学习与研究文档（本地资料，不入库）
 docs/YYC3-全能AI-应用学习/
 docs/YYC3-Muse-AI-应用学习/
+
+# 开源组件库：本地研读副本（不入库）
+docs/开源组件库/*/
+docs/开源组件库/_fetch.log
+docs/开源组件库/_status.log
