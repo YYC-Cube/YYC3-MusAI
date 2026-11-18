@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@yyc3/music-ui';
 import { AudioVisualizer } from './AudioVisualizer';
 import type { Emotion } from '@yyc3/music-hooks';
 import { useI18n } from '@yyc3/music-hooks';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
 
 interface MediaDisplayProps {
   mode: 'audio' | 'video';
@@ -37,6 +39,8 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
   videoUrl,
 }) => {
   const [visualizerSize, setVisualizerSize] = useState(384);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<any>(null);
   const { t } = useI18n();
 
   useEffect(() => {
@@ -48,6 +52,58 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
+
+  // ---------- Video.js 内核（补内核：Video.js 10 + HLS/Range 拖动） ----------
+  useEffect(() => {
+    if (mode !== 'video' || !videoRef.current) return;
+
+    const player: any = videojs(
+      videoRef.current,
+      {
+        fluid: true,
+        responsive: true,
+        controls: true,
+        preload: 'auto',
+        playbackRates: [0.5, 1, 1.5, 2],
+        controlBar: {
+          volumePanel: { inline: false },
+        },
+      },
+      () => {
+        // 设置深色主题色变量，与现有设计一致
+        player.el().style.setProperty('--vjs-color-accent', '#667eea');
+        player.el().style.setProperty('--vjs-control-color', 'rgba(255,255,255,0.8)');
+        player.el().style.setProperty('--vjs-control-hover-bg', 'rgba(255,255,255,0.15)');
+        player.el().style.setProperty('--vjs-control-active-bg', 'rgba(255,255,255,0.25)');
+        player.el().style.setProperty('--vjs-control-disabled-bg', 'rgba(255,255,255,0.05)');
+      }
+    );
+
+    playerRef.current = player;
+
+    if (videoUrl) {
+      player.src({ src: videoUrl, type: 'application/vnd.apple.mpegurl' });
+    }
+    if (isPlaying) {
+      player.play().catch(() => {});
+    }
+
+    return () => {
+      player.dispose();
+      playerRef.current = undefined;
+    };
+  }, [mode, videoUrl, isPlaying]);
+
+  // 当 isPlaying 变化时控制播放/暂停
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (isPlaying) {
+      player.play().catch(() => {});
+    } else {
+      player.pause();
+    }
+  }, [isPlaying]);
 
   const albumSize = visualizerSize * 0.62;
   const glowColor = EMOTION_GLOW[emotion] || EMOTION_GLOW.neutral;
@@ -190,11 +246,8 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
         <div className="relative w-full max-w-3xl aspect-video bg-black/40 rounded-2xl overflow-hidden backdrop-blur-sm border border-white/10 shadow-2xl">
           {videoUrl ? (
             <video
-              src={videoUrl}
+              ref={videoRef}
               className="w-full h-full object-contain"
-              controls
-              autoPlay={isPlaying}
-              loop
               playsInline
             />
           ) : (

@@ -15,3 +15,4 @@ export {
 export * from './localLibrary';
 export * from './localAudio';
 export * from './libraryScanner';
+export * from './mediaScanner';

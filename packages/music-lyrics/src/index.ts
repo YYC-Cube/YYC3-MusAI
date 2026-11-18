@@ -3,3 +3,4 @@ export * from './parseLrc';
 export * from './tapSync';
 export * from './components/LyricsDisplay';
 export * from './components/EmotionRipple';
+export * from './components/WaveformLyrics';

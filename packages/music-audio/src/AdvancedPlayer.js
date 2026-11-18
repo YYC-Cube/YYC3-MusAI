@@ -14,10 +14,14 @@
 
 import PlayerUI from './PlayerUI.js';
 import SoundResourceManager from './SoundResourceManager.js';
+import Hls from 'hls.js';
 
 /**
  * 高级播放器
  * 整合SoundResourceManager和PlayerUI，提供完整的播放控制功能
+ *
+ * §W2 补内核：音频内核升级为 hls.js 自适应流（HLS/DASH），普通文件降级为原生 Audio。
+ * 保持现有 on/emit 接口与 PlayerUI 事件契约不变。
  */
 class AdvancedPlayer {
     constructor(container, options = {}) {
@@ -39,7 +43,18 @@ class AdvancedPlayer {
         this.currentTrack = null;
         this.eventListeners = new Map();
 
+        // 音频内核：hls.js 实例（HLS 流）或原生 Audio（普通文件）
+        this.hls = null;
+        this.useHls = false;
+
         this.init();
+    }
+
+    /**
+     * 判断是否为 HLS 流
+     */
+    _isHls(src) {
+        return typeof src === 'string' && (/\.m3u8(\?.*)?$/i.test(src) || /\.m3u8(\?.*)?$/i.test(src.split('?')[0]));
     }
 
     /**
@@ -115,30 +130,79 @@ class AdvancedPlayer {
         this.currentIndex = index;
         this.currentTrack = this.playlist[index];
 
-        // 停止当前播放
+        // 停止当前播放并销毁旧内核
         if (this.isPlaying) {
             this.pause();
         }
+        this._destroyHls();
 
-        // 加载音频
-        this.audio = new Audio(this.currentTrack.src);
+        const src = this.currentTrack.src;
 
-        // 绑定音频事件
-        this.bindAudioEvents();
+        // §W2 补内核：HLS 流使用 hls.js 自适应流内核，普通文件降级为原生 Audio
+        if (this._isHls(src) && Hls.isSupported()) {
+            this.useHls = true;
+            this.hls = new Hls();
+            this.hls.loadSource(src);
+            this.hls.attachMedia(this._getAudioEl());
+
+            this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                if (this.isPlaying) {
+                    this._getAudioEl().play().catch(() => {});
+                }
+                this.emit('trackLoaded', this.currentTrack);
+                this.updateUI();
+            });
+
+            this.hls.on(Hls.Events.ERROR, (data, error) => {
+                console.error('hls.js 错误:', error);
+                this.emit('trackError', { track: this.currentTrack, error });
+            });
+
+            this.hls.on(Hls.Events.LEVEL_LOADED, () => {
+                this.emit('hlsLevelLoaded');
+            });
+        } else {
+            this.useHls = false;
+            this.audio = new Audio(src);
+            this.bindAudioEvents();
+            this.emit('trackLoaded', this.currentTrack);
+            this.updateUI();
+        }
 
         // 更新UI
         this.updateUI();
+    }
 
-        // 触发加载事件
-        this.emit('trackLoaded', this.currentTrack);
+    /**
+     * 获取（或创建）用于挂载 hls.js 的音频元素
+     */
+    _getAudioEl() {
+        if (!this._audioEl) {
+            this._audioEl = new Audio();
+            this.bindAudioEvents();
+        }
+        return this._audioEl;
+    }
+
+    /**
+     * 销毁 hls.js 实例
+     */
+    _destroyHls() {
+        if (this.hls) {
+            this.hls.destroy();
+            this.hls = null;
+        }
+        this.useHls = false;
     }
 
     /**
      * 绑定音频事件
      */
     bindAudioEvents() {
-        // 播放结束
-        this.audio.addEventListener('ended', () => {
+        const el = this.useHls ? this._getAudioEl() : this.audio;
+        if (!el) return;
+
+        el.addEventListener('ended', () => {
             this.isPlaying = false;
             this.updateUI();
             this.emit('trackEnded', this.currentTrack);
@@ -147,18 +211,15 @@ class AdvancedPlayer {
             this.next();
         });
 
-        // 播放进度更新
-        this.audio.addEventListener('timeupdate', () => {
+        el.addEventListener('timeupdate', () => {
             this.updateUI();
         });
 
-        // 加载完成
-        this.audio.addEventListener('loadedmetadata', () => {
+        el.addEventListener('loadedmetadata', () => {
             this.updateUI();
         });
 
-        // 错误处理
-        this.audio.addEventListener('error', (e) => {
+        el.addEventListener('error', (e) => {
             console.error('音频加载失败:', e);
             this.emit('trackError', { track: this.currentTrack, error: e });
         });

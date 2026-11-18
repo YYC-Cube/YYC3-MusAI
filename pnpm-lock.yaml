@@ -571,6 +571,9 @@ importers:
       react:
         specifier: '>=19.0.0'
         version: 19.3.1
+      wavesurfer.js:
+        specifier: ^8.1.0
+        version: 8.1.0
     devDependencies:
       '@types/react':
         specifier: ^19.3.0
@@ -10318,6 +10321,9 @@ packages:
   watchpack@2.6.4:
     resolution: {integrity: sha512-5H3Tce2GfzWbcr9VnSqyak2whFaONw4BdmI5BDnMXold4qSlCFd64XaMQESRh2vkDKmdUkv6rUo17UvZ9f9nXw==}
     engines: {node: '>=10.13.0'}
+
+  wavesurfer.js@8.1.0:
+    resolution: {integrity: sha512-7/FFjqZxrtZ5pYyjTbb5HPmMAwq5vx4qZRKFsMz1E1wLDVVkueKatR9RW3FjpKQTHFgCpc7VUYUpwTjyIZKLwQ==}
 
   wbuf@1.7.3:
     resolution: {integrity: sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==}
@@ -21763,6 +21769,8 @@ snapshots:
   watchpack@2.6.4:
     dependencies:
       graceful-fs: 4.2.11
+
+  wavesurfer.js@8.1.0: {}
 
   wbuf@1.7.3:
     dependencies:
