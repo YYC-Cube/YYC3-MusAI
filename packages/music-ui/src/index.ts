@@ -49,6 +49,8 @@ export * from './ui/tooltip';
 export * from './ui/playlist-dnd';
 export * from './ui/playlist-sort';
 export * from './ui/virtual-list';
+export * from './ui/cmd-k-palette';
+export * from './ui/vaul-drawer';
 // 工具
 export * from './ui/use-mobile';
 export * from './ui/utils';

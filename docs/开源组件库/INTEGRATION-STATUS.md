@@ -88,8 +88,8 @@
 | darkroomengineering/lenis | music-hooks | useScrollProgress | Done W1 |
 | clauderic/dnd-kit | music-ui | PlaylistSortableList | Done W1 |
 | TanStack/table | music-ui | VirtualTrackList | Done W1 |
-| pacocoursey/cmdk | music-ui | Command palette (reserved) | Planned |
-| emilkowalski/vaul | music-ui | Drawer (reserved) | Planned |
+| pacocoursey/cmdk | music-ui | Command palette | Done W4-2 |
+| emilkowalski/vaul | music-ui | Drawer | Done W4-2 |
 | emilkowalski/sonner | music-ui | Toast (integrated) | Done W1 |
 | heroui-inc/heroui | music-ui | Form components optional | Planned |
 | mantinedev/mantine | music-ui | Full components optional | Planned |
