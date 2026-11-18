@@ -63,6 +63,8 @@ try {
     }
 
     let room = 'lobby';
+    const roomOwner = new Map<string, string | null>();
+    roomOwner.set(room, userId);
     const join = (next: string) => {
       rooms.get(room)?.delete(socket);
       room = next.slice(0, 64) || 'lobby';
@@ -72,35 +74,137 @@ try {
     join(room);
     socket.send(JSON.stringify({ type: 'welcome', room, userId }));
 
+    const lastMessageAt = new Map<string, number>();
+    const isModerator = (uid: string | null) => uid === roomOwner.get(room) || uid === 'admin';
+
+    const broadcast = (payload: any, targetRoom = room) => {
+      const str = JSON.stringify(payload);
+      for (const peer of rooms.get(targetRoom) ?? []) {
+        if (peer.readyState === 1) peer.send(str);
+      }
+    };
+
+    const sendToSelf = (payload: any) => {
+      if (socket.readyState === 1) socket.send(JSON.stringify(payload));
+    };
+
+    // 敏感词过滤（简化版，生产可接入专业过滤库）
+    const SENSITIVE = /(色情|赌博|枪支|毒品|自杀|炸弹)/i;
+    const isSensitive = (text: string) => SENSITIVE.test(text);
+
     socket.on('message', (raw: any) => {
       let msg: any;
       try { msg = JSON.parse(String(raw)); } catch { return; }
 
       if (msg.type === 'join' && typeof msg.room === 'string') {
         join(msg.room);
+        roomOwner.set(room, userId);
         socket.send(JSON.stringify({ type: 'joined', room }));
+        // 同步房间在线人数
+        broadcast({ type: 'viewer_count', room, count: (rooms.get(room) as Set<any> | undefined)?.size ?? 0 }, room);
         return;
       }
       if (msg.type === 'ping') {
         socket.send(JSON.stringify({ type: 'pong', ts: Date.now() }));
         return;
       }
+      if (msg.type === 'get_room') {
+        sendToSelf({ type: 'room_info', room, userId, count: (rooms.get(room) as Set<any> | undefined)?.size ?? 0 });
+        return;
+      }
       if (msg.type === 'danmaku') {
-        const payload = JSON.stringify({
+        const text = String(msg.text ?? '').slice(0, 200);
+        if (!text) return;
+        const now = Date.now();
+        const last = lastMessageAt.get(userId ?? '') ?? 0;
+        if (now - last < 1000) return; // 频率限制：1 条/秒
+        lastMessageAt.set(userId ?? '', now);
+        if (isSensitive(text)) {
+          sendToSelf({ type: 'moderated', reason: 'sensitive_content' });
+          return;
+        }
+        const payload = {
           type: 'danmaku',
           room,
-          text: String(msg.text ?? '').slice(0, 200),
+          text,
           user: userId ?? null,
           ts: Date.now(),
-        });
+        };
         for (const peer of rooms.get(room) ?? []) {
-          if (peer.readyState === 1) peer.send(payload);
+          if (peer.readyState === 1) peer.send(JSON.stringify(payload));
         }
+        return;
+      }
+      if (msg.type === 'emoji') {
+        const emoji = String(msg.emoji ?? '').slice(0, 10);
+        if (!emoji) return;
+        const now = Date.now();
+        const last = lastMessageAt.get(userId ?? '') ?? 0;
+        if (now - last < 1000) return;
+        lastMessageAt.set(userId ?? '', now);
+        const payload = {
+          type: 'emoji',
+          room,
+          emoji,
+          user: userId ?? null,
+          ts: Date.now(),
+        };
+        for (const peer of rooms.get(room) ?? []) {
+          if (peer.readyState === 1) peer.send(JSON.stringify(payload));
+        }
+        return;
+      }
+      if (msg.type === 'gift') {
+        const giftId = String(msg.giftId ?? '').slice(0, 32);
+        const count = Math.max(1, Math.min(100, Number(msg.count) || 1));
+        if (!giftId) return;
+        const payload = {
+          type: 'gift',
+          room,
+          giftId,
+          count,
+          user: userId ?? null,
+          ts: Date.now(),
+        };
+        for (const peer of rooms.get(room) ?? []) {
+          if (peer.readyState === 1) peer.send(JSON.stringify(payload));
+        }
+        return;
+      }
+      if (msg.type === 'moderate') {
+        if (!isModerator(userId)) {
+          sendToSelf({ type: 'moderated', reason: 'not_moderator' });
+          return;
+        }
+        const targetUser = String(msg.targetUser ?? '');
+        const action = String(msg.action ?? ''); // 'mute' | 'unmute' | 'kick' | 'delete'
+        const payload = {
+          type: 'moderation',
+          room,
+          action,
+          targetUser,
+          moderator: userId ?? null,
+          ts: Date.now(),
+        };
+        if (action === 'kick') {
+          for (const peer of rooms.get(room) ?? []) {
+            if (peer.readyState === 1) peer.send(JSON.stringify(payload));
+          }
+        }
+        for (const peer of rooms.get(room) ?? []) {
+          if (peer.readyState === 1) peer.send(JSON.stringify(payload));
+        }
+        return;
+      }
+      if (msg.type === 'viewer_count_request') {
+        broadcast({ type: 'viewer_count', room, count: (rooms.get(room) as Set<any> | undefined)?.size ?? 0 }, room);
+        return;
       }
     });
 
     socket.on('close', () => {
       rooms.get(room)?.delete(socket);
+      broadcast({ type: 'viewer_count', room, count: (rooms.get(room) as Set<any> | undefined)?.size ?? 0 }, room);
     });
   });
 

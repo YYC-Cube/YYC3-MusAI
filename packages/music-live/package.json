@@ -1,0 +1,28 @@
+{
+  "name": "@yyc3/music-live",
+  "version": "0.1.0",
+  "private": true,
+  "description": "YYC³ 音乐直播专用组件包（W3 补流媒体）：直播间 UI、弹幕、表情、礼物、在线人数",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sonner": "^2.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.19"
+  }
+}
