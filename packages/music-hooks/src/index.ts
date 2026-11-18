@@ -9,3 +9,5 @@ export * from './usePWA';
 export * from './useResponsive';
 export * from './useSwipeGesture';
 export * from './useVirtualList';
+export * from './useScrollProgress';
+export * from './useMediaQuery';

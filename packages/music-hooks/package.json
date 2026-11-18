@@ -15,7 +15,8 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@yyc3/music-utils": "workspace:*"
+    "@yyc3/music-utils": "workspace:*",
+    "lenis": "^1.3.27"
   },
   "peerDependencies": {
     "react": ">=19.0.0"
