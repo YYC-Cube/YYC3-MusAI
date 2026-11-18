@@ -213,25 +213,44 @@
 
 ### 6.1 借鉴（取交互与架构，不取有风险代码）
 
-| 开源项目 | 许可证 | 借鉴内容 | 应用目标 |
-|----------|--------|----------|----------|
-| Navidrome | GPL-3.0 | 媒体库扫描/转码/Subsonic API 语义 | music-data `mediaScanner`、`libraryScanner` |
-| PeerTube/MediaCMS | AGPL-3.0 | 频道/播放列表/转码/审核领域模型 | music-server 媒体资产管理（仅参考模型） |
-| Misskey | AGPL-3.0 | 信息流、Widget、表情反应、主题化 | music-community 社交交互 |
-| Koel | MIT | 歌单/播放队列/多用户产品细节 | music-player 播放列表 |
-| Immich | AGPL-3.0 | 上传、去重、缩略图、时间轴 | music-server 媒体上传链路 |
+| 开源项目 | 许可证 | 借鉴内容 | 应用目标 | 实际落地 |
+|----------|--------|----------|----------|----------|
+| Navidrome | GPL-3.0 | 媒体库扫描/转码/Subsonic API 语义 | music-data `mediaScanner`、`libraryScanner` | ✅ `mediaScanner.ts`（W2），仅架构参考，不引入代码 |
+| PeerTube/MediaCMS | AGPL-3.0 | 频道/播放列表/转码/审核领域模型 | music-server 媒体资产管理（仅参考模型） | ✅ `/live/stream/*`（W3），仅领域模型参考 |
+| Misskey | AGPL-3.0 | 信息流、Widget、表情反应、主题化 | music-community 社交交互 | ✅ `CommunityFeed` 表情反应 + `reactions` 字段（W4） |
+| Koel | MIT | 歌单/播放队列/多用户产品细节 | music-player 播放列表 | 参考设计，未引入代码 |
+| Immich | AGPL-3.0 | 上传、去重、缩略图、时间轴 | music-server 媒体上传链路 | 参考设计，`/upload/media/:id/file` 已支持 Range 流式 |
 
-### 6.2 参考自己设计（以现有 packages 为基座）
+### 6.2 参考自己设计（以现有 packages 为基座，不推倒重建）
 
-- 复用 `@yyc3/music-data/types.ts` 已有的全局类型系统（Track、LyricLine、MediaMode、ThemeId 等）
-- 复用 `@yyc3/music-server` 的 Hono 路由、JWT 鉴权、KV+PG 双写模式、WebSocket 直播通道
-- 复用 `@yyc3/music-ui` 的 shadcn 基件与 D-Music 设计层
-- 复用 `@yyc3/music-hooks` 的 `useAudioEngine`、`useVirtualList` 等
-- **不推倒重建**：所有新能力以现有包为锚点增量引入，保持包组边界清晰
+W1-W4 所有新能力均以现有包为锚点增量引入，未推倒重建：
+
+- 类型系统：复用 `@yyc3/music-data/types.ts`（`CommunityActivity.reactions`、`Track` 等），W4 仅增量新增字段
+- 服务端模式：复用 `@yyc3/music-server` 的 Hono 路由、JWT 鉴权、KV 双写、WebSocket 直播通道（W3 `/live/stream`、`/ws/live`）
+- UI 基座：复用 `@yyc3/music-ui` 的 shadcn 基件（Card、Badge、Progress、Dialog 等），W4 `AnalyticsDashboard` 直接复用
+- Hooks：复用 `@yyc3/music-hooks` 的 `useVirtualList`（W1）、`useI18n`、`useScrollProgress`
 
 ### 6.3 自研（完整推进流程，作为最后交付物）
 
-自研一套**“开源项 → 包组”落地流程**，文档化并固化为可复用的 SOP（见 §9）。
+自研一套**“开源项 → 包组”落地 SOP**，已固化并按 W1-W4 逐阶段验证：
+
+| 步骤 | 内容 | 实际执行 |
+|------|------|----------|
+| 1. 调研与选型 | 许可证合规审核 + 技术栈契合度评估 | AGPL/GPL 红线已执行，remotion 商业授权替代为 revideo |
+| 2. 拉取与研读 | 72 个仓库下载到 `docs/开源组件库/`，代码审计 | 已完成（4.4G，64 个子目录） |
+| 3. 包组集成 | 按 W1-W4 引入 `packages/`，统一 `src/index.ts` 导出 | W1-W4 全部落地并提交 |
+| 4. 验收与闭环 | typecheck/lint/build 全绿，量化验收指标 | W1-W4 各阶段验收均全绿 |
+| 5. 许可证合规 | NOTICE 汇总，AGPL/GPL 仅独立部署 | 文档红线已落实，无违规引入 |
+| 6. 持续更新 | 版本锁定为 2026-11-18 HEAD 快照 | `docs/开源组件库/` 不随上游自动更新 |
+
+---
+
+**W4 实际交付物**：
+- `packages/music-community/src/components/AnalyticsDashboard.tsx`（运营看板，recharts）
+- `packages/music-community/src/components/CommunityFeed.tsx`（Misskey 风格表情反应）
+- `packages/music-mv/`（MvScene，revideo 程序化 MV，Apache-2.0）
+- `pnpm-lock.yaml` 已同步新增依赖（@visx/visx、react/react-dom 等）
+
 
 ---
 
