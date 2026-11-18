@@ -91,15 +91,15 @@
 | pacocoursey/cmdk | music-ui | Command palette | Done W4-2 |
 | emilkowalski/vaul | music-ui | Drawer | Done W4-2 |
 | emilkowalski/sonner | music-ui | Toast (integrated) | Done W1 |
-| heroui-inc/heroui | music-ui | Form components optional | Planned |
-| mantinedev/mantine | music-ui | Full components optional | Planned |
+| heroui-inc/heroui | music-ui | Form components optional | 引用参考（与 shadcn+Radix 基座冲突，不引入代码） |
+| mantinedev/mantine | music-ui | Full components optional | 引用参考（与 shadcn+Radix 基座冲突，不引入代码） |
 | tremorlabs/tremor | music-community | AnalyticsDashboard design reference | Done W4 |
-| airbnb/visx | music-community | Visualization primitive reference | Planned |
+| airbnb/visx | music-community | Visualization primitive reference | Done W4-2 (VisxCharts: Bar/Line/Pie/Area) |
 | redotvideo/revideo | music-mv | MvScene programmatic MV | Done W4 |
 | navidrome/navidrome | music-data | mediaScanner architecture reference (GPL, no code copy) | Done W2 |
 | misskey-dev/misskey | music-community | CommunityFeed reactions (AGPL, no code copy) | Done W4 |
-| koel/koel | music-player | Playlist product details reference | Planned |
-| immich-app/immich | music-server | Upload/dedup/thumbnail reference | Planned |
+| koel/koel | music-player | Playlist product details reference | 引用参考（歌单/队列交互模型，不引入代码） |
+| immich-app/immich | music-server | Upload/dedup/thumbnail reference | 引用参考（上传/去重/缩略图模型，AGPL 不引入代码） |
 
 
 # Open Source Component Library Snapshot Version Record
