@@ -5,6 +5,7 @@ export * from './components/CommentSystem';
 export * from './components/TimelineComments';
 export * from './components/ForkTree';
 export * from './components/ChallengePanel';
+export * from './components/ReactionBar';
 export * from './components/LiveSessionPanel';
 export * from './components/SpaceTimePanel';
 export * from './components/UploadPanel';

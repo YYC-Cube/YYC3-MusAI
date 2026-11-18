@@ -47,6 +47,7 @@ export * from './ui/toggle';
 export * from './ui/toggle-group';
 export * from './ui/tooltip';
 export * from './ui/playlist-dnd';
+export * from './ui/playlist-sort';
 export * from './ui/virtual-list';
 // 工具
 export * from './ui/use-mobile';

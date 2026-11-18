@@ -11,3 +11,4 @@ export * from './useSwipeGesture';
 export * from './useVirtualList';
 export * from './useScrollProgress';
 export * from './useMediaQuery';
+export * from './useWaveform';

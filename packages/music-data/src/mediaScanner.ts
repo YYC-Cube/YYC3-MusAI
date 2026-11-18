@@ -1,353 +1,189 @@
 /**
- * YYC³ music-data · 媒体库扫描（mediaScanner）
- * ============================================================
- * 借鉴 Navidrome 的媒体库扫描与资产管理模型（仅架构参考，不引入任何 GPL-3.0 代码）。
+ * YYC³ music-data — 媒体库扫描模型
  *
- * 职责：将原始媒体文件清单转化为可被 music-player / music-lyrics 消费的
- * 资产索引（Track / Album / Artist），支持：
- *   1. 扩展名过滤与媒体类型识别（音频/视频/封面）
- *   2. 路径与内容指纹去重
- *   3. 艺术家/专辑/年份分组聚合
- *   4. 封面资产定位（同目录 cover.jpg / folder.png 等）
- *   5. 时长/码率等元数据占位（由后端或 ffprobe 补充，此处仅本地推断）
+ * 参考 Navidrome 的媒体库扫描架构（仅借鉴模型与流程，不引入 GPL 代码）：
+ * - 以 `path + mtime + size` 作为变更检测指纹，避免逐字节哈希全量对比；
+ * - 全量扫描 → 与上一份索引 diff → 产出 added/updated/removed 三类变更；
+ * - 扫描结果不可变，调用方持久化 `MediaScanIndex` 作为下一次 diff 基线。
  *
- * 设计原则：纯函数、零外部依赖、零 DOM，可在浏览器/Node/测试环境直接调用。
- * 不返回 UI 展示模型，避免数据层替应用层做设计决策。
+ * 许可：MIT
  */
 
-import type { Emotion, Track } from './types';
+import type { Track } from './types';
 
-const AUDIO_EXT_RE = /\.(mp3|flac|m4a|ogg|wav|aac|opus)$/i;
-const VIDEO_EXT_RE = /\.(mp4|mkv|webm|mov|m3u8)$/i;
-const IMAGE_EXT_RE = /\.(jpg|jpeg|png|webp|gif)$/i;
+// ============================================================
+// 扫描模型类型
+// ============================================================
 
-export type MediaType = 'audio' | 'video' | 'image';
-
-export interface MediaEntry {
-  /** 相对路径或 URL */
+/** 扫描到的单个媒体文件条目 */
+export interface MediaScanEntry {
+  /** 稳定 ID：由相对路径派生（同一路径跨扫描恒定） */
+  id: string;
+  /** 库内相对路径 */
   path: string;
-  /** 文件字节数（可选，用于指纹去重） */
-  sizeBytes?: number;
-  /** 修改时间戳（可选，用于增量扫描） */
-  mtimeMs?: number;
+  /** 文件名（不含扩展名），作为标题猜测来源 */
+  fileName: string;
+  /** 扩展名（小写，不含点） */
+  extension: string;
+  /** MIME 类型（来自 File 对象；不可用时按扩展名猜测） */
+  mimeType: string;
+  /** 文件字节数 */
+  size: number;
+  /** 最后修改时间（epoch ms） */
+  mtimeMs: number;
+  /** 可播放地址（Blob URL / CDN URL），由调用方注入 */
+  url?: string;
 }
 
-export interface MediaAsset {
-  /** 资产唯一 ID（稳定，由路径哈希生成） */
-  id: string;
-  /** 资产类型 */
-  type: MediaType;
-  /** 资产路径 / URL */
-  url: string;
-  /** 文件名（不含扩展名） */
-  name: string;
-  /** 扩展名（小写） */
-  ext: string;
-  /** 字节数 */
-  sizeBytes?: number;
-  /** 修改时间戳 */
-  mtimeMs?: number;
+/** 扫描索引：一次完整扫描的不可变快照 */
+export interface MediaScanIndex {
+  /** id → entry */
+  entries: Record<string, MediaScanEntry>;
+  /** 本次扫描完成时间（epoch ms） */
+  scannedAt: number;
 }
 
-export interface MediaTrack extends Track {
-  /** 封面资产 URL（若找到同目录封面） */
-  coverUrl?: string;
-  /** 归属专辑 ID */
-  albumId?: string;
-  /** 归属艺术家 ID */
-  artistId?: string;
-  /** 扫描来源路径 */
-  sourcePath: string;
+/** diff 结果 */
+export interface MediaScanDiff {
+  /** 新增条目 */
+  added: MediaScanEntry[];
+  /** 内容有变化（mtime/size 变动）的条目 */
+  updated: MediaScanEntry[];
+  /** 上份索引有、本次扫描没有的条目 */
+  removed: MediaScanEntry[];
 }
 
-export interface MediaAlbum {
-  id: string;
-  title: string;
-  /** 专辑封面 URL */
-  coverUrl?: string;
-  /** 所属艺术家 */
-  artist: string;
-  /** 曲目数量 */
-  trackCount: number;
-  /** 总时长（秒） */
-  totalDuration: number;
-  /** 年份（由文件名或路径推断，可空） */
-  year?: number;
+/** 支持的音频/视频扩展名 */
+export const SUPPORTED_EXTENSIONS = [
+  'mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'opus', 'weba',
+  'mp4', 'm4v', 'webm', 'mov',
+] as const;
+
+/** 扫描选项 */
+export interface MediaScanOptions {
+  /** 自定义可播放地址解析器（如把 path 映射到 Blob URL） */
+  resolveUrl?: (entry: Omit<MediaScanEntry, 'id' | 'url'>) => string | undefined;
+  /** 额外允许的扩展名 */
+  extraExtensions?: string[];
 }
 
-export interface MediaArtist {
-  id: string;
-  name: string;
-  /** 曲目数量 */
-  trackCount: number;
-  /** 专辑数量 */
-  albumCount: number;
-}
+// ============================================================
+// 工具函数
+// ============================================================
 
-export interface MediaScanReport {
-  /** 所有音频/视频资产 */
-  assets: MediaAsset[];
-  /** 转换为 Track 形式的音频曲目 */
-  tracks: MediaTrack[];
-  /** 聚合的专辑 */
-  albums: MediaAlbum[];
-  /** 聚合的艺术家 */
-  artists: MediaArtist[];
-  /** 被剔除的重复路径 */
-  duplicates: string[];
-  /** 不支持的扩展名 */
-  unsupported: string[];
-  /** 统计 */
-  stats: {
-    totalAssets: number;
-    audioCount: number;
-    videoCount: number;
-    imageCount: number;
-    totalBytes: number;
-  };
-}
-
-/** 稳定短哈希，用于生成可复现的资产 ID */
-function hash(text: string): number {
-  let value = 0;
-  for (let i = 0; i < text.length; i++) {
-    value = (Math.imul(value, 31) + text.charCodeAt(i)) | 0;
+/** 由路径派生稳定 ID（FNV-1a 32 位，避免依赖 crypto） */
+export function entryIdFromPath(path: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < path.length; i += 1) {
+    hash ^= path.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
   }
-  return value;
+  return `mscan-${(hash >>> 0).toString(16).padStart(8, '0')}`;
 }
 
-function fileNameOf(path: string): string {
-  return path.split('/').pop() ?? path;
+function extensionOf(fileName: string): string {
+  const dot = fileName.lastIndexOf('.');
+  return dot === -1 ? '' : fileName.slice(dot + 1).toLowerCase();
 }
 
-function extOf(fileName: string): string {
-  const m = fileName.match(/\.([^.]+)$/);
-  return m ? m[1].toLowerCase() : '';
-}
-
-function mediaTypeOf(ext: string): MediaType | null {
-  if (AUDIO_EXT_RE.test('.' + ext)) return 'audio';
-  if (VIDEO_EXT_RE.test('.' + ext)) return 'video';
-  if (IMAGE_EXT_RE.test('.' + ext)) return 'image';
-  return null;
-}
-
-/** 同目录封面候选文件名 */
-const COVER_CANDIDATES = ['cover.jpg', 'cover.jpeg', 'cover.png', 'cover.webp', 'folder.jpg', 'folder.png'];
-
-/** 推断专辑名：路径含 albums/ 时取下一级，否则「单曲」 */
-function albumFromPath(path: string): string {
-  const parts = path.split('/');
-  const idx = parts.lastIndexOf('albums');
-  if (idx >= 0 && parts[idx + 1]) return parts[idx + 1];
-  return '单曲';
-}
-
-/** 推断艺术家：文件名「艺术家 - 标题」格式，否则「未知艺术家」 */
-function artistFromFileName(fileName: string): string {
-  const base = fileName.replace(/\.[^.]+$/, '').replace(/_/g, ' ').trim();
-  const matched = base.match(/^(.{1,64}?)\s+[-–—]\s+(.{1,120})$/);
-  return matched ? matched[1].trim() || '未知艺术家' : '未知艺术家';
-}
-
-/** 推断标题：文件名「艺术家 - 标题」格式，否则基础文件名 */
-function titleFromFileName(fileName: string): string {
-  const base = fileName.replace(/\.[^.]+$/, '').replace(/_/g, ' ').trim();
-  const matched = base.match(/^(.{1,64}?)\s+[-–—]\s+(.{1,120})$/);
-  return matched ? matched[2].trim() : base;
-}
-
-/** 推断情绪（仅看标题，避免艺术家名污染） */
-function _inferEmotion(title: string): Emotion {
-  const keywords: Array<[RegExp, Emotion]> = [
-    [/sad|悲伤|伤感|泪/i, 'sad'],
-    [/energ|rock|燃|热血|电音/i, 'energetic'],
-    [/happy|快乐|欢|喜/i, 'happy'],
-    [/calm|轻|纯|放松|钢琴|晚安/i, 'calm'],
-  ];
-  for (const [re, emotion] of keywords) {
-    if (re.test(title)) return emotion;
-  }
-  return 'neutral';
-}
-
-/** 查找同目录封面资产 */
-function findCoverUrl(dirPath: string, allAssets: Map<string, MediaAsset>): string | undefined {
-  const dir = dirPath.split('/').slice(0, -1).join('/');
-  const prefix = dir ? dir + '/' : '';
-  for (const cand of COVER_CANDIDATES) {
-    const coverPath = prefix + cand;
-    if (allAssets.has(coverPath)) {
-      return allAssets.get(coverPath)!.url;
-    }
-  }
-  return undefined;
+function isSupported(fileName: string, extra: string[] = []): boolean {
+  const ext = extensionOf(fileName);
+  return (SUPPORTED_EXTENSIONS as readonly string[]).includes(ext) || extra.includes(ext);
 }
 
 /**
- * 扫描媒体文件清单 → 媒体资产索引报告
- *
- * 去重顺序：路径去重优先，其次按「艺术家::标题::大小」内容指纹去重。
- * 不提供 sizeBytes 的条目只参与路径去重。
+ * 从 `File` 列表构建一份扫描索引。
+ * 典型输入：`<input type="file" multiple>`、`DataTransfer.files` 或
+ * `showDirectoryPicker()` 递归收集的文件。
  */
-export function scanMedia(entries: MediaEntry[]): MediaScanReport {
-  const assets: MediaAsset[] = [];
-  const duplicates: string[] = [];
-  const unsupported: string[] = [];
-  const seenPaths = new Set<string>();
-  const seenFingerprints = new Set<string>();
-  let totalBytes = 0;
-  let audioCount = 0;
-  let videoCount = 0;
-  let imageCount = 0;
+export async function scanFiles(
+  files: Iterable<File>,
+  options: MediaScanOptions = {},
+): Promise<MediaScanIndex> {
+  const extra = options.extraExtensions || [];
+  const entries: Record<string, MediaScanEntry> = {};
 
-  // 先收集所有资产，用于后续封面查找
-  const allAssetsMap = new Map<string, MediaAsset>();
+  for (const file of files) {
+    if (!isSupported(file.name, extra)) continue;
 
-  for (const entry of entries) {
-    const fileName = fileNameOf(entry.path);
-    const ext = extOf(fileName);
-    const type = mediaTypeOf(ext);
-
-    if (!type) {
-      unsupported.push(entry.path);
-      continue;
-    }
-    if (seenPaths.has(entry.path)) {
-      duplicates.push(entry.path);
-      continue;
-    }
-    seenPaths.add(entry.path);
-
-    // 内容指纹去重
-    const artist = artistFromFileName(fileName);
-    const title = titleFromFileName(fileName);
-    if (entry.sizeBytes !== undefined) {
-      const fingerprint = `${artist}::${title}::${entry.sizeBytes}`;
-      if (seenFingerprints.has(fingerprint)) {
-        duplicates.push(entry.path);
-        continue;
-      }
-      seenFingerprints.add(fingerprint);
-    }
-
-    const id = `asset-${Math.abs(hash(entry.path)).toString(36)}`;
-    const asset: MediaAsset = {
+    const extension = extensionOf(file.name);
+    const mtimeMs = file.lastModified;
+    const base = {
+      path: (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
+      fileName: file.name,
+      extension,
+      mimeType: file.type || guessMime(extension),
+      size: file.size,
+      mtimeMs,
+    };
+    const id = entryIdFromPath(base.path);
+    entries[id] = {
+      ...base,
       id,
-      type,
-      url: entry.path,
-      name: baseName(fileName),
-      ext,
-      sizeBytes: entry.sizeBytes,
-      mtimeMs: entry.mtimeMs,
+      url: options.resolveUrl?.(base),
     };
-    assets.push(asset);
-    allAssetsMap.set(entry.path, asset);
-
-    totalBytes += entry.sizeBytes ?? 0;
-    if (type === 'audio') audioCount++;
-    else if (type === 'video') videoCount++;
-    else if (type === 'image') imageCount++;
   }
 
-  // ---------- 构建 Track（仅音频） ----------
-  const tracks: MediaTrack[] = [];
-  const artistMap = new Map<string, { name: string; trackCount: number; albumCount: number; albums: Map<string, MediaAlbum> }>();
-  const albumMap = new Map<string, MediaAlbum>();
+  return { entries, scannedAt: Date.now() };
+}
 
-  for (const asset of assets) {
-    if (asset.type !== 'audio') continue;
+/** 与上一份索引 diff，产出 added/updated/removed */
+export function diffIndexes(prev: MediaScanIndex | null, next: MediaScanIndex): MediaScanDiff {
+  const prevEntries = prev?.entries ?? {};
+  const added: MediaScanEntry[] = [];
+  const updated: MediaScanEntry[] = [];
+  const removed: MediaScanEntry[] = [];
 
-    const fileName = asset.name + '.' + asset.ext;
-    const artistName = artistFromFileName(fileName);
-    const trackTitle = titleFromFileName(fileName);
-    const albumTitle = albumFromPath(asset.url);
-    const coverUrl = findCoverUrl(asset.url, allAssetsMap);
-
-    // 艺术家聚合
-    let artistAgg = artistMap.get(artistName);
-    if (!artistAgg) {
-      artistAgg = { name: artistName, trackCount: 0, albumCount: 0, albums: new Map() };
-      artistMap.set(artistName, artistAgg);
-    }
-    artistAgg.trackCount++;
-
-    // 专辑聚合（按 艺术家::专辑 唯一）
-    const albumKey = `${artistName}::${albumTitle}`;
-    let album = albumMap.get(albumKey);
-    if (!album) {
-      album = {
-        id: `album-${Math.abs(hash(albumKey)).toString(36)}`,
-        title: albumTitle,
-        artist: artistName,
-        coverUrl: undefined,
-        trackCount: 0,
-        totalDuration: 0,
-      };
-      albumMap.set(albumKey, album);
-      artistAgg.albums.set(albumTitle, album);
-      artistAgg.albumCount++;
-    }
-    album.trackCount++;
-    if (coverUrl && !album.coverUrl) album.coverUrl = coverUrl;
-
-    const track: Track = {
-      id: asset.id,
-      title: trackTitle,
-      artist: artistName,
-      album: albumTitle,
-      audioUrl: asset.url,
-      duration: 0,
-      albumArt: coverUrl ?? '',
-      color: '',
-      lyrics: [],
-      chordSet: 0,
-    };
-    tracks.push(track as MediaTrack);
-  }
-
-  // ---------- 填充专辑封面 ----------
-  for (const album of albumMap.values()) {
-    // 若专辑无封面，尝试从该专辑任一曲目的同目录查找
-    if (!album.coverUrl) {
-      const track = tracks.find((t) => t.album === album.title && t.artist === album.artist);
-      if (track) {
-        const cover = findCoverUrl(track.sourcePath, allAssetsMap);
-        if (cover) album.coverUrl = cover;
-      }
+  for (const entry of Object.values(next.entries)) {
+    const before = prevEntries[entry.id];
+    if (!before) {
+      added.push(entry);
+    } else if (before.mtimeMs !== entry.mtimeMs || before.size !== entry.size) {
+      updated.push(entry);
     }
   }
 
-  const artists: MediaArtist[] = [];
-  for (const [name, agg] of artistMap) {
-    artists.push({
-      id: `artist-${Math.abs(hash(name)).toString(36)}`,
-      name: agg.name,
-      trackCount: agg.trackCount,
-      albumCount: agg.albumCount,
-    });
+  for (const entry of Object.values(prevEntries)) {
+    if (!next.entries[entry.id]) removed.push(entry);
   }
 
-  const albums: MediaAlbum[] = Array.from(albumMap.values());
+  return { added, updated, removed };
+}
 
+/**
+ * 将扫描条目映射为全局 `Track`（供播放列表直接消费）。
+ * 标题取文件名（去扩展名），艺术家/专辑留空由调用方补全。
+ */
+export function entryToTrack(entry: MediaScanEntry): Track {
+  const title = entry.fileName.replace(/\.[^.]+$/, '');
   return {
-    assets,
-    tracks,
-    albums,
-    artists,
-    duplicates,
-    unsupported,
-    stats: {
-      totalAssets: assets.length,
-      audioCount,
-      videoCount,
-      imageCount,
-      totalBytes,
-    },
+    id: entry.id,
+    title,
+    artist: '',
+    album: '',
+    duration: 0,
+    albumArt: '',
+    audioUrl: entry.url,
+    lyrics: [],
+    chordSet: 0,
+    color: '#667eea',
   };
 }
 
-/** 去除扩展名的基础文件名 */
-function baseName(fileName: string): string {
-  return fileName.replace(/\.[^.]+$/, '');
+function guessMime(ext: string): string {
+  const map: Record<string, string> = {
+    mp3: 'audio/mpeg',
+    m4a: 'audio/mp4',
+    aac: 'audio/aac',
+    flac: 'audio/flac',
+    wav: 'audio/wav',
+    ogg: 'audio/ogg',
+    opus: 'audio/ogg',
+    weba: 'audio/webm',
+    mp4: 'video/mp4',
+    m4v: 'video/mp4',
+    webm: 'video/webm',
+    mov: 'video/quicktime',
+  };
+  return map[ext] || 'application/octet-stream';
 }
