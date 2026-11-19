@@ -9,6 +9,12 @@ import { useState, useEffect, useCallback, useRef, type RefObject } from 'react'
  *   • Uses IntersectionObserver on a sentinel element to load more
  *   • Caps at `totalCount` to avoid unbounded DOM growth
  *
+ * ⧗ Naming boundary vs music-ui (W6-P1-5): despite the similar name, this is
+ * progressive rendering, NOT windowing. For true virtualised lists (1000+
+ * rows, only visible window in DOM) use `VirtualList` from `@yyc3/music-ui`
+ * (TanStack Virtual v3). Choose this hook when motion/AnimatePresence layout
+ * animations must keep already-rendered rows mounted.
+ *
  * Returns:
  *   - visibleCount: number of items to render (use `.slice(0, visibleCount)`)
  *   - sentinelRef: attach to a <div> at the bottom of the list

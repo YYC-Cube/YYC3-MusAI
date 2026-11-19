@@ -2,6 +2,10 @@
 // 类型以 types.ts（v148 规范层）为准；playlistData 内的同名历史接口不再导出，
 // 仅导出运行时数据（TD-11 见拆分规划卷 08）。
 export * from './types';
+export * from './mediaScanner';
+export * from './libraryScanner';
+export * from './localLibrary';
+export * from './localAudio';
 export {
   dMusicLogo,
   dMusicGold,
@@ -12,7 +16,3 @@ export {
   ACHIEVEMENTS,
   DEMO_PLAYLIST,
 } from './playlistData';
-export * from './localLibrary';
-export * from './localAudio';
-export * from './libraryScanner';
-export * from './mediaScanner';

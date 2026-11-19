@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-11-17T21:33:01.620Z",
+  "generatedAt": "2026-11-19T05:14:04.677Z",
   "totals": {
     "packages": 15,
-    "components": 306,
+    "components": 349,
     "curated": 17
   },
   "packages": [
@@ -11,12 +11,12 @@
       "name": "@yyc3/music-ai",
       "version": "2.0.1",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
-      "componentCount": 4
+      "componentCount": 14
     },
     {
       "name": "@yyc3/music-audio",
       "version": "2.0.0",
-      "description": "高级播放器、WebAudio、音效资源管理、翻页交互、情感音效与交互文档组件。",
+      "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "componentCount": 4
     },
     {
@@ -29,7 +29,7 @@
       "name": "@yyc3/music-community",
       "version": "2.0.1",
       "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
-      "componentCount": 11
+      "componentCount": 36
     },
     {
       "name": "@yyc3/music-data",
@@ -65,12 +65,12 @@
       "name": "@yyc3/music-lyrics",
       "version": "2.1.0",
       "description": "逐行歌词展示、点击跳转与情感涟漪可视化。",
-      "componentCount": 2
+      "componentCount": 3
     },
     {
       "name": "@yyc3/music-player",
       "version": "2.0.1",
-      "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
+      "description": "YYC³ D-Music 播放器核心组件 — 媒体展示/播放控制/移动端播放器/音频可视化",
       "componentCount": 5
     },
     {
@@ -83,7 +83,7 @@
       "name": "@yyc3/music-ui",
       "version": "2.0.1",
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
-      "componentCount": 268
+      "componentCount": 275
     },
     {
       "name": "@yyc3/music-utils",
@@ -140,25 +140,131 @@
       "example": null
     },
     {
-      "name": "CreationStudio",
+      "name": "CompactThemePicker",
       "package": "@yyc3/music-ai",
       "version": "2.0.1",
       "category": "AI 创作",
       "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
       "props": [
-        "isOpen",
-        "onClose",
-        "onCreateTrack",
-        "playlist",
-        "currentTrackIndex",
-        "onHaptic",
-        "onShareWork",
-        "onOpenMV",
+        "label",
+        "value",
+        "onSelect",
+        "unlockedPremium",
         "user",
         "starPower",
-        "onStarPowerUpdate"
+        "onUnlockTheme",
+        "onHaptic",
+        "lang"
       ],
+      "source": "packages/music-ai/src/components/creation-studio/CompactThemePicker.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "CreateButton",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "onClick",
+        "disabled",
+        "className",
+        "stage",
+        "progressLabel",
+        "doneLabel",
+        "idleIcon",
+        "idleLabel"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/CreateButton.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "CreationStudio",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [],
       "source": "packages/music-ai/src/components/CreationStudio.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "LyricsPreview",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "title",
+        "titleClassName",
+        "gradient",
+        "lyrics",
+        "copied",
+        "onCopy",
+        "stepDelay",
+        "lang"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/LyricsPreview.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "MasterPanel",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "lang",
+        "onHaptic",
+        "masterTheme",
+        "onSelectTheme",
+        "masterKeywords",
+        "setMasterKeywords",
+        "masterKwInput",
+        "setMasterKwInput",
+        "addMasterKeyword",
+        "masterStructure",
+        "setMasterStructure",
+        "masterInstruments",
+        "toggleInstrument",
+        "masterLineCount",
+        "setMasterLineCount",
+        "masterTempo",
+        "setMasterTempo",
+        "masterGenerating",
+        "masterComposing",
+        "masterLyrics",
+        "unlockedPremium",
+        "user",
+        "starPower",
+        "onUnlockTheme",
+        "onCreate",
+        "getProgressLabel",
+        "copiedId",
+        "onCopyLyrics"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/MasterPanel.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "ModeHub",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "worksCount",
+        "onSelectMode",
+        "onOpenMV",
+        "onHaptic",
+        "lang"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/ModeHub.tsx",
       "demo": null,
       "example": null
     },
@@ -185,11 +291,127 @@
       "example": null
     },
     {
+      "name": "QuickSongPanel",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "lang",
+        "onHaptic",
+        "quickTheme",
+        "onSelectTheme",
+        "quickPrompt",
+        "setQuickPrompt",
+        "quickGenerating",
+        "quickComposing",
+        "quickLyrics",
+        "unlockedPremium",
+        "user",
+        "starPower",
+        "onUnlockTheme",
+        "onCreate",
+        "getProgressLabel",
+        "copiedId",
+        "onCopyLyrics"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/QuickSongPanel.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "QuickThemePicker",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "value",
+        "onSelect",
+        "unlockedPremium",
+        "user",
+        "starPower",
+        "onUnlockTheme",
+        "onHaptic",
+        "lang"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/QuickThemePicker.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "RemixPanel",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "lang",
+        "onHaptic",
+        "playlist",
+        "remixSourceTrack",
+        "onSelectTrack",
+        "remixTargetTheme",
+        "onSelectTargetTheme",
+        "remixGenerating",
+        "remixComposing",
+        "remixResult",
+        "unlockedPremium",
+        "user",
+        "starPower",
+        "onUnlockTheme",
+        "onRemix",
+        "getProgressLabel",
+        "copiedId",
+        "onCopyLyrics"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/RemixPanel.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "StudioHeader",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "activeMode",
+        "onBack",
+        "onClose",
+        "lang"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/StudioHeader.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "WorksPanel",
+      "package": "@yyc3/music-ai",
+      "version": "2.0.1",
+      "category": "AI 创作",
+      "description": "AI 助手、AI 歌词生成、创作工作室与 MV 生成器。",
+      "props": [
+        "lang",
+        "works",
+        "onStartCreate",
+        "copiedId",
+        "onCopyLyrics",
+        "deleteWork",
+        "formatDate",
+        "onShareWork",
+        "onOpenMV"
+      ],
+      "source": "packages/music-ai/src/components/creation-studio/WorksPanel.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
       "name": "EmotionAudioPlayer",
       "package": "@yyc3/music-audio",
       "version": "2.0.0",
       "category": "音效与文档",
-      "description": "高级播放器、WebAudio、音效资源管理、翻页交互、情感音效与交互文档组件。",
+      "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
       "source": "packages/music-audio/src/EmotionAudioPlayer.tsx",
       "demo": null,
@@ -200,7 +422,7 @@
       "package": "@yyc3/music-audio",
       "version": "2.0.0",
       "category": "音效与文档",
-      "description": "高级播放器、WebAudio、音效资源管理、翻页交互、情感音效与交互文档组件。",
+      "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
       "source": "packages/music-audio/src/InteractiveCodeBlock.tsx",
       "demo": null,
@@ -211,7 +433,7 @@
       "package": "@yyc3/music-audio",
       "version": "2.0.0",
       "category": "音效与文档",
-      "description": "高级播放器、WebAudio、音效资源管理、翻页交互、情感音效与交互文档组件。",
+      "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
       "source": "packages/music-audio/src/InteractiveMindMap.tsx",
       "demo": null,
@@ -222,7 +444,7 @@
       "package": "@yyc3/music-audio",
       "version": "2.0.0",
       "category": "音效与文档",
-      "description": "高级播放器、WebAudio、音效资源管理、翻页交互、情感音效与交互文档组件。",
+      "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
       "source": "packages/music-audio/src/SmartTip.tsx",
       "demo": null,
@@ -278,6 +500,112 @@
       "example": null
     },
     {
+      "name": "AnalyticsDashboard",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "data",
+        "leaderboard",
+        "className"
+      ],
+      "source": "packages/music-community/src/components/AnalyticsDashboard.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "BatchFileCard",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [],
+      "source": "packages/music-community/src/components/upload/BatchFileCard.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "CapsuleCard",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "cap",
+        "user",
+        "lang",
+        "t",
+        "handleDecryptCapsule",
+        "handleLikeCapsule"
+      ],
+      "source": "packages/music-community/src/components/spacetime/CapsuleCard.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "CapsuleList",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "capLoading",
+        "capsules",
+        "user",
+        "lang",
+        "t",
+        "handleDecryptCapsule",
+        "handleLikeCapsule"
+      ],
+      "source": "packages/music-community/src/components/spacetime/CapsuleList.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "CapsulesTab",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "user",
+        "capTitle",
+        "setCapTitle",
+        "capContent",
+        "setCapContent",
+        "capUnlockAt",
+        "setCapUnlockAt",
+        "capRecipient",
+        "setCapRecipient",
+        "capEmotion",
+        "setCapEmotion",
+        "capLinkSong",
+        "setCapLinkSong",
+        "currentTrackTitle",
+        "capEncrypt",
+        "setCapEncrypt",
+        "capRecipientId",
+        "setCapRecipientId",
+        "e2eeReady",
+        "e2eeChecked",
+        "e2eePromptVisible",
+        "setE2eePromptVisible",
+        "capCreatedFlash",
+        "capCreating",
+        "handleCreateCapsule",
+        "capLoading",
+        "capsules",
+        "handleDecryptCapsule",
+        "handleLikeCapsule",
+        "t",
+        "lang"
+      ],
+      "source": "packages/music-community/src/components/spacetime/CapsulesTab.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
       "name": "ChallengePanel",
       "package": "@yyc3/music-community",
       "version": "2.0.1",
@@ -329,6 +657,97 @@
       "example": null
     },
     {
+      "name": "ComposeMessage",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "user",
+        "newMsg",
+        "setNewMsg",
+        "msgEmotion",
+        "setMsgEmotion",
+        "showSchedule",
+        "setShowSchedule",
+        "scheduleTime",
+        "setScheduleTime",
+        "linkSong",
+        "setLinkSong",
+        "geoSupported",
+        "attachLocation",
+        "setAttachLocation",
+        "requestLocation",
+        "userLocation",
+        "setUserLocation",
+        "geoLoading",
+        "sttSupported",
+        "sttActive",
+        "stopSTT",
+        "startSTT",
+        "sttStreamingRef",
+        "currentTrackTitle",
+        "voiceSupported",
+        "audioBlob",
+        "isRecording",
+        "startRecording",
+        "recordingDuration",
+        "stopRecording",
+        "audioWaveform",
+        "isPlayingPreview",
+        "togglePreview",
+        "discardRecording",
+        "handleSendVoice",
+        "sending",
+        "sentFlash",
+        "handleSendMessage",
+        "t",
+        "lang"
+      ],
+      "source": "packages/music-community/src/components/spacetime/ComposeMessage.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "CreateCapsuleForm",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "user",
+        "capTitle",
+        "setCapTitle",
+        "capContent",
+        "setCapContent",
+        "capUnlockAt",
+        "setCapUnlockAt",
+        "capRecipient",
+        "setCapRecipient",
+        "capEmotion",
+        "setCapEmotion",
+        "capLinkSong",
+        "setCapLinkSong",
+        "currentTrackTitle",
+        "capEncrypt",
+        "setCapEncrypt",
+        "capRecipientId",
+        "setCapRecipientId",
+        "e2eeReady",
+        "e2eeChecked",
+        "e2eePromptVisible",
+        "setE2eePromptVisible",
+        "capCreatedFlash",
+        "capCreating",
+        "handleCreateCapsule",
+        "t",
+        "lang"
+      ],
+      "source": "packages/music-community/src/components/spacetime/CreateCapsuleForm.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
       "name": "E2EKeySetup",
       "package": "@yyc3/music-community",
       "version": "2.0.1",
@@ -373,9 +792,153 @@
         "currentTrackId",
         "currentTrackTitle",
         "isPlaying",
-        "currentEmotion"
+        "currentEmotion",
+        "wsUrl",
+        "roomId"
       ],
       "source": "packages/music-community/src/components/LiveSessionPanel.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "LyricsEditor",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [],
+      "source": "packages/music-community/src/components/upload/LyricsEditor.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "LyricsTab",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "t",
+        "lang",
+        "lyricsTarget",
+        "setLyricsTarget",
+        "setActiveTab"
+      ],
+      "source": "packages/music-community/src/components/upload/LyricsTab.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "MessageCard",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "msg",
+        "user",
+        "lang",
+        "t",
+        "expandedReplies",
+        "replies",
+        "replyLoading",
+        "replyText",
+        "setReplyText",
+        "setMessages",
+        "handleLikeMessage",
+        "handleToggleReplies",
+        "handleSendReply"
+      ],
+      "source": "packages/music-community/src/components/spacetime/MessageCard.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "MessagesList",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "msgLoading",
+        "messages",
+        "setMessages",
+        "user",
+        "lang",
+        "t",
+        "expandedReplies",
+        "replies",
+        "replyLoading",
+        "replyText",
+        "setReplyText",
+        "handleLikeMessage",
+        "handleToggleReplies",
+        "handleSendReply"
+      ],
+      "source": "packages/music-community/src/components/spacetime/MessagesList.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "MessagesTab",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "user",
+        "newMsg",
+        "setNewMsg",
+        "msgEmotion",
+        "setMsgEmotion",
+        "showSchedule",
+        "setShowSchedule",
+        "scheduleTime",
+        "setScheduleTime",
+        "linkSong",
+        "setLinkSong",
+        "geoSupported",
+        "attachLocation",
+        "setAttachLocation",
+        "requestLocation",
+        "userLocation",
+        "setUserLocation",
+        "geoLoading",
+        "sttSupported",
+        "sttActive",
+        "stopSTT",
+        "startSTT",
+        "sttStreamingRef",
+        "currentTrackTitle",
+        "voiceSupported",
+        "audioBlob",
+        "isRecording",
+        "startRecording",
+        "recordingDuration",
+        "stopRecording",
+        "audioWaveform",
+        "isPlayingPreview",
+        "togglePreview",
+        "discardRecording",
+        "handleSendVoice",
+        "sending",
+        "sentFlash",
+        "handleSendMessage",
+        "msgLoading",
+        "messages",
+        "setMessages",
+        "expandedReplies",
+        "replies",
+        "replyLoading",
+        "replyText",
+        "setReplyText",
+        "handleLikeMessage",
+        "handleToggleReplies",
+        "handleSendReply",
+        "t",
+        "lang"
+      ],
+      "source": "packages/music-community/src/components/spacetime/MessagesTab.tsx",
       "demo": null,
       "example": null
     },
@@ -392,6 +955,112 @@
         "lang"
       ],
       "source": "packages/music-community/src/components/MHeartSystem.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "MyUploadsTab",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "t",
+        "loadingUploads",
+        "myUploads",
+        "playingId",
+        "togglePreview",
+        "openLyricsEditor",
+        "handleDelete"
+      ],
+      "source": "packages/music-community/src/components/upload/MyUploadsTab.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "NearbyTab",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "userLocation",
+        "nearbyLoading",
+        "geoLoading",
+        "nearbyMessages",
+        "fetchNearby",
+        "t",
+        "lang"
+      ],
+      "source": "packages/music-community/src/components/spacetime/NearbyTab.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "PanelFooter",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "tab",
+        "fetchMessages",
+        "fetchCapsules",
+        "fetchNearby",
+        "t"
+      ],
+      "source": "packages/music-community/src/components/spacetime/PanelFooter.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "PanelHeader",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "t",
+        "onClose"
+      ],
+      "source": "packages/music-community/src/components/spacetime/PanelHeader.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "PanelTabBar",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "tab",
+        "setTab",
+        "geoSupported",
+        "nearbyMessages",
+        "fetchNearby",
+        "t"
+      ],
+      "source": "packages/music-community/src/components/spacetime/PanelTabBar.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "ReactionBar",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "reactions",
+        "myReactions",
+        "availableEmojis",
+        "onReact",
+        "onUnreact",
+        "readOnly",
+        "className"
+      ],
+      "source": "packages/music-community/src/components/ReactionBar.tsx",
       "demo": null,
       "example": null
     },
@@ -462,6 +1131,140 @@
         "onUploadComplete"
       ],
       "source": "packages/music-community/src/components/UploadPanel.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "UploadTab",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "t",
+        "lang",
+        "addFilesToQueue",
+        "isDragging",
+        "handleDragOver",
+        "handleDragLeave",
+        "handleDrop",
+        "fileInputRef",
+        "batchFiles",
+        "successCount",
+        "errorCount",
+        "clearQueue",
+        "isUploading",
+        "totalProgress",
+        "removeFromQueue",
+        "updateBatchItem",
+        "openLyricsEditor",
+        "startBatchUpload",
+        "pendingCount"
+      ],
+      "source": "packages/music-community/src/components/upload/UploadTab.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VisxAreaChart",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "data",
+        "width",
+        "height",
+        "title"
+      ],
+      "source": "packages/music-community/src/components/VisxCharts.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VisxBarChart",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "data",
+        "width",
+        "height",
+        "title"
+      ],
+      "source": "packages/music-community/src/components/VisxCharts.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VisxChartsDashboard",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "isOpen",
+        "onClose"
+      ],
+      "source": "packages/music-community/src/components/VisxChartsDashboard.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VisxLineChart",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "data",
+        "width",
+        "height",
+        "title"
+      ],
+      "source": "packages/music-community/src/components/VisxCharts.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VisxPieChart",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "data",
+        "width",
+        "height",
+        "title"
+      ],
+      "source": "packages/music-community/src/components/VisxCharts.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VoiceRecorderPanel",
+      "package": "@yyc3/music-community",
+      "version": "2.0.1",
+      "category": "社区",
+      "description": "动态流、评论、时间线、Fork 树、挑战、直播、时空胶囊、上传、分享与端到端加密。",
+      "props": [
+        "voiceSupported",
+        "audioBlob",
+        "isRecording",
+        "startRecording",
+        "recordingDuration",
+        "stopRecording",
+        "audioWaveform",
+        "isPlayingPreview",
+        "togglePreview",
+        "discardRecording",
+        "handleSendVoice",
+        "sending",
+        "t"
+      ],
+      "source": "packages/music-community/src/components/spacetime/VoiceRecorderPanel.tsx",
       "demo": null,
       "example": null
     },
@@ -630,6 +1433,31 @@
       "example": "<LyricsDisplay\n  currentTime={5}\n  isPlaying={false}\n  lyrics={[\n    { time: 0, text: '前奏', translation: 'Intro' },\n    { time: 5, text: '等待星辰对齐', translation: 'Wait for the stars to align' },\n  ]}\n/>"
     },
     {
+      "name": "WaveformLyrics",
+      "package": "@yyc3/music-lyrics",
+      "version": "2.1.0",
+      "category": "歌词",
+      "description": "逐行歌词展示、点击跳转与情感涟漪可视化。",
+      "props": [
+        "audioUrl",
+        "lyrics",
+        "height",
+        "waveColor",
+        "progressColor",
+        "cursorColor",
+        "showRegions",
+        "loopCurrentRegion",
+        "onTimeUpdate",
+        "onReady",
+        "onSeek",
+        "onRegionLoop",
+        "className"
+      ],
+      "source": "packages/music-lyrics/src/components/WaveformLyrics.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
       "name": "AudioVisualizer",
       "package": "@yyc3/music-player",
       "version": "2.0.1",
@@ -681,7 +1509,7 @@
       "package": "@yyc3/music-player",
       "version": "2.0.1",
       "category": "播放器",
-      "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
+      "description": "YYC³ D-Music 播放器核心组件 — 媒体展示/播放控制/移动端播放器/音频可视化",
       "props": [
         "mode",
         "isPlaying",
@@ -702,7 +1530,7 @@
       "package": "@yyc3/music-player",
       "version": "2.0.1",
       "category": "播放器",
-      "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
+      "description": "YYC³ D-Music 播放器核心组件 — 媒体展示/播放控制/移动端播放器/音频可视化",
       "props": [
         "isOpen",
         "onClose",
@@ -749,7 +1577,7 @@
       "package": "@yyc3/music-player",
       "version": "2.0.1",
       "category": "播放器",
-      "description": "媒体展示、播放控制、移动端播放器与音频可视化四件套。",
+      "description": "YYC³ D-Music 播放器核心组件 — 媒体展示/播放控制/移动端播放器/音频可视化",
       "props": [
         "isPlaying",
         "onPlayPause",
@@ -861,7 +1689,7 @@
         "color",
         "bgColor"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/AchievementRing.tsx",
       "demo": "AchievementRing",
       "example": "<AchievementRing progress={72} size={72} />"
     },
@@ -1399,6 +2227,23 @@
       "example": null
     },
     {
+      "name": "CmdKPalette",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [
+        "open",
+        "onOpenChange",
+        "className",
+        "children",
+        "onSelectSearchResult"
+      ],
+      "source": "packages/music-ui/src/ui/cmd-k-palette.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
       "name": "Collapsible",
       "package": "@yyc3/music-ui",
       "version": "2.0.1",
@@ -1709,7 +2554,7 @@
         "unlocked",
         "rarity"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DAchievementCard.tsx",
       "demo": "DAchievementCard",
       "example": "<DAchievementCard title=\"夜行者\" description=\"连续 7 天收听\" icon=\"🌙\" progress={70} rarity=\"rare\" />"
     },
@@ -1741,7 +2586,7 @@
         "size",
         "children"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DBadge.tsx",
       "demo": "DBadge",
       "example": "<DBadge variant=\"accent\" size=\"sm\">Pro</DBadge>"
     },
@@ -1756,7 +2601,7 @@
         "separator",
         "className"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DBreadcrumb.tsx",
       "demo": null,
       "example": null
     },
@@ -1776,7 +2621,7 @@
         "disabled",
         "children"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DButton.tsx",
       "demo": "DButton",
       "example": "<DButton variant=\"primary\" onClick={() => console.log('play')}>\n  开始播放\n</DButton>"
     },
@@ -1794,7 +2639,7 @@
         "onClick",
         "children"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DCard.tsx",
       "demo": "DCard",
       "example": "<DCard variant=\"glass\" padding=\"md\">\n  <h3>夜航</h3>\n  <p>YYC³ · MusAI</p>\n</DCard>"
     },
@@ -1811,7 +2656,7 @@
         "className",
         "onDismiss"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DFeedback.tsx",
       "demo": null,
       "example": null
     },
@@ -1939,7 +2784,7 @@
         "inputSize",
         "leftIcon"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DInput.tsx",
       "demo": "DInput",
       "example": "<DInput label=\"搜索\" placeholder=\"歌曲 / 歌手\" />"
     },
@@ -1955,7 +2800,7 @@
         "className",
         "divided"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DList.tsx",
       "demo": null,
       "example": null
     },
@@ -1971,7 +2816,7 @@
         "className",
         "active"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DListItem.tsx",
       "demo": null,
       "example": null
     },
@@ -1992,7 +2837,7 @@
         "className",
         "closeOnBackdrop"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DModal.tsx",
       "demo": null,
       "example": null
     },
@@ -2012,7 +2857,7 @@
         "onClick",
         "className"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DMusicCard.tsx",
       "demo": null,
       "example": null
     },
@@ -2064,7 +2909,7 @@
         "variant",
         "showLabel"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DProgress.tsx",
       "demo": "DProgress",
       "example": "<DProgress value={68} showLabel />"
     },
@@ -2142,6 +2987,24 @@
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
       "source": "packages/music-ui/src/ui/drawer.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "DrawerPanel",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [
+        "open",
+        "onOpenChange",
+        "side",
+        "title",
+        "className",
+        "children"
+      ],
+      "source": "packages/music-ui/src/ui/vaul-drawer.tsx",
       "demo": null,
       "example": null
     },
@@ -2352,7 +3215,7 @@
       "props": [
         "size"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DSpinner.tsx",
       "demo": "DSpinner",
       "example": "<DSpinner size=\"lg\" />"
     },
@@ -2371,7 +3234,7 @@
         "className",
         "fullWidth"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DTabBar.tsx",
       "demo": null,
       "example": null
     },
@@ -2389,7 +3252,7 @@
         "className",
         "style"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DTag.tsx",
       "demo": null,
       "example": null
     },
@@ -2407,7 +3270,7 @@
         "onDismiss",
         "className"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DToast.tsx",
       "demo": null,
       "example": null
     },
@@ -2425,7 +3288,7 @@
         "onClick",
         "className"
       ],
-      "source": "packages/music-ui/src/dmusic/DMusicUI.tsx",
+      "source": "packages/music-ui/src/dmusic/ui/DUserCard.tsx",
       "demo": null,
       "example": null
     },
@@ -2972,6 +3835,43 @@
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
       "source": "packages/music-ui/src/ui/pagination.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "PlaylistItemView",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [],
+      "source": "packages/music-ui/src/ui/playlist-dnd.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "PlaylistSort",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [
+        "items",
+        "onReorder",
+        "className"
+      ],
+      "source": "packages/music-ui/src/ui/playlist-sort.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "PlaylistSortableList",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [],
+      "source": "packages/music-ui/src/ui/playlist-dnd.tsx",
       "demo": null,
       "example": null
     },
@@ -3911,6 +4811,36 @@
       "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
       "props": [],
       "source": "packages/music-ui/src/ui/tooltip.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VirtualList",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [
+        "items",
+        "estimateSize",
+        "overscan",
+        "renderItem",
+        "initialRect",
+        "className",
+        "itemClassName"
+      ],
+      "source": "packages/music-ui/src/ui/virtual-list.tsx",
+      "demo": null,
+      "example": null
+    },
+    {
+      "name": "VirtualTrackList",
+      "package": "@yyc3/music-ui",
+      "version": "2.0.1",
+      "category": "UI 基础",
+      "description": "shadcn/ui + Radix UI 基件与 D-Music 设计层（DButton / DCard / 数据可视化等），六主题可切换。",
+      "props": [],
+      "source": "packages/music-ui/src/ui/virtual-list.tsx",
       "demo": null,
       "example": null
     },

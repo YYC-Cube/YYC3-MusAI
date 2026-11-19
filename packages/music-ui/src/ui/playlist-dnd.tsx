@@ -61,7 +61,8 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
           setNodeRef(node);
           if (ref) {
             if (typeof ref === 'function') ref(node);
-            else (ref as React.RefObject<HTMLDivElement>).current = node;
+            // React 18 类型中 RefObject.current 只读，React 19 才可变；可变结构断言兼容两者
+            else (ref as { current: HTMLDivElement | null }).current = node;
           }
         }}
         {...attributes}

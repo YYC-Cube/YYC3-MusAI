@@ -1,204 +1,228 @@
 "use client";
 
 /**
- * §W2 补波形：WaveSurfer.js 波形 + 歌词联动
+ * YYC³ music-lyrics — WaveSurfer 波形歌词联动组件
  *
- * 提供音频波形可视化与歌词同步高亮，Regions 支持：
- *  - 点击波形跳转到对应歌词行
- *  - 片段循环（Region 循环播放）
- *  - 歌词行点击跳转波形位置
+ * 基于 wavesurfer.js v8 渲染交互式音频波形：
+ * - 每行歌词生成一个 Region，点击 Region 即跳转到该行并播放；
+ * - `loopCurrentRegion` 开启后，播放到达当前 Region 末尾自动回到 Region 起点（片段循环）；
+ * - 对外暴露 seek/play/pause，供 LyricsDisplay 的歌词行点击（tapSync）与波形时间轴联动。
  *
- * 依赖：wavesurfer.js (BSD-3-Clause，立即可用)
+ * 许可：MIT（wavesurfer.js BSD-3-Clause，本组件 MIT）
  *
- * @example
- *   import { WaveformLyrics } from '@yyc3/music-lyrics';
- *   <WaveformLyrics audioUrl="/audio/song.mp3" lyrics={lyrics} onSeek={onSeek} />
+ * ⧗ 与 useWaveform 的选型边界（W6-P1-5）：需要歌词联动/Region 循环/点击 seek
+ * 等交互式波形 → 用本组件（wavesurfer.js v8）；只要波形采样数据（进度条、
+ * 迷你波形、可视化）→ 用 @yyc3/music-hooks 的 `useWaveform`（自研采样，零依赖）。
+ *
+ * ↺ 主仓 2026-11-09 合入增量：`onSeek` / `onRegionLoop` 回调、default 导出、
+ *   "use client" 指令；主仓受控版（isPlaying/currentTime + 内置歌词列表）与
+ *   本仓 LyricsDisplay+tapSync 架构重叠，未搬入（两仓测试均以本句柄 API 为准）。
  */
 
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import RegionsPlugin from 'wavesurfer.js/plugins/regions';
 import WaveSurfer from 'wavesurfer.js';
-import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from 'react';
+
 import type { LyricLine } from './LyricsDisplay';
 
-interface WaveformLyricsProps {
-  /** 音频地址 */
+/** WaveSurfer.create 的 plugins 数组元素类型（主入口未再导出 GenericPlugin） */
+type WaveSurferPlugin = NonNullable<
+  Parameters<typeof WaveSurfer.create>[0]['plugins']
+>[number];
+
+export interface WaveformLyricsHandle {
+  play: () => void;
+  pause: () => void;
+  /** 跳转到指定秒数（歌词行 tapSync 联动入口） */
+  seek: (time: number) => void;
+  getCurrentTime: () => number;
+  getDuration: () => number;
+}
+
+export interface WaveformLyricsProps {
+  /** 音频地址，支持常规格式与 .m3u8 以外的直接可解码源 */
   audioUrl: string;
-  /** 歌词行（按 time 升序） */
-  lyrics: LyricLine[];
-  /** 播放状态 */
-  isPlaying?: boolean;
-  /** 当前播放时间（秒），由外部播放器同步 */
-  currentTime?: number;
-  /** 波形颜色 */
+  /** 歌词行数组，用于生成 Region */
+  lyrics?: LyricLine[];
+  /** 波形高度，默认 64px */
+  height?: number;
   waveColor?: string;
-  /** 进度颜色 */
   progressColor?: string;
-  /** 歌词高亮时回调：时间 */
+  cursorColor?: string;
+  /** 是否为每行歌词渲染 Region，默认 true */
+  showRegions?: boolean;
+  /** 播放到当前 Region 末尾时自动循环该片段 */
+  loopCurrentRegion?: boolean;
+  /** 播放进度回调（秒），用于与歌词滚动联动 */
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
+  /** 音频解码完成回调 */
+  onReady?: (duration: number) => void;
+  /** 点击 Region / 歌词行跳转时回调（主仓合入），参数为目标行起始秒数 */
   onSeek?: (time: number) => void;
-  /** Region 循环开始/结束回调 */
+  /** 片段循环触发时回调（主仓合入），参数为当前 Region 起点/终点秒数 */
   onRegionLoop?: (start: number, end: number) => void;
-  /** 类名 */
   className?: string;
 }
 
-/**
- * WaveformLyrics 组件
- */
-export const WaveformLyrics: React.FC<WaveformLyricsProps> = ({
-  audioUrl,
-  lyrics,
-  isPlaying = false,
-  currentTime,
-  waveColor = 'rgb(100, 200, 255)',
-  progressColor = 'rgb(255, 100, 100)',
-  onSeek,
-  onRegionLoop,
-  className = '',
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const wavesurferRef = useRef<any>(null);
-  const [ready, setReady] = useState(false);
+export const WaveformLyrics = forwardRef<WaveformLyricsHandle, WaveformLyricsProps>(
+  (
+    {
+      audioUrl,
+      lyrics,
+      height = 64,
+      waveColor = 'rgba(255,255,255,0.35)',
+      progressColor = 'linear-gradient(90deg, #667eea, #764ba2)',
+      cursorColor = '#ffffff',
+      showRegions = true,
+      loopCurrentRegion = false,
+      onTimeUpdate,
+      onReady,
+      onSeek,
+      onRegionLoop,
+      className,
+    },
+    ref,
+  ) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const wsRef = useRef<WaveSurfer | null>(null);
+    const regionsRef = useRef<ReturnType<typeof RegionsPlugin.create> | null>(null);
+    const activeRegionIdRef = useRef<string | null>(null);
+    const loopRef = useRef(loopCurrentRegion);
+    loopRef.current = loopCurrentRegion;
 
-  // 歌词行索引映射（用于 Region）
-  const lyricRegionsRef = useRef<Map<string, any>>(new Map());
+    // ── WaveSurfer 生命周期：随 audioUrl 重建 ──
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container || !audioUrl) return;
 
-  // ---------- 初始化 WaveSurfer ----------
-  useEffect(() => {
-    if (!containerRef.current) return;
+      const regions = RegionsPlugin.create();
+      regionsRef.current = regions;
 
-    const wavesurfer = WaveSurfer.create({
-      container: containerRef.current,
-      url: audioUrl,
-      waveColor,
-      progressColor,
-      cursorWidth: 1,
-      cursorColor: 'rgba(255, 255, 255, 0.6)',
-      barWidth: 2,
-      barRadius: 2,
-      barGap: 1,
-      height: 64,
-      fillParent: true,
-      hideScrollbar: true,
-      autoCenter: true,
-      interact: true,
-    });
+      const ws = WaveSurfer.create({
+        container,
+        url: audioUrl,
+        height,
+        waveColor,
+        progressColor,
+        cursorColor,
+        cursorWidth: 2,
+        barWidth: 2,
+        barGap: 1,
+        barRadius: 2,
+        normalize: true,
+        dragToSeek: true,
+        hideScrollbar: true,
+        plugins: [regions as unknown as WaveSurferPlugin],
+      });
+      wsRef.current = ws;
 
-    // 加载 Regions 插件
-    const regionsPlugin = wavesurfer.registerPlugin(RegionsPlugin.create());
+      const onTime = (currentTime: number) => {
+        // 片段循环：到达当前 Region 末尾时回到起点
+        if (loopRef.current && activeRegionIdRef.current) {
+          const region = regions.getRegions().find((r) => r.id === activeRegionIdRef.current);
+          if (region && currentTime >= region.end - 0.05) {
+            ws.setTime(region.start);
+            if (!ws.isPlaying()) void ws.play();
+            onRegionLoop?.(region.start, region.end);
+          }
+        }
+        onTimeUpdate?.(currentTime, ws.getDuration());
+      };
+      const onReadyHandler = () => onReady?.(ws.getDuration());
 
-    wavesurferRef.current = wavesurfer;
+      ws.on('timeupdate', onTime);
+      ws.on('ready', onReadyHandler);
 
-    wavesurfer.on('ready', () => {
-      setReady(true);
-      // 为每首歌词行创建一个 Region（点击波形跳转）
-      lyricRegionsRef.current.clear();
-      lyrics.forEach((line, index) => {
-        if (line.time == null) return;
-        const region = regionsPlugin.addRegion({
-          start: line.time,
-          end: line.time + 0.5,
+      return () => {
+        ws.un('timeupdate', onTime);
+        ws.un('ready', onReadyHandler);
+        activeRegionIdRef.current = null;
+        regionsRef.current = null;
+        wsRef.current = null;
+        ws.destroy();
+      };
+      // 波形颜色等展示项不触发重建
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [audioUrl, height]);
+
+    // ── 歌词行 → Region 同步 ──
+    useEffect(() => {
+      const regions = regionsRef.current;
+      const ws = wsRef.current;
+      if (!regions || !ws || !showRegions) return;
+
+      const duration = ws.getDuration() || 0;
+      regions.clearRegions();
+
+      (lyrics || []).forEach((line, i) => {
+        const next = (lyrics || [])[i + 1];
+        const start = line.time;
+        const end = next ? next.time : duration || line.time + 5;
+        if (end <= start) return;
+
+        regions.addRegion({
+          id: `lyric-${i}`,
+          start,
+          end,
           content: line.text,
-          color: 'rgba(255, 255, 255, 0.06)',
-        });
-        lyricRegionsRef.current.set(String(index), region);
-
-        // 点击 Region 跳转歌词
-        region.on('click', () => {
-          onSeek?.(line.time);
+          color: 'rgba(255,255,255,0.04)',
+          drag: false,
+          resize: false,
         });
       });
-    });
 
-    // 时间更新同步（由外部 currentTime 驱动，也可监听 wavesurfer 的 timeupdate）
-    wavesurfer.on('timeupdate', (_time: number) => {
-      // 外部控制播放位置，此处不主动回调 onSeek，避免循环
-    });
+      const clickUnsub = regions.on('region-clicked', (region) => {
+        activeRegionIdRef.current = region.id;
+        ws.setTime(region.start);
+        void ws.play();
+        region.play();
+        onSeek?.(region.start);
+      });
+      const inUnsub = regions.on('region-in', (region) => {
+        activeRegionIdRef.current = region.id;
+      });
 
-    // Region 循环：当播放进入 Region 时可触发循环（由 onRegionLoop 外部处理）
-    regionsPlugin.on('region-clicked', (region: any) => {
-      onSeek?.(region.start);
-    });
+      return () => {
+        clickUnsub();
+        inUnsub();
+      };
+    }, [lyrics, showRegions]);
 
-    return () => {
-      wavesurfer.destroy();
-      wavesurferRef.current = undefined;
-      setReady(false);
-    };
-  }, [audioUrl, waveColor, progressColor, lyrics, onSeek]);
+    // ── 命令句柄：供歌词 tapSync 联动 ──
+    const seek = useCallback((time: number) => {
+      wsRef.current?.setTime(time);
+    }, []);
 
-  // ---------- 歌词高亮：当 currentTime 变化，滚动到对应行 ----------
-  const activeIndexRef = useRef(-1);
-  useEffect(() => {
-    if (!lyrics || lyrics.length === 0 || currentTime == null) return;
-    const idx = lyrics.findLastIndex((line) => line.time <= currentTime);
-    if (idx !== activeIndexRef.current) {
-      activeIndexRef.current = idx;
-    }
-  }, [currentTime, lyrics]);
+    useImperativeHandle(ref, () => ({
+      play: () => void wsRef.current?.play(),
+      pause: () => wsRef.current?.pause(),
+      seek,
+      getCurrentTime: () => wsRef.current?.getCurrentTime() ?? 0,
+      getDuration: () => wsRef.current?.getDuration() ?? 0,
+    }), [seek]);
 
-  // ---------- 外部 isPlaying 控制 ----------
-  useEffect(() => {
-    const ws = wavesurferRef.current;
-    if (!ws || !ready) return;
-    if (isPlaying) {
-      ws.play().catch(() => {});
-    } else {
-      ws.pause();
-    }
-  }, [isPlaying, ready]);
-
-  // ---------- 当 currentTime 变化，同步 wavesurfer 播放位置 ----------
-  useEffect(() => {
-    const ws = wavesurferRef.current;
-    if (!ws || !ready || currentTime == null) return;
-    // 仅当差异较大时才 seek，避免频繁跳转
-    const diff = Math.abs(ws.getCurrentTime() - currentTime);
-    if (diff > 0.5) {
-      ws.seek(currentTime);
-    }
-  }, [currentTime, ready]);
-
-  // ---------- 渲染歌词列表（点击跳转） ----------
-  const handleLyricClick = useCallback(
-    (time: number) => {
-      onSeek?.(time);
-      const ws = wavesurferRef.current;
-      if (ws) ws.seek(time);
-    },
-    [onSeek]
-  );
-
-  return (
-    <div className={`w-full flex flex-col gap-4 ${className}`}>
-      {/* Waveform 区域 */}
+    return (
       <div
         ref={containerRef}
-        className={`w-full bg-black/20 rounded-xl border border-white/10 relative ${className}`}
-        style={{ height: 80 }}
+        className={className}
+        data-slot="waveform-lyrics"
+        role="slider"
+        aria-label="音频波形 / Waveform"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(wsRef.current?.getDuration() ?? 0)}
+        aria-valuenow={Math.round(wsRef.current?.getCurrentTime() ?? 0)}
       />
-      {/* 歌词列表 */}
-      <div className="flex-1 overflow-y-auto py-2">
-        {lyrics.map((line, index) => {
-          const isActive =
-            activeIndexRef.current === index;
-          return (
-            <div
-              key={index}
-              onClick={() => handleLyricClick(line.time)}
-              className={`cursor-pointer px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-white/10 text-white font-semibold'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white/70'
-              }`}
-            >
-              <span className="text-xs text-white/30 mr-2">{line.time.toFixed(1)}s</span>
-              {line.text}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+    );
+  },
+);
 
+WaveformLyrics.displayName = 'WaveformLyrics';
+
+// 主仓兼容：default 导出（主仓调用方 `import WaveformLyrics from ...` 用法）
 export default WaveformLyrics;

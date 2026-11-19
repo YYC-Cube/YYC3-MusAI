@@ -2,27 +2,21 @@
   "name": "@yyc3/music-server",
   "version": "1.0.0",
   "private": true,
-  "description": "YYC³ D-Music 服务端（22 文件 / 21 路由模块）— Node 20+ 运行时，Hono + Prisma/pg + PostgreSQL 15",
+  "description": "YYC³ D-Music Supabase Edge Functions 后端（22 文件 / 21 路由模块）— 独立部署单元，Deno 运行时，不参与 workspace 构建/发布流水线",
   "type": "module",
   "files": [
     "src"
   ],
   "scripts": {
-    "start": "node src/index.ts",
-    "start:prod": "node dist/index.js",
-    "dev": "node --watch src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "deploy": "supabase functions deploy make-server-f626b673 --project-ref $SUPABASE_PROJECT_REF",
     "prisma:validate": "prisma validate",
     "test:deno": "env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno test --allow-all test-deno",
     "test:deno:coverage": "rm -rf /tmp/deno-cov && env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno test --allow-all --coverage=/tmp/deno-cov test-deno && env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno coverage /tmp/deno-cov --exclude=test-deno --exclude=src/index.ts --lcov --output=/tmp/deno-src.lcov"
   },
   "keywords": [
     "yyc3",
-    "musai",
     "music",
-    "server",
+    "supabase",
     "edge-functions"
   ],
   "author": "YYC³ Team <admin@0379.email>",

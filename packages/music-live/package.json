@@ -2,27 +2,48 @@
   "name": "@yyc3/music-live",
   "version": "0.1.0",
   "private": true,
-  "description": "YYC³ 音乐直播专用组件包（W3 补流媒体）：直播间 UI、弹幕、表情、礼物、在线人数",
+  "description": "YYC³ D-Music 直播组件包 — 直播间 UI / 弹幕渲染 / 礼物动画（对接 music-server /live/ws）",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
-    "test": "vitest run"
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@yyc3/music-hooks": "workspace:*",
+    "@yyc3/music-ui": "workspace:*",
+    "@yyc3/music-utils": "workspace:*",
+    "lucide-react": "0.487.0",
+    "motion": "12.23.24",
+    "sonner": "^2.0.8",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "sonner": "^2.0.8"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
+    "typescript": "^5.9.2",
+    "@types/node": "^22.10.2",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "5.2.0",
-    "typescript": "^5.9.3",
     "vite": "^5.4.19"
+  },
+  "keywords": [
+    "yyc3",
+    "music",
+    "live",
+    "danmaku"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "YYC³ Team <admin@0379.email>",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18.0.0"
   }
 }

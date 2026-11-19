@@ -1,0 +1,73 @@
+# group	repo	license	note
+01-音乐	navidrome/navidrome	GPL-3.0	自托管音乐流媒体（Subsonic 兼容）
+01-音乐	koel/koel	MIT	全功能音乐流媒体
+01-音乐	qier222/YesPlayMusic	MIT	高完成度音乐播放器客户端
+01-音乐	maotoumao/MusicFree	AGPL-3.0	插件化音乐播放器
+01-音乐	jeffvli/feishin	GPL-3.0	Navidrome/Jellyfin 桌面客户端
+01-音乐	dweymouth/supersonic	GPL-3.0	Subsonic 桌面客户端
+01-音乐	DIYgod/APlayer	MIT	网页音频播放器
+01-音乐	metowolf/Meting	MIT	多平台音乐 API 聚合
+02-社交	mastodon/mastodon	AGPL-3.0	联邦式微博客
+02-社交	misskey-dev/misskey	AGPL-3.0	联邦式社交（强自定义 UI）
+02-社交	LemmyNet/lemmy	AGPL-3.0	联邦式社区/论坛
+02-社交	bluesky-social/social-app	MIT	去中心化社交客户端
+02-社交	pixelfed/pixelfed	AGPL-3.0	图片社交
+02-社交	discourse/discourse	GPL-2.0	论坛/社区
+02-社交	forem/forem	AGPL-3.0	开发者社区平台
+03-媒体视频	Chocobozzz/PeerTube	AGPL-3.0	联邦式视频平台
+03-媒体视频	mediacms-io/mediacms	AGPL-3.0	媒体 CMS
+03-媒体视频	jellyfin/jellyfin	GPL-2.0	家庭媒体服务器
+03-媒体视频	immich-app/immich	AGPL-3.0	自托管照片/视频资产库
+03-媒体视频	owncast/owncast	MIT	自托管直播 + 聊天
+03-媒体视频	bluenviron/mediamtx	MIT	零依赖流媒体服务器
+03-媒体视频	ossrs/srs	MIT	实时媒体服务器
+03-媒体视频	ZLMediaKit/ZLMediaKit	MIT	高性能流媒体服务
+03-媒体视频	livekit/livekit	Apache-2.0	WebRTC SFU
+03-媒体视频	nayak-nirmalya/netflix-clone	MIT	流媒体前台 UI 教学实现
+04-综艺制作	obsproject/obs-studio	GPL-2.0	采集/混流/推流
+04-综艺制作	CasparCG/server	GPL-3.0	广电级播控
+04-综艺制作	remotion-dev/remotion	Commercial	React 程序化视频（商业授权）
+04-综艺制作	redotvideo/revideo	Apache-2.0	代码驱动视频编辑
+04-综艺制作	motion-canvas/motion-canvas	MIT	代码化动画/演示视频
+04-综艺制作	FFmpeg/FFmpeg	LGPL/GPL	转码/封装/截图底座
+04-综艺制作	AcademySoftwareFoundation/OpenTimelineIO	Apache-2.0	剪辑时间线交换格式
+05-UI组件	shadcn-ui/ui	MIT	可复制源码的组件集合
+05-UI组件	radix-ui/primitives	MIT	无样式可访问性原语
+05-UI组件	tailwindlabs/headlessui	MIT	Tailwind 官方无样式组件
+05-UI组件	heroui-inc/heroui	Apache-2.0	React 组件库
+05-UI组件	mantinedev/mantine	MIT	全量组件 + Hooks
+05-UI组件	chakra-ui/chakra-ui	MIT	样式化组件系统
+05-UI组件	ant-design/ant-design	MIT	企业级组件库
+05-UI组件	arco-design/arco-design	MIT	中后台组件库
+05-UI组件	DouyinFE/semi-design	MIT	中后台组件库
+05-UI组件	element-plus/element-plus	MIT	Vue 3 组件库
+05-UI组件	vuetifyjs/vuetify	MIT	Vue 组件库
+05-UI组件	tusen-ai/naive-ui	MIT	Vue 3 组件库
+05-UI组件	saadeghi/daisyui	MIT	Tailwind 主题化组件
+05-UI组件	motiondivision/motion	MIT	React 动画
+05-UI组件	greensock/GSAP	Free-Closed	时间线动画（闭源免费）
+05-UI组件	darkroomengineering/lenis	MIT	平滑滚动
+05-UI组件	pmndrs/react-three-fiber	MIT	React 声明式 3D
+05-UI组件	pmndrs/drei	MIT	R3F 工具集
+05-UI组件	pixijs/pixijs	MIT	2D WebGL 渲染
+05-UI组件	airbnb/lottie-web	MIT	矢量动画运行时
+05-UI组件	rive-app/rive-wasm	MIT	可交互矢量动画
+05-UI组件	videojs/video.js	Apache-2.0	视频播放器
+05-UI组件	muxinc/media-chrome	MIT	可组合媒体控件
+05-UI组件	sampotts/plyr	MIT	轻量播放器 UI
+05-UI组件	vidstack/player	MIT	Headless 媒体组件（已弃用）
+05-UI组件	wavesurfer-js/wavesurfer.js	BSD-3-Clause	交互式音频波形
+05-UI组件	bbc/peaks.js	LGPL-3.0	BBC 波形标注
+05-UI组件	video-dev/hls.js	Apache-2.0	HLS 播放内核
+05-UI组件	shaka-project/shaka-player	Apache-2.0	DASH/HLS 播放内核
+05-UI组件	recharts/recharts	MIT	React 图表
+05-UI组件	airbnb/visx	MIT	React 可视化原语
+05-UI组件	plouc/nivo	MIT	React 图表
+05-UI组件	tremorlabs/tremor	Apache-2.0	仪表盘组件
+05-UI组件	apache/echarts	Apache-2.0	通用图表库
+05-UI组件	d3/d3	ISC	底层可视化
+05-UI组件	clauderic/dnd-kit	MIT	拖拽
+05-UI组件	TanStack/table	MIT	表格
+05-UI组件	pacocoursey/cmdk	MIT	命令面板
+05-UI组件	emilkowalski/vaul	MIT	抽屉
+05-UI组件	emilkowalski/sonner	MIT	Toast

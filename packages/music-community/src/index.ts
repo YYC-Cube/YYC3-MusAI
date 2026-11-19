@@ -13,3 +13,4 @@ export * from './components/ShareWorkModal';
 export * from './components/E2EKeySetup';
 export * from './components/MHeartSystem';
 export * from './components/VisxCharts';
+export * from './components/VisxChartsDashboard';

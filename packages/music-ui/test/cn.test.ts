@@ -8,8 +8,7 @@ describe('cn 类名合并', () => {
   })
 
   it('忽略 falsy 值', () => {
-    const disabled = false
-    expect(cn('a', disabled && 'b', undefined, null, 'c')).toBe('a c')
+    expect(cn('a', false && 'b', undefined, null, 'c')).toBe('a c')
   })
 
   it('支持条件对象与数组', () => {

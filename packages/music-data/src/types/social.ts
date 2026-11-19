@@ -27,6 +27,8 @@ export interface CommunityActivity {
   songTitle: string;
   detail: string;
   timestamp: number;
+  /** emoji → 计数（用于表情反应） */
+  reactions?: Record<string, number>;
 }
 
 /** Comment on a song */

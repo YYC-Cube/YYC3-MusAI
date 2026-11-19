@@ -24,9 +24,11 @@ interface LiveRoomProps {
   user: LiveUser;
   /** WebSocket URL（含 token） */
   wsUrl: string;
+  /** 自定义播放器渲染（接收 HLS 地址与直播状态）；不传则用内置占位播放区 */
+  renderPlayer?: (hlsUrl: string | null, live: boolean) => React.ReactNode;
 }
 
-export const LiveRoom: React.FC<LiveRoomProps> = ({ room, user, wsUrl }) => {
+export const LiveRoom: React.FC<LiveRoomProps> = ({ room, user, wsUrl, renderPlayer }) => {
   const clientRef = useRef<InstanceType<typeof LiveClient> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(room.viewerCount);
@@ -88,26 +90,32 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ room, user, wsUrl }) => {
     <div className="flex flex-col h-full w-full bg-black text-white">
       {/* 视频区域（HLS 播放，前端用 Video.js/hls.js 使用 room.hlsPlayUrl） */}
       <div className="flex-1 relative bg-black flex items-center justify-center">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-2xl font-bold mb-2">{room.name}</div>
-            <div className="text-xs text-gray-400">
-              HLS 播放地址：{room.hlsPlayUrl}
+        {renderPlayer ? (
+          renderPlayer(room.hlsPlayUrl || null, room.status === 'live')
+        ) : (
+          <>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold mb-2">{room.name}</div>
+                <div className="text-xs text-gray-400">
+                  HLS 播放地址：{room.hlsPlayUrl}
+                </div>
+                <div className="mt-4 text-lg">
+                  {isConnected ? (
+                    <span className="text-green-400">● 已连接直播间</span>
+                  ) : (
+                    <span className="text-red-400">⚠ 连接中断</span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="mt-4 text-lg">
-              {isConnected ? (
-                <span className="text-green-400">● 已连接直播间</span>
-              ) : (
-                <span className="text-red-400">⚠ 连接中断</span>
-              )}
+            {/* 占位：实际集成时替换为 <Video> 或 hls.js 播放器 */}
+            <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center pointer-events-none">
+              <div className="text-2xl">📺</div>
+              <div className="text-white/50 text-sm">HLS 流媒体播放区</div>
             </div>
-          </div>
-        </div>
-        {/* 占位：实际集成时替换为 <Video> 或 hls.js 播放器 */}
-        <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center pointer-events-none">
-          <div className="text-2xl">📺</div>
-          <div className="text-white/50 text-sm">HLS 流媒体播放区</div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* 底部交互栏 */}

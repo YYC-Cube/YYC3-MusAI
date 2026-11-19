@@ -1,4 +1,4 @@
-// YYC³ music-hooks — 交互逻辑层（10 个通用 hooks）
+// YYC³ music-hooks — 交互逻辑层（13 个通用 hooks）
 export * from './i18n-translations';
 export * from './useAIAssistant';
 export * from './useAudioComposer';
@@ -9,6 +9,6 @@ export * from './usePWA';
 export * from './useResponsive';
 export * from './useSwipeGesture';
 export * from './useVirtualList';
+export * from './useWaveform';
 export * from './useScrollProgress';
 export * from './useMediaQuery';
-export * from './useWaveform';

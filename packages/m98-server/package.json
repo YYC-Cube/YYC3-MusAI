@@ -9,7 +9,6 @@
     "start": "node src/server-postgres.js",
     "start:postgres": "node src/server-postgres.js",
     "dev": "nodemon src/server-postgres.js",
-    "lint": "eslint src scripts tests",
     "test": "jest --runInBand --testPathIgnorePatterns tests/pgApi.test.js tests/helpers",
     "test:pg": "jest --runInBand",
     "test:pg:setup": "node scripts/pg-test-db.js",

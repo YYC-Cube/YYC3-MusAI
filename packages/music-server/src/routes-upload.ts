@@ -26,8 +26,8 @@ import { ROUTE_PREFIX, kv, registerSongId, queryCache, getUserFromRequest } from
 import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
 import { validate } from "./validation.ts";
 import { z } from "zod";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { Readable } from "node:stream";
 import {
   getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
@@ -621,6 +621,12 @@ export function registerUploadRoutes(app: any) {
           signedUrl,
           coverSignedUrl,
           lyrics,
+          // W3-1: Range/206 由 Supabase Storage 端原生支持（签名 URL 直连），
+          // 服务端不做流代理，避免带宽放大与 SSRF 面。
+          streaming: {
+            range: true,
+            strategy: 'signed-url',
+          },
         },
       });
 

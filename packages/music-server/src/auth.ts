@@ -6,7 +6,7 @@
  * 存储 ：musai.users（password_hash），通过 db.ts 读写
  */
 
-import * as crypto from "crypto";
+import * as crypto from "node:crypto";
 import {
   getUserProfile,
   getUserByEmail,

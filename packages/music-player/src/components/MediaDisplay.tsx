@@ -4,8 +4,14 @@ import { ImageWithFallback } from '@yyc3/music-ui';
 import { AudioVisualizer } from './AudioVisualizer';
 import type { Emotion } from '@yyc3/music-hooks';
 import { useI18n } from '@yyc3/music-hooks';
+
+// Video.js 10 + Media Chrome 播放器内核（W2）
+// 注：media-chrome v4 为 Web Components，样式内建 shadow DOM，无独立 CSS 文件
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import Hls from 'hls.js';
+
+type VideoJsPlayer = any;
 
 interface MediaDisplayProps {
   mode: 'audio' | 'video';
@@ -39,9 +45,84 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
   videoUrl,
 }) => {
   const [visualizerSize, setVisualizerSize] = useState(384);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playerRef = useRef<any>(null);
   const { t } = useI18n();
+
+  // Video.js 10 播放器实例（仅 video 模式使用）
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<VideoJsPlayer | null>(null);
+
+  // 实例生命周期：随源（videoUrl）创建/销毁，不随播放状态重建（架构文档 §3.1：播放实例不随视图/状态重建）
+  useEffect(() => {
+    if (mode !== 'video' || !videoRef.current) return;
+
+    const el = videoRef.current;
+    const isHls = typeof videoUrl === 'string' && videoUrl.endsWith('.m3u8');
+
+    if (isHls && Hls.isSupported()) {
+      // hls.js 接管 HLS 源，video.js 仅负责渲染与控制栏
+      const hls = new Hls();
+      hls.loadSource(videoUrl);
+      hls.attachMedia(el);
+      // jsdom / 旧浏览器 play() 可能返回 undefined，安全调用
+      try {
+        void Promise.resolve(el.play?.()).catch(() => {});
+      } catch {
+        /* 自动播放被策略阻止属预期，等待用户手势 */
+      }
+      (el as any).__hls = hls;
+      return () => {
+        if ((el as any).__hls) {
+          (el as any).__hls.destroy();
+          (el as any).__hls = null;
+        }
+      };
+    }
+
+    // 非 HLS：Video.js 原生播放
+    const newPlayer: any = videojs(el, {
+      fluid: true,
+      controls: true,
+      playsinline: true,
+      preload: 'auto',
+      controlBar: {
+        volumePanel: true,
+        progressControl: true,
+        remainingTimeDisplay: false,
+      },
+    });
+    // videojs 同步返回实例；不在 ready 回调内引用自身（避免 TDZ 时序缺陷）
+    playerRef.current = newPlayer;
+    // 深色主题色变量，与现有设计一致（主仓 §W2 合入；宿主元素缺失/无 style 时跳过，如测试 mock）
+    const hostEl = newPlayer.el() as (HTMLElement | undefined | null);
+    hostEl?.style?.setProperty?.('--vjs-color-accent', '#667eea');
+    hostEl?.style?.setProperty?.('--vjs-control-color', 'rgba(255,255,255,0.8)');
+    hostEl?.style?.setProperty?.('--vjs-control-hover-bg', 'rgba(255,255,255,0.15)');
+    hostEl?.style?.setProperty?.('--vjs-control-active-bg', 'rgba(255,255,255,0.25)');
+    hostEl?.style?.setProperty?.('--vjs-control-disabled-bg', 'rgba(255,255,255,0.05)');
+    newPlayer.src({ src: videoUrl, type: 'video/mp4' });
+    // 首次创建时按当前播放状态启动（闭包捕获创建时刻的 isPlaying）
+    if (isPlaying) newPlayer.play();
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
+    // isPlaying 刻意不入 deps：仅首次创建读取，状态后续由同步 effect 处理
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, videoUrl]);
+
+  // 播放状态同步：仅 play/pause，不重建媒体元素
+  useEffect(() => {
+    if (mode !== 'video') return;
+    const player = playerRef.current;
+    if (!player) return;
+    if (player.currentSrc() === videoUrl) {
+      if (isPlaying) player.play();
+      else player.pause();
+    }
+  }, [mode, isPlaying, videoUrl]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -52,58 +133,6 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
-
-  // ---------- Video.js 内核（补内核：Video.js 10 + HLS/Range 拖动） ----------
-  useEffect(() => {
-    if (mode !== 'video' || !videoRef.current) return;
-
-    const player: any = videojs(
-      videoRef.current,
-      {
-        fluid: true,
-        responsive: true,
-        controls: true,
-        preload: 'auto',
-        playbackRates: [0.5, 1, 1.5, 2],
-        controlBar: {
-          volumePanel: { inline: false },
-        },
-      },
-      () => {
-        // 设置深色主题色变量，与现有设计一致
-        player.el().style.setProperty('--vjs-color-accent', '#667eea');
-        player.el().style.setProperty('--vjs-control-color', 'rgba(255,255,255,0.8)');
-        player.el().style.setProperty('--vjs-control-hover-bg', 'rgba(255,255,255,0.15)');
-        player.el().style.setProperty('--vjs-control-active-bg', 'rgba(255,255,255,0.25)');
-        player.el().style.setProperty('--vjs-control-disabled-bg', 'rgba(255,255,255,0.05)');
-      }
-    );
-
-    playerRef.current = player;
-
-    if (videoUrl) {
-      player.src({ src: videoUrl, type: 'application/vnd.apple.mpegurl' });
-    }
-    if (isPlaying) {
-      player.play().catch(() => {});
-    }
-
-    return () => {
-      player.dispose();
-      playerRef.current = undefined;
-    };
-  }, [mode, videoUrl, isPlaying]);
-
-  // 当 isPlaying 变化时控制播放/暂停
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (isPlaying) {
-      player.play().catch(() => {});
-    } else {
-      player.pause();
-    }
-  }, [isPlaying]);
 
   const albumSize = visualizerSize * 0.62;
   const glowColor = EMOTION_GLOW[emotion] || EMOTION_GLOW.neutral;
@@ -247,8 +276,9 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
           {videoUrl ? (
             <video
               ref={videoRef}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain vjs-theme-sea"
               playsInline
+              // src 由 Video.js / hls.js 在 useEffect 中设置，避免双重加载
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">

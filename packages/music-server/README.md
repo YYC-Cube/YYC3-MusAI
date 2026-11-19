@@ -4,7 +4,7 @@ YYC³ D-Music Supabase Edge Functions 后端 — 承接自正身 `YYC3-MusAI v11
 
 ## 定位
 
-- **独立部署单元**：Node 20+ 运行时（`@hono/node-server` + `node src/index.ts`），数据层为 PostgreSQL 15（`musai` schema）；Deno 仅保留测试用例（`pnpm test:deno`）
+- **独立部署单元**：Deno Edge 运行时优先（Supabase Edge Functions，`src/index.tsx` 入口），与 workspace 的 Node/Vite 构建链**完全解耦**；Node 20+ 兼容路径就绪（`@hono/node-server` + `node src/index.ts`，数据层 PostgreSQL 15 `musai` schema，Deno 侧测试 `pnpm test:deno`）
 - **不参与** turbo build / typecheck / vitest / npm publish（`private: true`，无 build script）
 - 前端对接：`@yyc3/music-utils` 的 `supabase.ts` 中 `API_BASE = /functions/v1/make-server-f626b673`
 

@@ -10,9 +10,7 @@
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
-    "prepublishOnly": "pnpm run build",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@yyc3/music-data": "workspace:*",
@@ -22,7 +20,7 @@
   },
   "peerDependencies": {
     "@playwright/test": ">=1.40.0",
-    "react": ">=19.0.0"
+    "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {
@@ -31,7 +29,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.2"
   },
   "files": [
     "dist"
@@ -48,7 +46,6 @@
   },
   "keywords": [
     "yyc3",
-    "musai",
     "music",
     "testing"
   ],

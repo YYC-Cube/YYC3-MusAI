@@ -4,7 +4,7 @@
  * @author YanYuCloudCube Team <admin@0379.email>
  * @version v1.1.0
  * @created 2026-03-06
- * @updated 2026-03-06
+ * @updated 2026-11-09（合入主仓 §W2 hls.js 事件转发：MANIFEST_PARSED 续播 / ERROR / LEVEL_LOADED）
  * @status stable
  * @license MIT
  * @copyright Copyright (c) 2026 YanYuCloudCube Team
@@ -12,9 +12,9 @@
  * @depends SoundResourceManager, PlayerUI
  */
 
+import Hls from 'hls.js';
 import PlayerUI from './PlayerUI.js';
 import SoundResourceManager from './SoundResourceManager.js';
-import Hls from 'hls.js';
 
 /**
  * 高级播放器
@@ -41,20 +41,10 @@ class AdvancedPlayer {
         this.currentIndex = this.options.currentIndex;
         this.isPlaying = false;
         this.currentTrack = null;
+        this.streamEngine = null;
         this.eventListeners = new Map();
 
-        // 音频内核：hls.js 实例（HLS 流）或原生 Audio（普通文件）
-        this.hls = null;
-        this.useHls = false;
-
         this.init();
-    }
-
-    /**
-     * 判断是否为 HLS 流
-     */
-    _isHls(src) {
-        return typeof src === 'string' && (/\.m3u8(\?.*)?$/i.test(src) || /\.m3u8(\?.*)?$/i.test(src.split('?')[0]));
     }
 
     /**
@@ -119,6 +109,8 @@ class AdvancedPlayer {
 
     /**
      * 加载曲目
+     * HLS（.m3u8）源使用 hls.js 自适应流内核；
+     * 其余源与不支持的浏览器降级为原生 Audio（Safari 可原生播放 HLS）。
      * @param {number} index - 曲目索引
      */
     loadTrack(index) {
@@ -134,75 +126,89 @@ class AdvancedPlayer {
         if (this.isPlaying) {
             this.pause();
         }
-        this._destroyHls();
 
+        // 销毁上一首的 hls.js 实例，避免泄漏
+        this.destroyStreamEngine();
+
+        // 加载音频：hls.js 优先，原生 Audio 兜底
         const src = this.currentTrack.src;
+        const isHlsSrc = typeof src === 'string' && /\.m3u8(\?|$)/i.test(src);
 
-        // §W2 补内核：HLS 流使用 hls.js 自适应流内核，普通文件降级为原生 Audio
-        if (this._isHls(src) && Hls.isSupported()) {
-            this.useHls = true;
-            this.hls = new Hls();
-            this.hls.loadSource(src);
-            this.hls.attachMedia(this._getAudioEl());
+        if (isHlsSrc && Hls.isSupported()) {
+            this.audio = new Audio();
+            this.streamEngine = new Hls({ enableWorker: true, lowLatencyMode: true });
+            this.streamEngine.loadSource(src);
+            this.streamEngine.attachMedia(this.audio);
 
-            this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                if (this.isPlaying) {
-                    this._getAudioEl().play().catch(() => {});
-                }
-                this.emit('trackLoaded', this.currentTrack);
-                this.updateUI();
-            });
+            // 主仓 §W2：HLS 事件转发（清单解析后续播 / 错误转发 / 分片加载通知）。
+            // 真实 hls.js 才有静态 Events 与实例 on；精简内核/测试 mock 下自动跳过。
+            if (Hls.Events && typeof this.streamEngine.on === 'function') {
+                this.streamEngine.on(Hls.Events.MANIFEST_PARSED, () => {
+                    if (this.isPlaying) {
+                        this.audio.play().catch(() => {});
+                    }
+                    this.updateUI();
+                });
 
-            this.hls.on(Hls.Events.ERROR, (data, error) => {
-                console.error('hls.js 错误:', error);
-                this.emit('trackError', { track: this.currentTrack, error });
-            });
+                this.streamEngine.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('hls.js 错误:', data);
+                    this.emit('trackError', { track: this.currentTrack, error: data });
+                });
 
-            this.hls.on(Hls.Events.LEVEL_LOADED, () => {
-                this.emit('hlsLevelLoaded');
-            });
+                this.streamEngine.on(Hls.Events.LEVEL_LOADED, () => {
+                    this.emit('hlsLevelLoaded');
+                });
+            }
         } else {
-            this.useHls = false;
+            // 原生 Audio：MP3/MP4 等常规格式，以及 Safari 原生 HLS
             this.audio = new Audio(src);
-            this.bindAudioEvents();
-            this.emit('trackLoaded', this.currentTrack);
-            this.updateUI();
         }
+
+        // 绑定音频事件
+        this.bindAudioEvents();
 
         // 更新UI
         this.updateUI();
+
+        // 触发加载事件（两侧共同契约：同步派发，供 UI/测试联动）
+        this.emit('trackLoaded', this.currentTrack);
     }
 
     /**
-     * 获取（或创建）用于挂载 hls.js 的音频元素
+     * 销毁当前流媒体引擎（hls.js），释放 MSE 资源
      */
-    _getAudioEl() {
-        if (!this._audioEl) {
-            this._audioEl = new Audio();
-            this.bindAudioEvents();
+    destroyStreamEngine() {
+        if (this.streamEngine) {
+            try {
+                this.streamEngine.destroy();
+            } catch (e) {
+                // 引擎可能已随媒体元素销毁
+            }
+            this.streamEngine = null;
         }
-        return this._audioEl;
     }
 
     /**
-     * 销毁 hls.js 实例
+     * 释放播放器持有的全部媒体资源
      */
-    _destroyHls() {
-        if (this.hls) {
-            this.hls.destroy();
-            this.hls = null;
+    dispose() {
+        this.destroyStreamEngine();
+        if (this.audio) {
+            this.audio.pause();
+            this.audio.src = '';
+            this.audio = null;
         }
-        this.useHls = false;
+        this.isPlaying = false;
+        this.currentTrack = null;
+        this.emit('disposed');
     }
 
     /**
      * 绑定音频事件
      */
     bindAudioEvents() {
-        const el = this.useHls ? this._getAudioEl() : this.audio;
-        if (!el) return;
-
-        el.addEventListener('ended', () => {
+        // 播放结束
+        this.audio.addEventListener('ended', () => {
             this.isPlaying = false;
             this.updateUI();
             this.emit('trackEnded', this.currentTrack);
@@ -211,15 +217,18 @@ class AdvancedPlayer {
             this.next();
         });
 
-        el.addEventListener('timeupdate', () => {
+        // 播放进度更新
+        this.audio.addEventListener('timeupdate', () => {
             this.updateUI();
         });
 
-        el.addEventListener('loadedmetadata', () => {
+        // 加载完成
+        this.audio.addEventListener('loadedmetadata', () => {
             this.updateUI();
         });
 
-        el.addEventListener('error', (e) => {
+        // 错误处理
+        this.audio.addEventListener('error', (e) => {
             console.error('音频加载失败:', e);
             this.emit('trackError', { track: this.currentTrack, error: e });
         });
@@ -382,6 +391,7 @@ class AdvancedPlayer {
      * 清空播放列表
      */
     clearPlaylist() {
+        this.destroyStreamEngine();
         this.playlist = [];
         this.currentIndex = 0;
         this.currentTrack = null;

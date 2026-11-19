@@ -210,3 +210,9 @@ docs/开源组件库/_fetch.log
 docs/开源组件库/_status.log
 docs/开源组件库/_sop.log
 docs/开源组件库/_markers/
+
+# 服务端运行时上传文件（本地测试音源，不入库）
+packages/music-server/uploads/
+
+# 本地 HTML 分享/报告缓存产物（不入库）
+.trae-html-share-packages/

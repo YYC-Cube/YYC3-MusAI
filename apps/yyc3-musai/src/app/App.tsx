@@ -33,8 +33,9 @@ import { PlayerControls } from '@yyc3/music-player';
 import { AuthModal } from './components/AuthModal';
 import { PlaylistPanel } from './components/PlaylistPanel';
 import { UserProfile } from './components/UserProfile';
-import { CommunityFeed } from '@yyc3/music-community';
+import { CommunityFeed, VisxChartsDashboard } from '@yyc3/music-community';
 import { CommentSystem } from '@yyc3/music-community';
+import { CmdKPalette } from '@yyc3/music-ui';
 import { useSwipeGesture } from '@yyc3/music-hooks';
 import { useAIAssistant } from '@yyc3/music-hooks';
 import { AIAssistant } from '@yyc3/music-ai';
@@ -511,6 +512,7 @@ export function AppInner() {
   );
   const [communityLoading, setCommunityLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
+  const [cmdkOpen, setCmdkOpen] = useState(false);
 
   // ==========================================
   // Auth
@@ -993,6 +995,60 @@ export function AppInner() {
   }, [audio, handleNextTrack, handlePrevTrack]);
 
   // ==========================================
+  // CmdKPalette (SCE-009) — 全局搜索命令面板 (Cmd+K / Ctrl+K)
+  // ==========================================
+  useEffect(() => {
+    const handleCmdK = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyK') {
+        e.preventDefault();
+        setCmdkOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleCmdK);
+    return () => window.removeEventListener('keydown', handleCmdK);
+  }, []);
+
+  // ==========================================
+  // CmdKPalette (SCE-009) — 全局搜索结果处理
+  // ==========================================
+  const handleSearchResultSelect = useCallback(
+    (result: { id: string; type: string; title: string; subtitle?: string; artwork?: string }) => {
+      switch (result.type) {
+        case 'song': {
+          const idx = playlist.findIndex((t) => t.id === result.id);
+          if (idx >= 0) {
+            handleSelectTrack(idx);
+          } else {
+            // 尝试从 DEMO_PLAYLIST 查找
+            const demoTrack = DEMO_PLAYLIST.find((t) => t.id === result.id);
+            if (demoTrack) {
+              setPlaylist([demoTrack, ...playlist]);
+              setCurrentTrackIndex(0);
+            }
+          }
+          closePanel();
+          break;
+        }
+        case 'playlist':
+          openPanel('playlist');
+          break;
+        case 'artist':
+        case 'album':
+        default:
+          closePanel();
+          break;
+      }
+    },
+    [playlist, closePanel, handleSelectTrack, setCurrentTrackIndex, setPlaylist, openPanel]
+  );
+
+  // ==========================================
   // AI Assistant (Voice + Proactive Tips + Prediction)
   // ==========================================
   const aiAssistant = useAIAssistant({
@@ -1122,6 +1178,8 @@ export function AppInner() {
         onRefresh={handleRefreshCommunity}
         isLoading={communityLoading}
       />
+
+      {/* SCE-010 — 表情反应已集成在 CommunityFeed 内部（见 MusicCommunity/components/CommunityFeed） */}
 
       {/* Comment System */}
       <CommentSystem
@@ -2160,6 +2218,24 @@ export function AppInner() {
           />
         )}
       </Suspense>
+
+      {/* SCE-009 — CmdKPalette 全局命令面板 (Cmd+K / Ctrl+K) */}
+      <CmdKPalette
+        open={cmdkOpen}
+        onOpenChange={setCmdkOpen}
+        onSelectSearchResult={handleSearchResultSelect}
+      />
+
+      {/* SCE-005 — VisxChartsDashboard 运营数据看板 (作为 AnalyticsDashboard 的图表补充) */}
+      <Suspense fallback={null}>
+        {showAnalytics && (
+          <VisxChartsDashboard
+            isOpen={showAnalytics}
+            onClose={closePanel}
+          />
+        )}
+      </Suspense>
+
     </div>
   );
 }

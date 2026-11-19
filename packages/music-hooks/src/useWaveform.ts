@@ -3,6 +3,11 @@
  *
  * 从音频缓冲区提取波形采样点，供音乐可视化与波形 seek 使用。
  * 采样精度可配置，默认 512 点，足以渲染整首歌曲的能量轮廓。
+ *
+ * ⧗ 与 WaveformLyrics 的选型边界（W6-P1-5）：
+ * - 本 hook＝自研轻量采样（无依赖、纯数据），适合进度条/迷你波形/可视化背景；
+ * - 需要交互式波形（Region 循环、点击 seek、缩放）→ 用 @yyc3/music-lyrics 的
+ *   `WaveformLyrics`（wavesurfer.js v8），不要用本 hook 重复造轮子。
  */
 
 import * as React from "react";

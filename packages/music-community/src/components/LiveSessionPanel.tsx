@@ -1,19 +1,23 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Radio, Users, Send, Music } from 'lucide-react';
 import { clsx } from 'clsx';
-import { apiFetch } from '@yyc3/music-utils';
+import { apiFetch, API_BASE } from '@yyc3/music-utils';
 import { useI18n } from '@yyc3/music-hooks';
 
 /**
  * §26.x — Live Session Panel (实时互动)
  *
- * W3 补流媒体：优先通过 WebSocket (/ws/live) 实时交互，
- * 无 wsUrl 时降级为 HTTP 轮询（向后兼容）。
- *
- * WebSocket 消息类型（与 music-server /ws/live 对齐）：
- *   welcome / joined / room_info / viewer_count
- *   danmaku / emoji / gift / moderation / moderated / pong
+ * 双通道实时策略：
+ *   1. 显式传入 wsUrl 时走外部 WebSocket 直播间（与 music-server /ws/live 对齐）：
+ *      welcome / joined / room_info / viewer_count
+ *      danmaku / emoji / gift / moderation / moderated / pong
+ *   2. 未传 wsUrl 时按 API_BASE 自动推导直播间（/live/ws：聊天 + 表情 + 审核 + 房间），
+ *      连接失败或环境不支持时自动回退到轮询模式：
+ *       - Presence heartbeat (15s intervals)
+ *       - Live danmaku feed (5s polling)
+ *       - Online listeners count + avatars
+ *       - Send live messages
  */
 
 interface LiveSessionPanelProps {
@@ -27,7 +31,7 @@ interface LiveSessionPanelProps {
   currentEmotion: string;
   /** WebSocket 地址（含 token），如 wss://host:port/ws/live?token=xxx */
   wsUrl?: string;
-  /** 房间 ID，默认当前曲目 */
+  /** 房间 ID，默认当前曲目（外部通道）；自动推导通道默认 main */
   roomId?: string;
 }
 
@@ -55,6 +59,16 @@ const DANMAKU_COLORS = [
   '#34D399', '#60A5FA', '#FBBF24', '#F87171', '#818CF8',
 ];
 
+/** 按用户名稳定选色（非加密用途的简单字符串哈希） */
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i += 1) {
+    h = (h << 5) - h + s.charCodeAt(i);
+    h |= 0;
+  }
+  return h;
+}
+
 export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
   isOpen, onClose, userId, userName, currentTrackId, currentTrackTitle,
   isPlaying, currentEmotion, wsUrl, roomId,
@@ -65,41 +79,68 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [connected, setConnected] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const userColorRef = useRef(DANMAKU_COLORS[Math.floor(Math.random() * DANMAKU_COLORS.length)]);
+  // W3 — WebSocket 直播间状态
+  const [wsConnected, setWsConnected] = useState(false);
+  const [wsOnlineCount, setWsOnlineCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
   const roomRef = useRef(roomId ?? currentTrackId);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const userColorRef = useRef(DANMAKU_COLORS[Math.floor(Math.random() * DANMAKU_COLORS.length)]);
+
+  // 乐观上屏记录：服务器回显/轮询拉取时按「userId+文本」短窗去重，避免消息重复显示
+  const recentSentRef = useRef<{ text: string; at: number }[]>([]);
+  const noteSent = useCallback((text: string) => {
+    const now = Date.now();
+    recentSentRef.current = [
+      ...recentSentRef.current.filter(s => now - s.at < 15000),
+      { text, at: now },
+    ];
+  }, []);
+  const consumeOwnEcho = useCallback((uid: string, text: string) => {
+    if (uid !== userId) return false;
+    const now = Date.now();
+    const idx = recentSentRef.current.findIndex(s => s.text === text && now - s.at < 15000);
+    if (idx < 0) return false;
+    recentSentRef.current.splice(idx, 1);
+    return true;
+  }, [userId]);
 
   // ==========================================
-  // WebSocket 实时通道（W3 补流媒体）
+  // W3 补流媒体：外部 WebSocket 直播间（显式传入 wsUrl 时启用）
   // ==========================================
   useEffect(() => {
-    if (!isOpen || !userId) return;
-    if (!wsUrl) {
-      // 无 wsUrl 时走 HTTP 轮询（见下方）
+    if (!isOpen || !userId || !wsUrl) {
+      // 无显式 wsUrl 时走下方自动推导通道 + HTTP 轮询兜底
       return;
     }
 
-    const ws = new WebSocket(wsUrl);
+    let closedByUs = false;
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch {
+      return;
+    }
     wsRef.current = ws;
-    setConnected(true);
+    setWsConnected(true);
 
     ws.onopen = () => {
+      setWsConnected(true);
       ws.send(JSON.stringify({ type: 'join', room: roomRef.current }));
       ws.send(JSON.stringify({ type: 'viewer_count_request' }));
     };
 
     ws.onmessage = (event) => {
       let msg: any;
-      try { msg = JSON.parse(event.data); } catch { return; }
+      try { msg = JSON.parse(event.data as string); } catch { return; }
 
       switch (msg.type) {
         case 'welcome':
         case 'joined':
-          setConnected(true);
+          setWsConnected(true);
           break;
         case 'room_info':
-          setConnected(true);
+          setWsConnected(true);
           setListeners(prev => {
             const existing = prev.find(l => l.userId === msg.user);
             if (!existing && msg.user) {
@@ -116,6 +157,7 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
           });
           break;
         case 'viewer_count':
+          if (typeof msg.count === 'number') setWsOnlineCount(msg.count);
           break;
         case 'danmaku':
         case 'emoji':
@@ -128,6 +170,9 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
           else if (msg.type === 'gift') text = `🎁 ${msg.giftId} ×${msg.count}`;
           else if (msg.type === 'moderation') text = `⚡ [管理] ${msg.action} → ${msg.targetUser}`;
 
+          // 自己刚发送的弹幕已被乐观上屏，跳过回显避免重复
+          if (msg.type === 'danmaku' && consumeOwnEcho(String(msg.user ?? ''), text)) break;
+
           setMessages(prev => {
             const exists = prev.some(m => m.id === id);
             if (exists) return prev;
@@ -138,7 +183,7 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
               text,
               trackId: currentTrackId,
               timestamp: msg.ts ?? Date.now(),
-              color: DANMAKU_COLORS[Math.abs(hashStr(String(msg.user))) % DANMAKU_COLORS.length],
+              color: DANMAKU_COLORS[Math.abs(hashString(String(msg.user))) % DANMAKU_COLORS.length],
             }].slice(-100);
           });
           break;
@@ -147,32 +192,120 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
           break;
         case 'pong':
           break;
+        default:
+          break;
       }
     };
 
     ws.onclose = () => {
-      setConnected(false);
+      if (!closedByUs) setWsConnected(false);
       wsRef.current = null;
     };
 
-    ws.onerror = () => {
-      setConnected(false);
-    };
+    ws.onerror = () => setWsConnected(false);
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-      setConnected(false);
+      closedByUs = true;
+      try { ws.close(); } catch { /* 已关闭 */ }
+      wsRef.current = null;
+      setWsConnected(false);
     };
-  }, [isOpen, userId, wsUrl, roomId, currentTrackId, currentTrackTitle, currentEmotion, isPlaying, userName]);
+  }, [isOpen, userId, wsUrl, roomId, currentTrackId, currentTrackTitle, currentEmotion, isPlaying, userName, consumeOwnEcho]);
 
-  // ==========================================
-  // HTTP 轮询兜底（无 wsUrl 时使用）
-  // ==========================================
+  // ── W3: 自动推导 WebSocket 直播间（聊天/表情/房间），失败回退轮询 ──
   useEffect(() => {
     if (!isOpen || !userId || wsUrl) return;
+
+    // API_BASE 为 https，转换为 ws/wss
+    let autoWsUrl: string;
+    try {
+      const base = new URL(API_BASE);
+      base.protocol = base.protocol === 'https:' ? 'wss:' : 'ws:';
+      base.pathname = `${base.pathname.replace(/\/$/, '')}/live/ws`;
+      base.search = `roomId=${encodeURIComponent(roomId || 'main')}&userId=${encodeURIComponent(userId)}&userName=${encodeURIComponent(userName || 'User')}`;
+      autoWsUrl = base.toString();
+    } catch {
+      return; // API_BASE 非法时直接走轮询
+    }
+
+    let closedByUs = false;
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(autoWsUrl);
+    } catch {
+      return;
+    }
+    wsRef.current = ws;
+
+    ws.onopen = () => setWsConnected(true);
+
+    ws.onmessage = (event) => {
+      let data: any;
+      try {
+        data = JSON.parse(event.data as string);
+      } catch {
+        return;
+      }
+      switch (data.type) {
+        case 'room:joined':
+          setWsOnlineCount(data.onlineCount || 0);
+          if (Array.isArray(data.recent)) {
+            setMessages(prev => {
+              const ids = new Set(prev.map(m => m.id));
+              const incoming = data.recent
+                .filter((m: any) => m.id && !ids.has(m.id))
+                .map((m: any) => ({
+                  id: m.id, userId: m.userId, userName: m.userName, text: m.text,
+                  trackId: '', timestamp: m.timestamp, color: DANMAKU_COLORS[Math.abs(hashString(m.userId || '')) % DANMAKU_COLORS.length],
+                }));
+              return [...prev, ...incoming].slice(-100);
+            });
+          }
+          break;
+        case 'chat': {
+          // 自己刚发送的弹幕已被乐观上屏，跳过回显避免重复
+          if (consumeOwnEcho(data.userId, data.text)) break;
+          const liveMsg: LiveMessage = {
+            id: data.id,
+            userId: data.userId,
+            userName: data.userName,
+            text: data.text,
+            trackId: '',
+            timestamp: data.timestamp,
+            color: DANMAKU_COLORS[Math.abs(hashString(data.userId || '')) % DANMAKU_COLORS.length],
+          };
+          setMessages(prev => [...prev, liveMsg].slice(-100));
+          break;
+        }
+        case 'reaction':
+          // 表情反应：气泡动效由上层 music-live 包处理，此处仅计入在线数
+          break;
+        case 'presence:join':
+        case 'presence:leave':
+          setWsOnlineCount(data.onlineCount || 0);
+          break;
+        default:
+          break;
+      }
+    };
+
+    ws.onclose = () => {
+      if (!closedByUs) setWsConnected(false);
+      wsRef.current = null;
+    };
+    ws.onerror = () => setWsConnected(false);
+
+    return () => {
+      closedByUs = true;
+      try { ws.close(); } catch { /* 已关闭 */ }
+      wsRef.current = null;
+      setWsConnected(false);
+    };
+  }, [isOpen, userId, userName, wsUrl, roomId, consumeOwnEcho]);
+
+  // Join session + heartbeat
+  useEffect(() => {
+    if (!isOpen || !userId) return;
     setConnected(true);
 
     const sendHeartbeat = () => {
@@ -191,7 +324,23 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
     };
 
     sendHeartbeat();
-    const heartbeatInterval = setInterval(sendHeartbeat, 15000);
+    const interval = setInterval(sendHeartbeat, 15000);
+
+    return () => {
+      clearInterval(interval);
+      // Leave session
+      apiFetch('/live-session/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      }).catch(() => {});
+      setConnected(false);
+    };
+  }, [isOpen, userId, currentTrackId, currentTrackTitle, currentEmotion, isPlaying, userName]);
+
+  // Poll presence
+  useEffect(() => {
+    if (!isOpen) return;
 
     const fetchPresence = () => {
       apiFetch<{ listeners: Listener[] }>('/live-session/presence')
@@ -202,41 +351,42 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
     };
 
     fetchPresence();
-    const presenceInterval = setInterval(fetchPresence, 10000);
+    const interval = setInterval(fetchPresence, 10000);
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
+  // Poll danmaku
+  useEffect(() => {
+    if (!isOpen) return;
 
     const fetchMessages = () => {
       apiFetch<{ messages: LiveMessage[] }>('/live-session/danmaku')
         .then(data => {
-          if (data?.messages) {
-            setMessages(prev => {
-              const existingIds = new Set(prev.map(m => m.id));
-              const newMsgs = data.messages.filter(m => !existingIds.has(m.id));
-              const combined = [...prev, ...newMsgs];
-              return combined.slice(-100);
-            });
-          }
+          if (!data?.messages) return;
+          // 先按乐观上屏记录过滤自己的回显，再按 id 去重合并
+          const incoming = data.messages.filter(m => !consumeOwnEcho(m.userId, m.text));
+          setMessages(prev => {
+            const existingIds = new Set(prev.map(m => m.id));
+            const newMsgs = incoming.filter(m => !existingIds.has(m.id));
+            const combined = [...prev, ...newMsgs];
+            return combined.slice(-100); // Keep last 100
+          });
         })
         .catch(() => {});
     };
 
     fetchMessages();
-    const messageInterval = setInterval(fetchMessages, 5000);
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, [isOpen, consumeOwnEcho]);
 
-    return () => {
-      clearInterval(heartbeatInterval);
-      clearInterval(presenceInterval);
-      clearInterval(messageInterval);
-      apiFetch('/live-session/leave', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      }).catch(() => {});
-      setConnected(false);
-    };
-  }, [isOpen, userId, wsUrl, currentTrackId, currentTrackTitle, currentEmotion, isPlaying, userName]);
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // ==========================================
-  // 发送弹幕（WebSocket 优先，HTTP 兜底）
+  // 发送弹幕（WebSocket 优先，HTTP 兜底，乐观上屏）
   // ==========================================
   const handleSend = useCallback(async () => {
     if (!inputText.trim() || !userId || sending) return;
@@ -257,19 +407,29 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
     };
     setMessages(prev => [...prev, optimistic].slice(-100));
     setInputText('');
+    noteSent(text);
 
-    // WebSocket 发送
+    // WebSocket 已连接时直接走直播间通道，未连接回退 HTTP danmaku 接口
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'danmaku',
-        room: roomRef.current,
-        text,
-      }));
+      if (wsUrl) {
+        // 外部通道协议（music-server /ws/live）
+        wsRef.current.send(JSON.stringify({
+          type: 'danmaku',
+          room: roomRef.current,
+          text,
+        }));
+      } else {
+        // 自动推导通道协议（/live/ws）
+        wsRef.current.send(JSON.stringify({
+          type: 'chat',
+          text,
+          emotion: currentEmotion,
+        }));
+      }
       setSending(false);
       return;
     }
 
-    // HTTP 兜底
     try {
       await apiFetch('/live-session/danmaku', {
         method: 'POST',
@@ -287,16 +447,13 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
     } finally {
       setSending(false);
     }
-  }, [inputText, userId, userName, currentTrackId, sending, wsRef.current, roomRef.current]);
+  }, [inputText, userId, userName, currentTrackId, currentEmotion, sending, wsUrl, noteSent]);
 
-  // ==========================================
-  // 自动滚到底
-  // ==========================================
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const onlineCount = listeners.filter(l => Date.now() - l.lastSeen < 30000).length;
+  // WS 在线数与轮询在线数取较大者
+  const onlineCount = Math.max(
+    wsOnlineCount,
+    listeners.filter(l => Date.now() - l.lastSeen < 30000).length,
+  );
 
   return (
     <AnimatePresence>
@@ -316,7 +473,7 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center relative">
                   <Radio className="w-4 h-4 text-green-400" />
-                  {connected && (
+                  {(connected || wsConnected) && (
                     <motion.div
                       className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400"
                       animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
@@ -329,8 +486,8 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
                     {lang === 'zh' ? '实时互动' : 'Live Session'}
                   </h2>
                   <p className="text-[10px] text-white/30">
-                    {connected
-                      ? (lang === 'zh' ? `${onlineCount} 人在线` : `${onlineCount} online`)
+                    {(connected || wsConnected)
+                      ? (lang === 'zh' ? `${onlineCount} 人在线${wsConnected ? ' · 实时' : ''}` : `${onlineCount} online${wsConnected ? ' · realtime' : ''}`)
                       : (lang === 'zh' ? '未连接' : 'Disconnected')}
                   </p>
                 </div>
@@ -458,12 +615,3 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
     </AnimatePresence>
   );
 };
-
-/** 简单字符串哈希，用于稳定选色 */
-function hashStr(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
-  }
-  return h;
-}

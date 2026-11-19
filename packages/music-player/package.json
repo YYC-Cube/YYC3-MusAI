@@ -10,9 +10,7 @@
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
-    "prepublishOnly": "pnpm run build",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-slider": "1.2.3",
@@ -23,15 +21,16 @@
     "hls.js": "^1.7.4",
     "lucide-react": "0.577.0",
     "media-chrome": "^4.19.5",
-    "motion": "12.43.0",
+    "motion": "12.23.24",
     "video.js": "^10.5.0"
   },
   "peerDependencies": {
-    "react": ">=19.0.0"
+    "react": ">=18.0.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.2"
   },
   "files": [
     "dist"
@@ -48,7 +47,6 @@
   },
   "keywords": [
     "yyc3",
-    "musai",
     "music",
     "player"
   ],

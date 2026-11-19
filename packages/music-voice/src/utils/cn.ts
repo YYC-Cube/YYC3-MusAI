@@ -1,6 +1,2 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+// cn 唯一实现在 @yyc3/music-utils，此处保留包内导入路径兼容
+export { cn } from '@yyc3/music-utils';

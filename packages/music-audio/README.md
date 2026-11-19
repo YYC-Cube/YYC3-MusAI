@@ -1,19 +1,38 @@
 # @yyc3/music-audio
 
-> 高级播放器、WebAudio、音效资源管理、翻页交互、情感音效与交互文档组件。
+YYC³ D-Music 播放引擎层 — HLS/流式播放引擎 · WebAudio 图 · 声音资源管理 · 翻页交互，及情感音频实验组件。
 
 | 属性 | 值 |
 | --- | --- |
-| 版本 | 2.0.0 |
-| 定位 | 音效与文档交互组件 |
+| 定位 | 引擎层：无头播放能力（音效与文档交互组件） |
 | 许可证 | MIT |
-| 仓库 | https://github.com/YYC-Cube/YYC3-MusAI |
 
-## 安装
+## 包定位（播放器三套并存裁决，W6-P1-4）
 
-```bash
-pnpm add @yyc3/music-audio react
-```
+| 层 | 包 | 职责 |
+| --- | --- | --- |
+| **引擎层（本包）** | `@yyc3/music-audio` | 无头播放能力：流式引擎、WebAudio、资源管理 |
+| **UI 展示层** | `@yyc3/music-player` | 播放器组件：MediaDisplay / PlayerControls / MobilePlayer / AudioVisualizer |
+| ~~应用内旧实现~~ | `apps/m98-web` MusicPlayer | **已弃用**，新功能请用上述两包 |
+
+需要「能播放」→ 用本包引擎；需要「播放器长什么样」→ 用 `@yyc3/music-player`。
+
+## 能力清单（导出清单）
+
+- `AdvancedPlayer`（.js）— hls.js 优先的流式播放引擎，原生 Audio 回退（Safari）；`destroyStreamEngine()` / `dispose()` 完整释放路径
+- `WebAudioPlayer`（.js）— WebAudio 图播放
+- `SoundResourceManager`（.js）— 声音资源生命周期管理
+- `PageFlipInteraction`（.js）— 翻页交互音效
+- 情感音频实验场：`EmotionAudioPlayer` / `EmotionDetector` / `PlayerUI` / `SmartTip` / `InteractiveCodeBlock` / `InteractiveMindMap`
+
+## 关键 API
+
+| 名称 | 说明 |
+| --- | --- |
+| `SmartTip` | isVisible、message、emotion: neutral\|encouraging\|calm、position、duration |
+| `EmotionAudioPlayer` | 按情绪播放音效，内部复用 AudioContext |
+| `SoundResourceManager` | 音效资源预加载与缓存 |
+| `InteractiveCodeBlock / InteractiveMindMap` | 文档型交互展示组件 |
 
 ## 快速开始
 
@@ -30,20 +49,24 @@ export function AudioDemo() {
 }
 ```
 
-## 导出清单
+## 已知分层债务（W7-P2-1 处理）
 
-- AdvancedPlayer、WebAudioPlayer、PlayerUI、SoundResourceManager、PageFlipInteraction
-- EmotionAudioPlayer、EmotionDetector、SmartTip
-- InteractiveCodeBlock、InteractiveMindMap
+实验/教学组件（SmartTip、InteractiveCodeBlock、InteractiveMindMap、PlayerUI）与引擎同层平铺，W7 将收敛为 `engines/ + ui/` 分层并评估教学组件迁出。
 
-## 关键 API
+## 对标来源（开源组件库目录）
 
-| 名称 | 说明 |
-| --- | --- |
-| `SmartTip` | isVisible、message、emotion: neutral|encouraging|calm、position、duration |
-| `EmotionAudioPlayer` | 按情绪播放音效，内部复用 AudioContext |
-| `SoundResourceManager` | 音效资源预加载与缓存 |
-| `InteractiveCodeBlock / InteractiveMindMap` | 文档型交互展示组件 |
+- 03-媒体视频：hls.js（流式协议）、funkwhale/navidrome（流式服务架构参考，仅架构借鉴、无 GPL 代码）
+- 01-音乐：feishin/supersonic（桌面播放器交互基线）、src-情感音效（情感音频素材）
+
+## 安装与使用
+
+```bash
+pnpm add @yyc3/music-audio   # workspace 内：直接依赖 workspace:*
+```
+
+```js
+import { AdvancedPlayer } from '@yyc3/music-audio';
+```
 
 ## 说明
 
@@ -51,8 +74,8 @@ WebAudio 相关组件需在用户交互后初始化 AudioContext；测试环境�
 
 ## 兼容性
 
-- React 19+（组件包 peer 依赖）
-- TypeScript 5.6+ / Node.js 20.19+
+- React 18+（组件包 peer 依赖）
+- TypeScript 5.9+ / Node.js 18+（monorepo engines）
 - 现代浏览器（Chrome/Edge/Safari/Firefox 最近两个大版本）
 
 ## 开发与验证
@@ -66,10 +89,4 @@ pnpm test:coverage
 
 ## 许可证
 
-MIT © 2026 YanYuCloudCube™（YYC³）
-
-<p align="center">
-  <b>YYC³</b>（YanYuCloudCube™ · 注册商标）<br>
-  言启象限 | 语枢未来 — Words Initiate Quadrants, Language Serves as Core for Future<br>
-  <sub>© 2026 YanYuCloudCube™（YYC³）· <a href="mailto:admin@0379.email">admin@0379.email</a></sub>
-</p>
+MIT License（第三方依赖许可见根目录 NOTICE.md）

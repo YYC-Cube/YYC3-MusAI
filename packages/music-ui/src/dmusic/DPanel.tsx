@@ -27,7 +27,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
-import { clsx } from 'clsx';
+import { cn } from '../ui/utils';
 
 export type PanelSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -136,7 +136,7 @@ export const DPanel: React.FC<DPanelProps> = ({
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className={clsx(
+            className={cn(
               'fixed z-[61] flex flex-col shadow-2xl',
               // Responsive positioning
               mobileBottomSheet

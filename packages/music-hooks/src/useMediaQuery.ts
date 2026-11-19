@@ -1,8 +1,12 @@
 /**
- * §9.x — 响应式媒体查询 Hook
+ * YYC³ music-hooks — useMediaQuery
  *
- * 基于 window.matchMedia 返回给定媒体查询是否匹配，随窗口大小变化自动更新。
- * 适用于音乐播放器的响应式布局（如切换音频/视频模式、收起/展开面板）。
+ * 响应式媒体查询订阅，基于 window.matchMedia 返回给定媒体查询是否匹配，
+ * 随窗口大小变化自动更新；组件卸载时自动取消订阅，避免内存泄漏。
+ * 适用于音乐播放器的响应式布局（如移动端抽屉 vs 桌面端停靠网格、
+ * 切换音频/视频模式、收起/展开面板）。
+ *
+ * query 变化时会重新求值并同步一次结果，避免旧查询状态残留。
  *
  * @example
  *   import { useMediaQuery } from '@yyc3/music-hooks';

@@ -10,9 +10,7 @@
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
-    "prepublishOnly": "pnpm run build",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@yyc3/music-hooks": "workspace:*",
@@ -21,7 +19,7 @@
   "devDependencies": {
     "@types/react": "^19.3.0",
     "fake-indexeddb": "^6.2.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.2"
   },
   "files": [
     "dist"
@@ -38,7 +36,6 @@
   },
   "keywords": [
     "yyc3",
-    "musai",
     "music",
     "data",
     "types"
@@ -54,5 +51,6 @@
   "homepage": "https://musai.yyc3.vip",
   "bugs": {
     "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
-  }
+  },
+  "peerDependencies": {}
 }

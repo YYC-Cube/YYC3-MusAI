@@ -25,7 +25,7 @@
 
 import React, { useMemo } from 'react';
 import * as Recharts from 'recharts';
-import { clsx } from 'clsx';
+import { cn } from '../ui/utils';
 import { Download } from 'lucide-react';
 import { DButton, AchievementRing } from './DMusicUI';
 
@@ -125,7 +125,7 @@ export const StarPowerChart: React.FC<StarPowerChartProps> = ({
   lang = 'zh',
 }) => {
   return (
-    <div className={clsx('w-full', className)} role="img" aria-label={lang === 'zh' ? '星力值增长曲线' : 'Star Power Growth Curve'}>
+    <div className={cn('w-full', className)} role="img" aria-label={lang === 'zh' ? '星力值增长曲线' : 'Star Power Growth Curve'}>
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
           <defs>
@@ -207,7 +207,7 @@ export const EmotionPieChart: React.FC<EmotionPieChartProps> = ({
   );
 
   return (
-    <div className={clsx('flex items-center gap-4', className)} role="img" aria-label={lang === 'zh' ? '情绪分布' : 'Emotion Distribution'}>
+    <div className={cn('flex items-center gap-4', className)} role="img" aria-label={lang === 'zh' ? '情绪分布' : 'Emotion Distribution'}>
       <ResponsiveContainer width={size} height={size}>
         <PieChart>
           <Pie
@@ -261,7 +261,7 @@ export const PlayStatsChart: React.FC<PlayStatsChartProps> = ({
   lang = 'zh',
 }) => {
   return (
-    <div className={clsx('w-full', className)} role="img" aria-label={lang === 'zh' ? '播放统计' : 'Play Statistics'}>
+    <div className={cn('w-full', className)} role="img" aria-label={lang === 'zh' ? '播放统计' : 'Play Statistics'}>
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--dm-border-subtle)" vertical={false} />
@@ -327,7 +327,7 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({
 }) => {
   return (
     <div
-      className={clsx('grid gap-4', className)}
+      className={cn('grid gap-4', className)}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       role="list"
       aria-label="Achievements"
@@ -378,7 +378,7 @@ export const SparklineChart: React.FC<SparklineChartProps> = ({
   const chartData = useMemo(() => data.map((v, i) => ({ i, v })), [data]);
 
   return (
-    <div className={clsx('inline-flex', className)} role="img" aria-label="Trend">
+    <div className={cn('inline-flex', className)} role="img" aria-label="Trend">
       <ResponsiveContainer width={width} height={height}>
         <LineChart data={chartData} margin={{ top: 2, right: 4, bottom: 2, left: 4 }}>
           <Line
@@ -473,7 +473,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   const isPositive = (change ?? 0) >= 0;
   return (
     <div
-      className={clsx('rounded-xl border p-4 flex flex-col gap-2', className)}
+      className={cn('rounded-xl border p-4 flex flex-col gap-2', className)}
       style={{
         background: 'var(--dm-bg-elevated)',
         borderColor: 'var(--dm-border-subtle)',
@@ -545,7 +545,7 @@ export const RankingList: React.FC<RankingListProps> = ({
   const maxScore = Math.max(...displayed.map(d => d.score), 1);
 
   return (
-    <div className={clsx('w-full', className)} role="list" aria-label={lang === 'zh' ? '排行榜' : 'Rankings'}>
+    <div className={cn('w-full', className)} role="list" aria-label={lang === 'zh' ? '排行榜' : 'Rankings'}>
       {/* Header */}
       <div className="flex items-center justify-between px-2 py-1.5 mb-1">
         <span className="text-[10px] font-medium" style={{ color: 'var(--dm-text-disabled)' }}>
@@ -563,7 +563,7 @@ export const RankingList: React.FC<RankingListProps> = ({
             key={item.rank}
             role="listitem"
             onClick={() => onItemClick?.(item)}
-            className={clsx(
+            className={cn(
               'flex items-center gap-2 px-2 py-2 rounded-lg transition-colors relative overflow-hidden',
               onItemClick && 'cursor-pointer hover:bg-[var(--dm-hover-bg)]',
               item.highlight && 'ring-1 ring-[var(--dm-accent-from)]/30 bg-[var(--dm-accent-from)]/5'
@@ -603,7 +603,7 @@ export const RankingList: React.FC<RankingListProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span
-                  className={clsx('text-xs truncate', isTop3 ? 'font-semibold' : 'font-medium')}
+                  className={cn('text-xs truncate', isTop3 ? 'font-semibold' : 'font-medium')}
                   style={{ color: isTop3 ? RANK_COLORS[item.rank] : 'var(--dm-text-primary)' }}
                 >
                   {item.name}

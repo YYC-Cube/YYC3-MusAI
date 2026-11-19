@@ -13,6 +13,7 @@ export * from './ui/card';
 export * from './ui/carousel';
 export * from './ui/chart';
 export * from './ui/checkbox';
+export * from './ui/cmd-k-palette';
 export * from './ui/collapsible';
 export * from './ui/command';
 export * from './ui/context-menu';
@@ -46,10 +47,12 @@ export * from './ui/textarea';
 export * from './ui/toggle';
 export * from './ui/toggle-group';
 export * from './ui/tooltip';
+
+// 交互/列表增强块（dnd-kit / TanStack Virtual）
 export * from './ui/playlist-dnd';
 export * from './ui/playlist-sort';
 export * from './ui/virtual-list';
-export * from './ui/cmd-k-palette';
+// W4 cmdk/vaul 集成（主仓）
 export * from './ui/vaul-drawer';
 // 工具
 export * from './ui/use-mobile';

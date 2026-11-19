@@ -1,17 +1,12 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
 
+// YYC³ 库模式构建：ESM 产出，外部化全部裸导入（React 由宿主提供）
 export default defineConfig({
-  plugins: [react()],
   build: {
-    lib: {
-      entry: 'src/index.ts',
-      name: 'music-live',
-      formats: ['es', 'cjs'],
-      fileName: 'index',
-    },
-    rollupOptions: {
-      external: ['react', 'react-dom', 'sonner'],
-    },
+    lib: { entry: 'src/index.ts', formats: ['es'], fileName: 'index' },
+    rollupOptions: { external: (id) => !id.startsWith('.') && !id.startsWith('/') },
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: true,
   },
-});
+})
