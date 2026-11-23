@@ -66,7 +66,8 @@ describe('CreationStudio 大师写歌表单', () => {
     setupClipboard()
   })
 
-  it('编辑关键词、结构与乐器，并调整行数和 BPM 边界', async () => {
+  // 重型交互用例（表单逐项编辑 + BPM 边界扫描）：超出默认 5s，显式放宽到 40s（两仓测试基建一致）
+  it('编辑关键词、结构与乐器，并调整行数和 BPM 边界', { timeout: 40_000 }, async () => {
     const viewer = userEvent.setup()
     renderStudio()
     await viewer.click(screen.getByRole('button', { name: /大师写歌/ }))

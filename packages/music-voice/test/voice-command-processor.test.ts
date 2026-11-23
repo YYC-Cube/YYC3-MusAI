@@ -3,8 +3,8 @@
  * @description 覆盖意图匹配、参数提取、自动执行/确认模式、历史裁剪与事件
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { VoiceCommandProcessor } from '../src/VoiceCommandProcessor'
-import type { SpeechRecognitionResult } from '../src/SpeechRecognitionEngine'
+import { VoiceCommandProcessor } from '../src'
+import type { SpeechRecognitionResult } from '../src'
 
 const speech = (transcript: string, confidence = 0.8): SpeechRecognitionResult => ({
   transcript,
@@ -475,5 +475,362 @@ describe('VoiceCommandProcessor', () => {
       await processor.processSpeechResult(speech('创建弹窗'))
       expect(listener).toHaveBeenCalledTimes(1)
     })
+  })
+})
+
+describe('VoiceCommandProcessor 弹窗实现链路与多语言命令（W5 补流）', () => {
+  let processor: VoiceCommandProcessor
+
+  type AnyRec = Record<string, any>
+
+  beforeEach(() => {
+    localStorage.clear()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    processor = new VoiceCommandProcessor()
+  })
+
+  afterEach(() => {
+    processor.destroy()
+    vi.restoreAllMocks()
+  })
+
+  /** 注入可控的弹窗管理器桩 */
+  function stubPopupManager(over: AnyRec = {}) {
+    const stub = {
+      createPopup: vi.fn(async () => ({ id: 'pop-1', zIndex: 3 })),
+      getAllPopups: vi.fn(() => [
+        { id: 'pop-top', zIndex: 20 },
+        { id: 'pop-low', zIndex: 5 },
+      ]),
+      closePopup: vi.fn(() => true),
+      cascadePopups: vi.fn(async () => {}),
+      ...over,
+    }
+    ;(processor as any).popupManager = stub
+    return stub
+  }
+
+  /** 注入可控的智能体管理器桩 */
+  function stubAgentManager(over: AnyRec = {}) {
+    const stub = {
+      getAllAgents: vi.fn(() => []),
+      createAgentForPopup: vi.fn(async () => ({ config: { id: 'agent-9' } })),
+      removeAgent: vi.fn(),
+      ...over,
+    }
+    ;(processor as any).agentManager = stub
+    return stub
+  }
+
+  it('带 popupId 的关闭命令：成功与失败分支', async () => {
+    const stub = stubPopupManager()
+    const result = await processor.executeCommand({
+      id: 'cmd-close-1',
+      text: '关闭指定弹窗',
+      intent: 'close_popup',
+      confidence: 1,
+      parameters: { popupId: 'pop-low' },
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(stub.closePopup).toHaveBeenCalledWith('pop-low')
+    expect(result).toEqual({ success: true, message: '弹窗已关闭' })
+
+    stub.closePopup.mockReturnValue(false)
+    const failed = await processor.executeCommand({
+      id: 'cmd-close-2',
+      text: '关闭指定弹窗',
+      intent: 'close_popup',
+      confidence: 1,
+      parameters: { popupId: 'ghost' },
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(failed).toEqual({ success: false, message: '弹窗关闭失败' })
+  })
+
+  it('真实弹窗桩（无 popups）下 closePopup 走管理器返回失败', async () => {
+    // 不注入桩：使用模块内置占位弹窗管理器（getAllPopups 恒为空数组）
+    const result = await processor.executeCommand({
+      id: 'cmd-close-3',
+      text: '关闭指定弹窗',
+      intent: 'close_popup',
+      confidence: 1,
+      parameters: { popupId: 'anything' },
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(result).toEqual({ success: false, message: '没有弹窗可以关闭' })
+  })
+
+  it('无 popupId 时关闭 zIndex 最高的弹窗', async () => {
+    const stub = stubPopupManager()
+    const result = await processor.executeCommand({
+      id: 'cmd-close-4',
+      text: '关闭弹窗',
+      intent: 'close_popup',
+      confidence: 1,
+      parameters: {},
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(stub.closePopup).toHaveBeenCalledWith('pop-top')
+    expect(result).toEqual({ success: true, popupId: 'pop-top', message: '弹窗已关闭' })
+  })
+
+  it('排列弹窗成功时级联排列并返回数量', async () => {
+    const stub = stubPopupManager()
+    const command = await processor.processSpeechResult(speech('排列弹窗'))
+    expect(command.result).toMatchObject({ success: true, popupCount: 2, message: '已排列 2 个弹窗' })
+    expect(stub.cascadePopups).toHaveBeenCalledTimes(1)
+  })
+
+  it('网格/圆形布局有弹窗时走默认级联布局', async () => {
+    stubPopupManager()
+    const grid = await processor.processSpeechResult(speech('网格布局'))
+    expect(grid.result).toMatchObject({ success: true, layout: 'grid', popupCount: 2 })
+
+    const circular = await processor.processSpeechResult(speech('圆形布局'))
+    expect(circular.result).toMatchObject({ success: true, layout: 'circular', popupCount: 2 })
+  })
+
+  it('布局智能体存在时接管布局命令', async () => {
+    stubPopupManager()
+    const handleMessage = vi.fn(async (msg: AnyRec) => ({
+      handled: true,
+      strategy: msg.payload.parameters.strategy,
+    }))
+    stubAgentManager({
+      getAllAgents: () => [new (class LayoutAgent { config = { id: 'layout-1' }; handleMessage = handleMessage })()],
+    })
+
+    const command = await processor.processSpeechResult(speech('网格布局'))
+    expect(handleMessage).toHaveBeenCalledTimes(1)
+    expect(command.result).toMatchObject({ handled: true, strategy: 'grid' })
+  })
+
+  it('创建智能体：params.type 优先、缺省 assistant、成功与失败分支', async () => {
+    const agents = stubAgentManager()
+    stubPopupManager()
+
+    // 缺省 type → assistant，绑定到 zIndex 最高的弹窗
+    const created = await processor.executeCommand({
+      id: 'cmd-agent-1',
+      text: '创建智能体',
+      intent: 'create_agent',
+      confidence: 1,
+      parameters: {},
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(agents.createAgentForPopup).toHaveBeenCalledWith('pop-top', 'assistant')
+    expect(created).toMatchObject({ success: true, agentId: 'agent-9', popupId: 'pop-top', agentType: 'assistant' })
+
+    // 显式 type
+    agents.createAgentForPopup.mockClear()
+    await processor.executeCommand({
+      id: 'cmd-agent-2',
+      text: '创建智能体',
+      intent: 'create_agent',
+      confidence: 1,
+      parameters: { type: 'layout' },
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(agents.createAgentForPopup).toHaveBeenCalledWith('pop-top', 'layout')
+
+    // 创建失败 → catch 分支
+    agents.createAgentForPopup.mockRejectedValue(new Error('no slot'))
+    const failed = await processor.executeCommand({
+      id: 'cmd-agent-3',
+      text: '创建智能体',
+      intent: 'create_agent',
+      confidence: 1,
+      parameters: {},
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(failed).toMatchObject({ success: false, message: '智能体创建失败: no slot' })
+  })
+
+  it('未注入智能体桩时创建智能体走内置占位并捕获异常', async () => {
+    stubPopupManager()
+    const failed = await processor.executeCommand({
+      id: 'cmd-agent-4',
+      text: '创建智能体',
+      intent: 'create_agent',
+      confidence: 1,
+      parameters: {},
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(failed).toMatchObject({ success: false })
+    expect(String((failed as AnyRec).message)).toContain('智能体创建失败')
+  })
+
+  it('ask_agent 命中助手智能体时透传提问', async () => {
+    stubPopupManager()
+    const handleMessage = vi.fn(async (msg: AnyRec) => ({
+      success: true,
+      data: { answer: `回复：${msg.payload.parameters.message}` },
+    }))
+    stubAgentManager({
+      getAllAgents: () => [new (class AssistantAgent { config = { id: 'assistant-2' }; handleMessage = handleMessage })()],
+    })
+
+    const command = await processor.processSpeechResult(speech('咨询助手'))
+    expect(command.result).toMatchObject({ success: true, data: { answer: '回复：帮助' } })
+  })
+
+  it('clear_all 关闭全部弹窗并移除智能体', async () => {
+    const popupStub = stubPopupManager()
+    const agents = stubAgentManager({
+      getAllAgents: () => [{ popup: { id: 'pop-top' } }, { popup: undefined }],
+    })
+
+    const command = await processor.processSpeechResult(speech('清空所有'))
+    expect(command.result).toMatchObject({ success: true, clearedPopups: 2, clearedAgents: 2 })
+    expect(popupStub.closePopup).toHaveBeenCalledWith('pop-top')
+    expect(popupStub.closePopup).toHaveBeenCalledWith('pop-low')
+    expect(agents.removeAgent).toHaveBeenCalledWith('pop-top')
+    expect(agents.removeAgent).toHaveBeenCalledWith(undefined)
+  })
+
+  it('创建弹窗动作把标题/位置/尺寸参数传给弹窗管理器', async () => {
+    const stub = stubPopupManager()
+    const result = await processor.executeCommand({
+      id: 'cmd-create-1',
+      text: '创建弹窗',
+      intent: 'create_popup',
+      confidence: 1,
+      parameters: { title: '调音台', x: 40, y: 60, width: 320, height: 240 },
+      timestamp: Date.now(),
+      executed: false,
+    })
+    expect(stub.createPopup).toHaveBeenCalledWith({
+      title: '调音台',
+      content: '语音创建的弹窗',
+      position: { x: 40, y: 60 },
+      size: { width: 320, height: 240 },
+    })
+    expect(result).toMatchObject({ success: true, popupId: 'pop-1' })
+  })
+
+  it('AI 学习的意图积累三次后生成默认动作并可执行', async () => {
+    const local = new VoiceCommandProcessor({ enableAutoExecution: false })
+    ;(local as any).agentManager = {
+      getAllAgents: () => [
+        new (class AssistantAgent {
+          config = { id: 'assistant-3' }
+          handleMessage = vi.fn(async () => ({
+            success: true,
+            data: { intent: 'swipe_gesture', parameters: {}, confidence: 0.9 },
+          }))
+        })(),
+      ],
+    }
+
+    await local.processSpeechResult(speech('swipe left now'))
+    await local.processSpeechResult(speech('swipe right now'))
+    await local.processSpeechResult(speech('swipe up now'))
+
+    // 相似文本出现三次 → 学习到新模式（默认动作，意图原本不存在）
+    const learned = local.getIntents().find((i) => i.intent === 'swipe_gesture')
+    expect(learned).toBeDefined()
+    expect(learned?.description).toContain('学习到的意图: swipe_gesture')
+
+    // 匹配学习到的模式 → 走默认动作返回成功
+    const command = await local.processSpeechResult(speech('swipe down now'))
+    expect(command.intent).toBe('swipe_gesture')
+    const result = await local.executeCommand(command)
+    expect(result).toMatchObject({ success: true, intent: 'swipe_gesture', message: '执行学习到的意图: swipe_gesture' })
+    local.destroy()
+  })
+
+  it('学习已存在意图时复用既有动作', async () => {
+    const local = new VoiceCommandProcessor({ enableAutoExecution: false })
+    ;(local as any).agentManager = {
+      getAllAgents: () => [
+        new (class AssistantAgent {
+          config = { id: 'assistant-4' }
+          handleMessage = vi.fn(async () => ({
+            success: true,
+            data: { intent: 'help', parameters: {}, confidence: 0.9 },
+          }))
+        })(),
+      ],
+    }
+
+    await local.processSpeechResult(speech('please help me now'))
+    await local.processSpeechResult(speech('help me please'))
+    await local.processSpeechResult(speech('help the user'))
+
+    const learned = local.getIntents().filter((i) => i.intent === 'help')
+    expect(learned.length).toBeGreaterThanOrEqual(2)
+    expect(learned.at(-1)?.description).toContain('学习到的意图: help')
+    local.destroy()
+  })
+
+  it('关闭学习时 AI 意图不入学习库', async () => {
+    const local = new VoiceCommandProcessor({ enableAutoExecution: false, enableLearning: false })
+    ;(local as any).agentManager = {
+      getAllAgents: () => [
+        new (class AssistantAgent {
+          config = { id: 'assistant-5' }
+          handleMessage = vi.fn(async () => ({
+            success: true,
+            data: { intent: 'ai_only', parameters: {}, confidence: 0.9 },
+          }))
+        })(),
+      ],
+    }
+
+    const command = await local.processSpeechResult(speech('这句话完全新'))
+    expect(command.intent).toBe('ai_only')
+    expect((local as any).learningData).toHaveLength(0)
+    local.destroy()
+  })
+
+  it('AI 响应缺 data 时降级到简单意图识别', async () => {
+    // specify_number 并非注册意图，自动执行会抛「未知的意图」；关闭自动执行仅验证识别降级
+    const local = new VoiceCommandProcessor({ enableAutoExecution: false })
+    ;(local as any).agentManager = {
+      getAllAgents: () => [
+        new (class AssistantAgent {
+          config = { id: 'assistant-6' }
+          handleMessage = vi.fn(async () => ({ success: true }))
+        })(),
+      ],
+    }
+
+    const command = await local.processSpeechResult(speech('调到 9'))
+    expect(command.intent).toBe('specify_number')
+    expect(command.parameters.number).toBe(9)
+    local.destroy()
+  })
+
+  it('多语言命令：英文大小写不敏感匹配并执行', async () => {
+    const action = vi.fn(async (params: AnyRec) => ({ played: true, ...params }))
+    processor.addIntent({
+      intent: 'play_music',
+      patterns: [/play\s+.*\s*music/],
+      description: 'Play music',
+      example: ['play some music'],
+      action,
+    })
+
+    const command = await processor.processSpeechResult(speech('PLAY some MUSIC'))
+    expect(command.intent).toBe('play_music')
+    expect(command.executed).toBe(true)
+    expect(command.result).toEqual({ played: true })
+    expect(action).toHaveBeenCalledWith({})
+  })
+
+  it('多语言命令：纯英文无匹配时标记 unknown', async () => {
+    const command = await processor.processSpeechResult(speech('lorem ipsum dolor'))
+    expect(command.intent).toBe('unknown')
+    expect(command.confidence).toBe(0.3)
+    expect(command.executed).toBe(false)
   })
 })

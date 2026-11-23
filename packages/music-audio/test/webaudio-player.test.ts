@@ -3,7 +3,7 @@
  * @description 覆盖 AudioContext 初始化、缓冲加载/缓存、基本播放、情感化淡入淡出与错误分支
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import WebAudioPlayer from '../src/WebAudioPlayer.js'
+import WebAudioPlayer from '../src/engines/WebAudioPlayer.js'
 
 type AnyRecord = Record<string, any>
 

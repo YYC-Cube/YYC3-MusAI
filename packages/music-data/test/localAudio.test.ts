@@ -1,6 +1,6 @@
 // YYC³ music-data — 本地音频持久化测试
 import 'fake-indexeddb/auto';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   deleteLocalAudio,
   getAudioStorageUsage,
@@ -74,5 +74,85 @@ describe('localAudio', () => {
 
   it('存储占用在无 navigator.storage 时返回 null', async () => {
     expect(await getAudioStorageUsage()).toBeNull();
+  });
+});
+
+// ============================================================
+// W5 补流：不支持 IndexedDB 的环境 / 损坏记录 / 存储配额查询
+// ============================================================
+
+describe('localAudio 环境降级与损坏数据分支', () => {
+  // 与上方主 describe 平级，需自带清库（含直写的损坏记录）
+  beforeEach(async () => {
+    for (const id of await listLocalAudioIds()) {
+      await deleteLocalAudio(id);
+    }
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('IndexedDB 不可用时保存失败并告警、读取/删除/枚举安全回退', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // dbPromise 已被既有用例缓存，仍须在每次调用时命中“不支持”短路分支
+    vi.stubGlobal('indexedDB', undefined);
+
+    expect(await saveLocalAudio('no-db', blob(), { title: '无法保存' })).toBe(false);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[localAudio] 保存失败'));
+    expect(await getLocalAudio('no-db')).toBeNull();
+    expect(await deleteLocalAudio('no-db')).toBe(false);
+    expect(await listLocalAudioIds()).toEqual([]);
+
+    warnSpy.mockRestore();
+  });
+
+  it('记录缺少 blob（损坏数据）时按不存在处理', async () => {
+    expect(await saveLocalAudio('real-1', blob(), { title: '正常' })).toBe(true);
+
+    // 直接向同一 object store 写入一条无 blob 的记录
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open('yyc3-music-audio', 1);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('tracks', 'readwrite');
+      tx.objectStore('tracks').put({ id: 'broken-no-blob', meta: { title: '损坏' }, updatedAt: Date.now() });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+
+    expect(await getLocalAudio('broken-no-blob')).toBeNull();
+    expect(await getLocalAudio('real-1')).not.toBeNull();
+  });
+
+  it('navigator.storage.estimate 可用时返回占用与配额', async () => {
+    const estimate = vi.fn(async () => ({ usage: 2048, quota: 8192 }));
+    vi.stubGlobal('navigator', { ...navigator, storage: { estimate } });
+
+    expect(await getAudioStorageUsage()).toEqual({ usage: 2048, quota: 8192 });
+    expect(estimate).toHaveBeenCalledTimes(1);
+  });
+
+  it('estimate 拒绝时返回 null 不抛出', async () => {
+    const estimate = vi.fn(async () => {
+      throw new Error('denied');
+    });
+    vi.stubGlobal('navigator', { ...navigator, storage: { estimate } });
+
+    expect(await getAudioStorageUsage()).toBeNull();
+  });
+
+  it('pruneLocalAudio 逐个删除孤儿并统计成功数', async () => {
+    await saveLocalAudio('keep', blob(), {});
+    await saveLocalAudio('orphan-a', blob(), {});
+    await saveLocalAudio('orphan-b', blob(), {});
+
+    const removed = await pruneLocalAudio(['keep']);
+    expect(removed).toBe(2);
+    expect(await listLocalAudioIds()).toEqual(['keep']);
   });
 });

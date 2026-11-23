@@ -16,8 +16,8 @@ import {
   revokeToken,
   registerUser,
   AuthError,
-} from '../src/auth.ts';
-import { kv } from '../src/kv.ts';
+} from '../src/services/auth.ts';
+import { kv } from '../src/services/kv.ts';
 
 describe('密码哈希', () => {
   it('正确密码可通过', () => {

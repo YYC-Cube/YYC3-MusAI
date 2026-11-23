@@ -4,9 +4,41 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useMediaQuery } from '../src/useMediaQuery';
-import { useScrollProgress } from '../src/useScrollProgress';
-import { useWaveform } from '../src/useWaveform';
+import { useMediaQuery } from '../src/env/useMediaQuery';
+import { useScrollProgress } from '../src/media/useScrollProgress';
+import { useWaveform } from '../src/media/useWaveform';
+
+// ============================================================
+// Lenis 模块桩：可控 FakeLenis（ok 模式）与构造抛错（throw 模式）
+// ============================================================
+
+const lenisState = vi.hoisted(() => ({
+  mode: 'ok' as 'ok' | 'throw',
+  instances: [] as Array<{
+    options: unknown;
+    on: ReturnType<typeof vi.fn>;
+    raf: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+  }>,
+}));
+
+vi.mock('lenis', () => {
+  class FakeLenis {
+    options: unknown;
+    on: ReturnType<typeof vi.fn>;
+    raf: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+    constructor(opts: unknown) {
+      if (lenisState.mode === 'throw') throw new Error('lenis unavailable');
+      this.options = opts;
+      this.on = vi.fn();
+      this.raf = vi.fn();
+      this.destroy = vi.fn();
+      lenisState.instances.push(this);
+    }
+  }
+  return { default: FakeLenis };
+});
 
 // ============================================================
 // useWaveform
@@ -167,5 +199,161 @@ describe('useScrollProgress', () => {
     Object.defineProperty(document.documentElement, 'clientHeight', { value: 500, configurable: true });
     const { result } = renderHook(() => useScrollProgress());
     expect(result.current.progress).toBe(0);
+  });
+});
+
+// ============================================================
+// useScrollProgress 分支补流（W5）— 注入实例载荷变体 / 自建 Lenis
+// 生命周期 / 容器度量 / 原生回退
+// ============================================================
+
+describe('useScrollProgress 分支补流', () => {
+  beforeEach(() => {
+    lenisState.mode = 'ok';
+    lenisState.instances = [];
+    (window as any).lenis = undefined;
+    Object.defineProperty(document.documentElement, 'scrollHeight', { value: 2000, configurable: true });
+    Object.defineProperty(document.documentElement, 'clientHeight', { value: 500, configurable: true });
+    Object.defineProperty(window, 'pageYOffset', { value: 0, writable: true });
+  });
+
+  afterEach(() => {
+    lenisState.mode = 'ok';
+    lenisState.instances = [];
+    (window as any).lenis = undefined;
+    vi.restoreAllMocks();
+  });
+
+  it('注入实例回调载荷为对象时读取 payload.progress，缺失时回退实例 .progress', () => {
+    const unsubscribe = vi.fn();
+    let captured: ((payload: unknown) => void) | null = null;
+    (window as any).lenis = {
+      progress: 0.7,
+      on: vi.fn((_evt: string, cb: (p: unknown) => void) => {
+        captured = cb;
+        return unsubscribe;
+      }),
+    };
+    const onProgress = vi.fn();
+    const { result, unmount } = renderHook(() => useScrollProgress({ onProgress }));
+
+    // 对象载荷且带 progress 字段
+    act(() => captured?.({ progress: 0.42 }));
+    expect(result.current.progress).toBeCloseTo(0.42, 5);
+    expect(result.current.isScrolling).toBe(true);
+    expect(onProgress).toHaveBeenLastCalledWith(0.42);
+
+    // 对象载荷缺 progress → 回退注入实例的 .progress
+    act(() => captured?.({}));
+    expect(result.current.progress).toBeCloseTo(0.7, 5);
+
+    // 载荷为 undefined → 同样回退实例值
+    act(() => captured?.(undefined));
+    expect(result.current.progress).toBeCloseTo(0.7, 5);
+
+    // 越界值被夹取到 [0,1]
+    act(() => captured?.({ progress: 1.8 }));
+    expect(result.current.progress).toBe(1);
+
+    unmount();
+    expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('容器滚动时以容器度量计算进度（自建 Lenis 带 wrapper）', () => {
+    const el = document.createElement('div');
+    Object.defineProperty(el, 'scrollTop', { value: 100, configurable: true });
+    Object.defineProperty(el, 'scrollHeight', { value: 1100, configurable: true });
+    Object.defineProperty(el, 'clientHeight', { value: 600, configurable: true });
+
+    // 稳定的 ref 标识，避免 effect 因依赖变化重建 Lenis
+    const containerRef = { current: el };
+    const { result } = renderHook(() => useScrollProgress({ containerRef }));
+
+    // 挂载即同步容器度量：max = 500, y = 100 → 0.2
+    expect(result.current.progress).toBeCloseTo(0.2, 5);
+    expect(result.current.maxScrollY).toBe(500);
+    expect(result.current.scrollY).toBe(100);
+
+    // 自建 Lenis 收到容器 wrapper 与 lerp 配置
+    expect(lenisState.instances).toHaveLength(1);
+    expect(lenisState.instances[0].options).toMatchObject({ lerp: 0.1, wrapper: el });
+
+    // 原生滚动兜底监听同样读容器度量
+    act(() => {
+      Object.defineProperty(el, 'scrollTop', { value: 350, configurable: true });
+      window.dispatchEvent(new Event('scroll'));
+    });
+    expect(result.current.progress).toBeCloseTo(0.7, 5);
+    expect(result.current.scrollY).toBe(350);
+  });
+
+  it('自建 Lenis 分支：订阅滚动回调、原生滚动兜底、raf 驱动与卸载清理', async () => {
+    const { result, unmount } = renderHook(() => useScrollProgress());
+    const instance = lenisState.instances[0];
+    expect(instance).toBeDefined();
+    expect(instance.on).toHaveBeenCalledWith('scroll', expect.any(Function));
+
+    // Lenis 滚动回调按度量计算进度
+    const onLenisScroll = instance.on.mock.calls[0][1] as () => void;
+    act(() => onLenisScroll());
+    expect(result.current.progress).toBeCloseTo(0, 5);
+    expect(result.current.isScrolling).toBe(true);
+    expect(result.current.maxScrollY).toBe(1500);
+
+    // 原生滚动兜底监听（window scroll）
+    act(() => {
+      (window as any).pageYOffset = 750;
+      window.dispatchEvent(new Event('scroll'));
+    });
+    expect(result.current.progress).toBeCloseTo(0.5, 5);
+    expect(result.current.scrollY).toBe(750);
+
+    // rAF 循环持续驱动 lenis.raf
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 40));
+    });
+    expect(instance.raf).toHaveBeenCalled();
+
+    // 卸载清理：destroy + 移除监听（之后滚动不再更新进度）
+    unmount();
+    expect(instance.destroy).toHaveBeenCalled();
+    act(() => {
+      (window as any).pageYOffset = 1200;
+      window.dispatchEvent(new Event('scroll'));
+    });
+    expect(result.current.progress).toBeCloseTo(0.5, 5);
+  });
+
+  it('Lenis 不可用时回退原生滚动分支', () => {
+    lenisState.mode = 'throw';
+    const onProgress = vi.fn();
+    const { result, unmount } = renderHook(() => useScrollProgress({ onProgress }));
+
+    // 未创建 Lenis；挂载即同步一次原生度量
+    expect(lenisState.instances).toHaveLength(0);
+    expect(result.current.progress).toBe(0);
+    expect(result.current.maxScrollY).toBe(1500);
+
+    act(() => {
+      (window as any).pageYOffset = 750;
+      window.dispatchEvent(new Event('scroll'));
+    });
+    expect(result.current.progress).toBeCloseTo(0.5, 5);
+    expect(result.current.isScrolling).toBe(true);
+    expect(onProgress).toHaveBeenLastCalledWith(0.5);
+
+    // 卸载后滚动不再更新进度
+    unmount();
+    act(() => {
+      (window as any).pageYOffset = 1200;
+      window.dispatchEvent(new Event('scroll'));
+    });
+    expect(result.current.progress).toBeCloseTo(0.5, 5);
+
+    // 无滚动空间时进度保持 0
+    Object.defineProperty(document.documentElement, 'scrollHeight', { value: 500, configurable: true });
+    const { result: r2, unmount: u2 } = renderHook(() => useScrollProgress());
+    expect(r2.current.progress).toBe(0);
+    u2();
   });
 });

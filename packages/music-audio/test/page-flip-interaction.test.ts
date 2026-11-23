@@ -3,7 +3,7 @@
  * @description 覆盖页面初始化、鼠标/触摸/键盘手势、翻页边界、动画、logo 集成与大屏同步
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import PageFlipInteraction from '../src/PageFlipInteraction.js'
+import PageFlipInteraction from '../src/engines/PageFlipInteraction.js'
 
 type PageFlipAny = InstanceType<typeof PageFlipInteraction> & {
   pages: HTMLElement[]

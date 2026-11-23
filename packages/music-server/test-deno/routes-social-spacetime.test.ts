@@ -1,7 +1,7 @@
 /**
  * Social / Spacetime / Challenge / Live Session 路由测试
  */
-import { assert, assertEquals, assertMatch } from 'jsr:@std/assert@1';
+import { assert, assertEquals, assertMatch } from '@std/assert';
 
 import { FakeSupabase } from './helpers/fake-supabase.ts';
 import {
@@ -11,7 +11,7 @@ import {
   request,
   tokenFor,
 } from './helpers/test-app.ts';
-import { queryCache } from '../src/server-utils.ts';
+import { queryCache } from '../src/services/server-utils.ts';
 
 const fake = new FakeSupabase();
 fake.install();
@@ -25,7 +25,7 @@ const app = createTestApp();
 const spacetimeApp = createSpacetimeApp();
 const P = '/make-server-f626b673';
 
-const auth = (id: string) => tokenFor(id);
+const auth = async (id: string) => tokenFor(id);
 
 // ============================================================
 // Social
@@ -65,7 +65,7 @@ Deno.test('social: achievements track 各动作分支', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/achievements/u-track/track`, {
-    token: auth('u-track'),
+    token: await auth('u-track'),
     body: {},
   });
   assertEquals(invalid.status, 400);
@@ -76,7 +76,7 @@ Deno.test('social: achievements track 各动作分支', async () => {
   ];
   for (const action of actions) {
     const res = await request(app, `${P}/achievements/u-track/track`, {
-      token: auth('u-track'),
+      token: await auth('u-track'),
       body: { action, starPower: 2500, totalPlays: 123 },
     });
     assertEquals(res.status, 200);
@@ -91,13 +91,13 @@ Deno.test('social: achievements track 各动作分支', async () => {
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   fake.seedJson('user:u-daily:achievement-stats', { streakDays: 3, lastActiveDate: yesterday });
   const daily = await request(app, `${P}/achievements/u-daily/track`, {
-    token: auth('u-daily'),
+    token: await auth('u-daily'),
     body: { action: 'daily_login' },
   });
   assertEquals((await jsonBody(daily)).stats.streakDays, 4);
 
   const sameDay = await request(app, `${P}/achievements/u-daily/track`, {
-    token: auth('u-daily'),
+    token: await auth('u-daily'),
     body: { action: 'daily_login' },
   });
   assertEquals((await jsonBody(sameDay)).stats.streakDays, 4);
@@ -105,13 +105,13 @@ Deno.test('social: achievements track 各动作分支', async () => {
   // 断签重置为 1
   fake.seedJson('user:u-gap:achievement-stats', { streakDays: 9, lastActiveDate: '2020-01-01' });
   const gap = await request(app, `${P}/achievements/u-gap/track`, {
-    token: auth('u-gap'),
+    token: await auth('u-gap'),
     body: { action: 'daily_login' },
   });
   assertEquals((await jsonBody(gap)).stats.streakDays, 1);
 
   const broken = await request(app, `${P}/achievements/u-track/track`, {
-    token: auth('u-track'),
+    token: await auth('u-track'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -150,13 +150,13 @@ Deno.test('social: timeline comments 发布/截断/点赞', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/timeline-comments/tl-song`, {
-    token: auth('tl-user'),
+    token: await auth('tl-user'),
     body: { text: 'hi' },
   });
   assertEquals(invalid.status, 400);
 
   const ok = await request(app, `${P}/timeline-comments/tl-song`, {
-    token: auth('tl-user'),
+    token: await auth('tl-user'),
     body: { text: 'nice', timestamp: 12, userName: 'TL' },
   });
   assertEquals(ok.status, 200);
@@ -177,13 +177,13 @@ Deno.test('social: timeline comments 发布/截断/点赞', async () => {
   const existing = Array.from({ length: 200 }, (_, i) => ({ id: `old${i}` }));
   fake.seedJson('timeline-comments:tl-trim', existing);
   const trimmed = await request(app, `${P}/timeline-comments/tl-trim`, {
-    token: auth('tl-user'),
+    token: await auth('tl-user'),
     body: { text: 'overflow', timestamp: 1 },
   });
   assertEquals((await jsonBody(trimmed)).total, 200);
 
   const broken = await request(app, `${P}/timeline-comments/tl-song`, {
-    token: auth('tl-user'),
+    token: await auth('tl-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -262,13 +262,13 @@ Deno.test('spacetime: 留言创建/列表/错误', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/spacetime/messages`, {
-    token: auth('st-user'),
+    token: await auth('st-user'),
     body: { content: '' },
   });
   assertEquals(invalid.status, 400);
 
   const ok = await request(app, `${P}/spacetime/messages`, {
-    token: auth('st-user'),
+    token: await auth('st-user'),
     body: { content: 'hello world', userName: 'ST', emotion: 'happy' },
   });
   assertEquals(ok.status, 200);
@@ -278,13 +278,13 @@ Deno.test('spacetime: 留言创建/列表/错误', async () => {
   assertEquals(fake.readJson('spacetime:messages').length, 1);
 
   const scheduled = await request(app, `${P}/spacetime/messages`, {
-    token: auth('st-user'),
+    token: await auth('st-user'),
     body: { content: 'future', targetTime: new Date(Date.now() + 3600000).toISOString() },
   });
   assertEquals((await jsonBody(scheduled)).message.status, 'scheduled');
 
   const broken = await request(app, `${P}/spacetime/messages`, {
-    token: auth('st-user'),
+    token: await auth('st-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -379,19 +379,19 @@ Deno.test('spacetime: 时间胶囊创建/解锁/点赞', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/spacetime/capsules`, {
-    token: auth('cap-user'),
+    token: await auth('cap-user'),
     body: { title: 'T', content: 'C' },
   });
   assertEquals(invalid.status, 400);
 
   const badDate = await request(app, `${P}/spacetime/capsules`, {
-    token: auth('cap-user'),
+    token: await auth('cap-user'),
     body: { title: 'T', content: 'C', unlockAt: 'not-a-date' },
   });
   assertEquals(badDate.status, 400);
 
   const plain = await request(app, `${P}/spacetime/capsules`, {
-    token: auth('cap-user'),
+    token: await auth('cap-user'),
     body: { title: 'Plain', content: 'secret', unlockAt: '2030-01-01', recipientName: 'R' },
   });
   assertEquals(plain.status, 200);
@@ -400,7 +400,7 @@ Deno.test('spacetime: 时间胶囊创建/解锁/点赞', async () => {
   assertEquals(plainCapsule.isUnlocked, false);
 
   const encrypted = await request(app, `${P}/spacetime/capsules`, {
-    token: auth('cap-user'),
+    token: await auth('cap-user'),
     body: {
       title: 'Encrypted', content: 'cipher-holder', unlockAt: '2030-01-01',
       encrypted: true, encryptedContent: 'cipher', encryptedSessionKey: 'key',
@@ -617,14 +617,14 @@ Deno.test('challenge: submit 校验/AI 评分/重复提交', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/challenges/c1/submit`, {
-    token: auth('sub-user'),
+    token: await auth('sub-user'),
     body: { userId: 'sub-user' },
   });
   assertEquals(invalid.status, 400);
 
   fake.seedJson('challenges:entries:c1', []);
   const ok = await request(app, `${P}/challenges/c1/submit`, {
-    token: auth('sub-user'),
+    token: await auth('sub-user'),
     body: { userId: 'sub-user', userName: 'Sub', workTitle: 'My Song', workLyrics: ['line'], workTheme: 'happy' },
   });
   assertEquals(ok.status, 200);
@@ -636,14 +636,14 @@ Deno.test('challenge: submit 校验/AI 评分/重复提交', async () => {
   assertEquals(fake.readJson('achievements:stats:sub-user').challengesEntered, 1);
 
   const dup = await request(app, `${P}/challenges/c1/submit`, {
-    token: auth('sub-user'),
+    token: await auth('sub-user'),
     body: { userId: 'sub-user', workTitle: 'Again' },
   });
   assertEquals(dup.status, 400);
   assertEquals((await jsonBody(dup)).alreadySubmitted, true);
 
   const broken = await request(app, `${P}/challenges/c1/submit`, {
-    token: auth('sub-user'),
+    token: await auth('sub-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -664,26 +664,26 @@ Deno.test('challenge: entries/vote/champions/notifications', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/challenges/c2/vote`, {
-    token: auth('v1'),
+    token: await auth('v1'),
     body: {},
   });
   assertEquals(invalid.status, 400);
 
   const vote = await request(app, `${P}/challenges/c2/vote`, {
-    token: auth('v1'),
+    token: await auth('v1'),
     body: { userId: 'v1', entryId: 'e-a' },
   });
   assertEquals(vote.status, 200);
   assertEquals((await jsonBody(vote)).votes, 1);
 
   const dupVote = await request(app, `${P}/challenges/c2/vote`, {
-    token: auth('v1'),
+    token: await auth('v1'),
     body: { userId: 'v1', entryId: 'e-a' },
   });
   assertEquals(dupVote.status, 400);
 
   const missingEntry = await request(app, `${P}/challenges/c2/vote`, {
-    token: auth('v2'),
+    token: await auth('v2'),
     body: { userId: 'v2', entryId: 'nope' },
   });
   assertEquals(missingEntry.status, 404);
@@ -721,7 +721,7 @@ Deno.test('challenge: finalize 无作品/成功/错误', async () => {
   fake.seedJson('challenges:entries:c3', []);
   const empty = await request(app, `${P}/challenges/c3/finalize`, {
     method: 'POST',
-    token: auth('fin-user'),
+    token: await auth('fin-user'),
   });
   assertEquals(empty.status, 400);
   assertEquals((await jsonBody(empty)).error, 'No entries to finalize');
@@ -735,7 +735,7 @@ Deno.test('challenge: finalize 无作品/成功/错误', async () => {
   fake.seed('user:fa:starpower', '10');
   const ok = await request(app, `${P}/challenges/c3/finalize`, {
     method: 'POST',
-    token: auth('fin-user'),
+    token: await auth('fin-user'),
   });
   assertEquals(ok.status, 200);
   const body = await jsonBody(ok);

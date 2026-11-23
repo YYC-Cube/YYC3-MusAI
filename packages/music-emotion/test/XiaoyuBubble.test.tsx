@@ -1,8 +1,58 @@
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
 // YYC³ music-emotion — XiaoyuBubble 气泡组件测试
 import { describe, it, expect, vi } from 'vitest'
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
-import XiaoyuBubble from '../src/components/xiaoyu/XiaoyuBubble'
+import { XiaoyuBubble } from '../src'
+
+// W7-P2-3 环境自足化：barrel 导入会连带加载同包 XiaoyuCharacter→lottie-web，
+// jsdom 无 2D canvas 时 lottie-web 模块初始化即崩溃；就地 mock（同 XiaoyuCharacter.test.tsx 模式）
+vi.mock('lottie-react', () => ({ default: () => null }))
 
 describe('XiaoyuBubble', () => {
   it('可见时渲染文本内容', () => {

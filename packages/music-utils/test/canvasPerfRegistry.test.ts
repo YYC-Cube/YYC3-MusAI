@@ -1,6 +1,6 @@
 // YYC³ music-utils — Canvas 性能注册表测试（window 单例数据总线）
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { getCanvasPerf, setCanvasPerf } from '../src/canvasPerfRegistry'
+import { getCanvasPerf, setCanvasPerf } from '../src'
 
 const REGISTRY_KEY = '__dmusic_canvas_perf__'
 

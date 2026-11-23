@@ -1,7 +1,8 @@
 import { defineConfig } from 'vitest/config'
 
 // YYC³ music-monorepo — Vitest 根配置
-// 覆盖率门禁：全量可执行源码（all:true），语句/分支/函数/行四项均 ≥80%。
+// 覆盖率门禁：全量可执行源码（all:true），阈值 95/92/88/95（2026-11-21 覆盖率提升收口，
+// 实测 99.11L/92.82B/97.38F，与源仓 vitest.config.ts 一致；80 时代阈值已退役）。
 // 排除项仅限不可执行或非运行时逻辑：类型声明、纯 re-export 桶文件、测试套件定义数据。
 // music-server 为 Deno 运行时，由 `pnpm test:deno:coverage` 独立统计并单独卡 80%。
 export default defineConfig({
@@ -26,10 +27,10 @@ export default defineConfig({
         'packages/m98-server/src/**',
       ],
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
+        lines: 95,
+        functions: 92,
+        branches: 88,
+        statements: 95,
       },
     },
     projects: [
@@ -140,6 +141,15 @@ export default defineConfig({
           name: 'music-player',
           environment: 'jsdom',
           include: ['packages/music-player/test/**/*.test.ts?(x)'],
+          setupFiles: ['test/setup-dom.ts'],
+        },
+      },
+      {
+        // W3 补流媒体：music-live 顶层架构测试（LiveRoom 槽位/LiveClient 队列/弹幕看板等）
+        test: {
+          name: 'music-live',
+          environment: 'jsdom',
+          include: ['packages/music-live/test/**/*.test.ts?(x)'],
           setupFiles: ['test/setup-dom.ts'],
         },
       },

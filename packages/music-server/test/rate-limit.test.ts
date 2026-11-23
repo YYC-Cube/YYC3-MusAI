@@ -3,7 +3,7 @@
  * @description 覆盖滑动窗口计数、超限响应、限流响应头与客户端标识提取
  */
 import { describe, expect, it, vi } from 'vitest'
-import { RATE_AUTH, RATE_HEAVY, RATE_SENSITIVE, RATE_STANDARD, rateLimit } from '../src/rate-limit'
+import { RATE_AUTH, RATE_HEAVY, RATE_SENSITIVE, RATE_STANDARD, rateLimit } from '../src/services/rate-limit.ts'
 
 function createContext(headers: Record<string, string> = {}, path = '/api/test') {
   const responseHeaders: Record<string, string> = {}

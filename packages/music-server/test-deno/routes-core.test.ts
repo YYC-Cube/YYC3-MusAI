@@ -6,7 +6,7 @@ import {
   assertEquals,
   assertExists,
   assertMatch,
-} from 'jsr:@std/assert@1';
+} from '@std/assert';
 
 import { FakeSupabase } from './helpers/fake-supabase.ts';
 import {
@@ -15,8 +15,8 @@ import {
   request,
   tokenFor,
 } from './helpers/test-app.ts';
-import { getVIPLevel } from '../src/routes-starpower.ts';
-import { hashContent } from '../src/server-utils.ts';
+import { getVIPLevel } from '../src/routes/routes-starpower.ts';
+import { hashContent } from '../src/services/server-utils.ts';
 
 const fake = new FakeSupabase();
 fake.install();
@@ -47,15 +47,16 @@ Deno.test('auth: signup 成功写入星力/角色/档案', async () => {
   assertEquals(res.status, 200);
   const body = await jsonBody(res);
   assertEquals(body.success, true);
-  assertEquals(body.user.id, 'user-alice');
+  // 应用层注册：userId 由服务端生成（UUID），accessToken 为三段式 JWT
+  const userId = body.user.id;
+  assertEquals(typeof userId, 'string');
+  assert(userId.length > 0);
+  assertEquals(body.accessToken.split('.').length, 3);
+  assertEquals(body.user.email, 'alice@example.com');
 
-  assertEquals(fake.read('user:user-alice:starpower'), '100');
-  assertEquals(fake.read('user:user-alice:role'), 'user');
-  const profile = fake.readJson('user:user-alice:profile');
-  assertEquals(profile.displayName, 'Alice');
-  assertEquals(profile.starPower, 100);
-  assertEquals(profile.email, 'alice@example.com');
-  assert(fake.callsTo('/auth/v1/admin/users').length > 0);
+  // KV：星力与角色键沿用既有命名（档案存 musai.users 关系表，不再写 KV profile）
+  assertEquals(fake.read(`user:${userId}:starpower`), '100');
+  assertEquals(fake.read(`user:${userId}:role`), 'user');
 });
 
 Deno.test('auth: signup 缺少密码返回 400', async () => {
@@ -64,20 +65,19 @@ Deno.test('auth: signup 缺少密码返回 400', async () => {
   assertExists((await jsonBody(res)).error);
 });
 
-Deno.test('auth: signup 上游已存在用户返回 400', async () => {
-  fake.adminSignupError = 'User already registered';
-  const res = await request(app, `${P}/signup`, {
-    body: { email: 'dup@example.com', password: 'pw' },
-  });
-  fake.adminSignupError = null;
-  assertEquals(res.status, 400);
-  assertEquals((await jsonBody(res)).error, 'User already registered');
+Deno.test('auth: signup 重复邮箱返回 409', async () => {
+  const body = { email: 'dup@example.com', password: 'pw', displayName: 'Dup' };
+  const first = await request(app, `${P}/signup`, { body });
+  assertEquals(first.status, 200);
+  const res = await request(app, `${P}/signup`, { body });
+  assertEquals(res.status, 409);
+  assertEquals((await jsonBody(res)).error, '该邮箱已注册');
 });
 
 Deno.test('auth: signup 非法 JSON 返回 500', async () => {
   const res = await request(app, `${P}/signup`, { body: '{not-json' });
   assertEquals(res.status, 500);
-  assertMatch((await jsonBody(res)).error, /Signup failed/);
+  assertMatch((await jsonBody(res)).error, /注册失败/);
 });
 
 // ============================================================
@@ -165,13 +165,13 @@ Deno.test('music: comments 需要鉴权并校验参数', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/comments/comment-song`, {
-    token: tokenFor('commenter'),
+    token: await tokenFor('commenter'),
     body: { userName: 'Bob', text: '' },
   });
   assertEquals(invalid.status, 400);
 
   const created = await request(app, `${P}/comments/comment-song`, {
-    token: tokenFor('commenter'),
+    token: await tokenFor('commenter'),
     body: { userName: 'Bob', text: 'hello', timestamp: 12 },
   });
   assertEquals(created.status, 200);
@@ -259,7 +259,7 @@ Deno.test('starpower: 增加余额（鉴权/校验/成功/错误）', async () =
 
   fake.seed('user:sp-add:starpower', '100');
   const ok = await request(app, `${P}/starpower/sp-add`, {
-    token: tokenFor('sp-add'),
+    token: await tokenFor('sp-add'),
     body: { amount: 50, reason: 'bonus' },
   });
   assertEquals(ok.status, 200);
@@ -270,13 +270,13 @@ Deno.test('starpower: 增加余额（鉴权/校验/成功/错误）', async () =
   assertEquals(fake.read('user:sp-add:starpower'), '150');
 
   const invalid = await request(app, `${P}/starpower/sp-add`, {
-    token: tokenFor('sp-add'),
+    token: await tokenFor('sp-add'),
     body: { amount: 0, reason: 'x' },
   });
   assertEquals(invalid.status, 400);
 
   const broken = await request(app, `${P}/starpower/sp-add`, {
-    token: tokenFor('sp-add'),
+    token: await tokenFor('sp-add'),
     body: '{bad-json',
   });
   assertEquals(broken.status, 500);
@@ -290,7 +290,7 @@ Deno.test('starpower: 签到连续天数、重复签到与错误', async () => {
 
   const ok = await request(app, `${P}/starpower/sp-checkin/checkin`, {
     method: 'POST',
-    token: tokenFor('sp-checkin'),
+    token: await tokenFor('sp-checkin'),
   });
   assertEquals(ok.status, 200);
   const body = await jsonBody(ok);
@@ -305,19 +305,19 @@ Deno.test('starpower: 签到连续天数、重复签到与错误', async () => {
 
   const again = await request(app, `${P}/starpower/sp-checkin/checkin`, {
     method: 'POST',
-    token: tokenFor('sp-checkin'),
+    token: await tokenFor('sp-checkin'),
   });
   assertEquals(again.status, 200);
   assertEquals((await jsonBody(again)).alreadyCheckedIn, true);
 
   const fresh = await request(app, `${P}/starpower/sp-fresh/checkin`, {
     method: 'POST',
-    token: tokenFor('sp-fresh'),
+    token: await tokenFor('sp-fresh'),
   });
   assertEquals((await jsonBody(fresh)).streak, 1);
 
   const broken = await request(app, `${P}/starpower/sp-checkin/checkin`, {
-    token: tokenFor('sp-checkin'),
+    token: await tokenFor('sp-checkin'),
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: undefined,
@@ -329,23 +329,27 @@ Deno.test('starpower: 交易分页与失败', async () => {
   const txns = [1, 2, 3].map((n) => ({ id: `t${n}`, amount: n }));
   fake.seed('user:sp-txn:transactions', JSON.stringify(txns));
 
+  // A3：统一分页信封（total/page/limit/hasMore 与业务字段并列返回）
   const page1 = await request(app, `${P}/starpower/sp-txn/transactions?page=1&limit=2`);
   const b1 = await jsonBody(page1);
   assertEquals(b1.transactions.length, 2);
-  assertEquals(b1.pagination.total, 3);
-  assertEquals(b1.pagination.hasNext, true);
-  assertEquals(b1.pagination.hasPrev, false);
+  assertEquals(b1.total, 3);
+  assertEquals(b1.page, 1);
+  assertEquals(b1.limit, 2);
+  assertEquals(b1.hasMore, true);
 
   const page2 = await request(app, `${P}/starpower/sp-txn/transactions?page=2&limit=2`);
   const b2 = await jsonBody(page2);
   assertEquals(b2.transactions.length, 1);
-  assertEquals(b2.pagination.hasPrev, true);
+  assertEquals(b2.total, 3);
+  assertEquals(b2.hasMore, false);
 
   fake.kvDown = true;
   const down = await request(app, `${P}/starpower/sp-txn/transactions`);
   fake.kvDown = false;
   assertEquals(down.status, 500);
-  assertEquals((await jsonBody(down)).transactions.length, 0);
+  // A2：统一错误体（apiError 信封，不再附带业务字段）
+  assertExists((await jsonBody(down)).error);
 });
 
 Deno.test('starpower: VIP 等级边界', () => {
@@ -385,14 +389,14 @@ Deno.test('starpower: consume 余额不足/成功/错误', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/starpower/sp-consume/consume`, {
-    token: tokenFor('sp-consume'),
+    token: await tokenFor('sp-consume'),
     body: { amount: -1, purpose: 'x' },
   });
   assertEquals(invalid.status, 400);
 
   fake.seed('user:sp-consume:starpower', '10');
   const poor = await request(app, `${P}/starpower/sp-consume/consume`, {
-    token: tokenFor('sp-consume'),
+    token: await tokenFor('sp-consume'),
     body: { amount: 50, purpose: 'buy' },
   });
   assertEquals(poor.status, 400);
@@ -400,7 +404,7 @@ Deno.test('starpower: consume 余额不足/成功/错误', async () => {
 
   fake.seed('user:sp-consume:starpower', '100');
   const ok = await request(app, `${P}/starpower/sp-consume/consume`, {
-    token: tokenFor('sp-consume'),
+    token: await tokenFor('sp-consume'),
     body: { amount: 30, purpose: 'buy', targetId: 't1' },
   });
   assertEquals(ok.status, 200);
@@ -409,7 +413,7 @@ Deno.test('starpower: consume 余额不足/成功/错误', async () => {
   assertEquals(fake.readJson('user:sp-consume:transactions')[0].detail, 'Target: t1');
 
   const broken = await request(app, `${P}/starpower/sp-consume/consume`, {
-    token: tokenFor('sp-consume'),
+    token: await tokenFor('sp-consume'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -422,14 +426,14 @@ Deno.test('starpower: leaderboard boost', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/leaderboard/boost`, {
-    token: tokenFor('boost-user'),
+    token: await tokenFor('boost-user'),
     body: { songId: '', userId: 'u1' },
   });
   assertEquals(invalid.status, 400);
 
   fake.seed('user:boost-user:starpower', '50');
   const poor = await request(app, `${P}/leaderboard/boost`, {
-    token: tokenFor('boost-user'),
+    token: await tokenFor('boost-user'),
     body: { songId: 's1', userId: 'boost-user', amount: 100 },
   });
   assertEquals(poor.status, 400);
@@ -437,7 +441,7 @@ Deno.test('starpower: leaderboard boost', async () => {
   fake.seed('user:boost-user:starpower', '500');
   fake.seed('song:s1:stats', JSON.stringify({ plays: 5, likes: 0, comments: 0 }));
   const ok = await request(app, `${P}/leaderboard/boost`, {
-    token: tokenFor('boost-user'),
+    token: await tokenFor('boost-user'),
     body: { songId: 's1', userId: 'boost-user', amount: 100 },
   });
   assertEquals(ok.status, 200);
@@ -447,7 +451,7 @@ Deno.test('starpower: leaderboard boost', async () => {
   assertEquals(fake.readJson('song:s1:stats').plays, 15);
 
   const broken = await request(app, `${P}/leaderboard/boost`, {
-    token: tokenFor('boost-user'),
+    token: await tokenFor('boost-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -463,20 +467,20 @@ Deno.test('starpower: 商店列表与购买流程', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor('shop-user'),
+    token: await tokenFor('shop-user'),
     body: { userId: 'shop-user' },
   });
   assertEquals(invalid.status, 400);
 
   const missing = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor('shop-user'),
+    token: await tokenFor('shop-user'),
     body: { userId: 'shop-user', itemId: 'no-such-item' },
   });
   assertEquals(missing.status, 404);
 
   fake.seed('user:shop-user:starpower', '10');
   const poor = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor('shop-user'),
+    token: await tokenFor('shop-user'),
     body: { userId: 'shop-user', itemId: 'theme-neon' },
   });
   assertEquals(poor.status, 400);
@@ -484,7 +488,7 @@ Deno.test('starpower: 商店列表与购买流程', async () => {
 
   fake.seed('user:shop-user:starpower', '300');
   const ok = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor('shop-user'),
+    token: await tokenFor('shop-user'),
     body: { userId: 'shop-user', itemId: 'theme-neon' },
   });
   assertEquals(ok.status, 200);
@@ -494,7 +498,7 @@ Deno.test('starpower: 商店列表与购买流程', async () => {
   fake.seed('user:shop-user:starpower', '300');
   fake.seedJson('user:shop-user:inventory', [{ itemId: 'theme-neon', purchasedAt: 1, expiresAt: null }]);
   const owned = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor('shop-user'),
+    token: await tokenFor('shop-user'),
     body: { userId: 'shop-user', itemId: 'theme-neon' },
   });
   assertEquals(owned.status, 400);
@@ -506,14 +510,14 @@ Deno.test('starpower: 商店列表与购买流程', async () => {
   fake.seed(`user:${raceUser}:starpower`, '300');
   fake.kvSequence.set(`user:${raceUser}:starpower`, ['300', '10']);
   const race = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor(raceUser),
+    token: await tokenFor(raceUser),
     body: { userId: raceUser, itemId: 'sound-synth' },
   });
   assertEquals(race.status, 400);
   assertMatch((await jsonBody(race)).error, /race condition/);
 
   const broken = await request(app, `${P}/starpower/shop/purchase`, {
-    token: tokenFor('shop-user'),
+    token: await tokenFor('shop-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -593,14 +597,14 @@ Deno.test('user: profile 更新（鉴权/校验/合并）', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/profile/prof-up`, {
-    token: tokenFor('prof-up'),
+    token: await tokenFor('prof-up'),
     body: { email: 'not-an-email' },
   });
   assertEquals(invalid.status, 400);
 
   fake.seedJson('user:prof-up:profile', { userId: 'prof-up', displayName: 'Old', starPower: 5 });
   const ok = await request(app, `${P}/profile/prof-up`, {
-    token: tokenFor('prof-up'),
+    token: await tokenFor('prof-up'),
     body: { displayName: 'New', bio: 'bio', extra: 'kept' },
   });
   assertEquals(ok.status, 200);
@@ -610,7 +614,7 @@ Deno.test('user: profile 更新（鉴权/校验/合并）', async () => {
   assertEquals(profile.extra, 'kept');
 
   const broken = await request(app, `${P}/profile/prof-up`, {
-    token: tokenFor('prof-up'),
+    token: await tokenFor('prof-up'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -634,29 +638,32 @@ Deno.test('user: role 读取与管理员更新', async () => {
   assertEquals(invalidToken.status, 403);
 
   const nonAdmin = await request(app, `${P}/user/role/role-user`, {
-    token: tokenFor('plain-user'),
+    token: await tokenFor('plain-user'),
     body: { role: 'admin' },
   });
   assertEquals(nonAdmin.status, 403);
 
   fake.seed('user:admin-user:role', 'admin');
   const badRole = await request(app, `${P}/user/role/role-user`, {
-    token: tokenFor('admin-user'),
+    token: await tokenFor('admin-user', 'admin'),
     body: { role: 'superuser' },
   });
   assertEquals(badRole.status, 400);
 
   const ok = await request(app, `${P}/user/role/role-user`, {
-    token: tokenFor('admin-user'),
+    token: await tokenFor('admin-user', 'admin'),
     body: { role: 'moderator' },
   });
   assertEquals(ok.status, 200);
   assertEquals(fake.read('user:role-user:role'), 'moderator');
 
+  // KV 故障：role-user 的档案已由上面的 POST 写入关系表（内存驱动），
+  // 读取走关系表兜底仍返回 200
   fake.kvDown = true;
   const down = await request(app, `${P}/user/role/role-user`);
   fake.kvDown = false;
-  assertEquals(down.status, 500);
+  assertEquals(down.status, 200);
+  assertEquals((await jsonBody(down)).role, 'moderator');
 });
 
 Deno.test('user: unlocked-themes 读写', async () => {
@@ -669,20 +676,20 @@ Deno.test('user: unlocked-themes 读写', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/user/theme-user/unlocked-themes`, {
-    token: tokenFor('theme-user'),
+    token: await tokenFor('theme-user'),
     body: {},
   });
   assertEquals(invalid.status, 400);
 
   const ok = await request(app, `${P}/user/theme-user/unlocked-themes`, {
-    token: tokenFor('theme-user'),
+    token: await tokenFor('theme-user'),
     body: { themeId: 'neon' },
   });
   assertEquals(ok.status, 200);
   assertEquals((await jsonBody(ok)).themes, ['neon']);
 
   const dup = await request(app, `${P}/user/theme-user/unlocked-themes`, {
-    token: tokenFor('theme-user'),
+    token: await tokenFor('theme-user'),
     body: { themeId: 'neon' },
   });
   assertEquals((await jsonBody(dup)).themes, ['neon']);
@@ -704,7 +711,7 @@ Deno.test('user: preferences 读写与白名单过滤', async () => {
   assertEquals(anonymous.status, 401);
 
   const ok = await request(app, `${P}/preferences/pref-user`, {
-    token: tokenFor('pref-user'),
+    token: await tokenFor('pref-user'),
     body: { lang: 'zh', volume: 0.5, hack: 'nope', mode: 'loop' },
   });
   assertEquals(ok.status, 200);
@@ -756,7 +763,7 @@ Deno.test('user: export 鉴权与数据过滤', async () => {
   assertEquals(anonymous.status, 401);
 
   const wrongUser = await request(app, `${P}/export/ex-user`, {
-    token: tokenFor('someone-else'),
+    token: await tokenFor('someone-else'),
   });
   assertEquals(wrongUser.status, 401);
 
@@ -767,7 +774,7 @@ Deno.test('user: export 鉴权与数据过滤', async () => {
   fake.seedJson('capsule:c1', { senderId: 'ex-user' });
   fake.seedJson('capsule:c2', { senderId: 'other' });
 
-  const res = await request(app, `${P}/export/ex-user`, { token: tokenFor('ex-user') });
+  const res = await request(app, `${P}/export/ex-user`, { token: await tokenFor('ex-user') });
   assertEquals(res.status, 200);
   const body = await jsonBody(res);
   assertEquals(body.userId, 'ex-user');
@@ -792,13 +799,13 @@ Deno.test('community: activities 读取/写入/校验', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/community/activities`, {
-    token: tokenFor('act-user'),
+    token: await tokenFor('act-user'),
     body: { type: 'like' },
   });
   assertEquals(invalid.status, 400);
 
   const ok = await request(app, `${P}/community/activities`, {
-    token: tokenFor('act-user'),
+    token: await tokenFor('act-user'),
     body: { type: 'like', userId: 'act-user', userName: 'Act', songTitle: 'S' },
   });
   assertEquals(ok.status, 200);
@@ -820,13 +827,13 @@ Deno.test('community: shared-works 发布与重复发布', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/shared-works`, {
-    token: tokenFor('sw-user'),
+    token: await tokenFor('sw-user'),
     body: { workId: '', title: '' },
   });
   assertEquals(invalid.status, 400);
 
   const ok = await request(app, `${P}/shared-works`, {
-    token: tokenFor('sw-user'),
+    token: await tokenFor('sw-user'),
     body: { workId: 'sw-1', title: 'Work One', userId: 'sw-user', userName: 'Sw' },
   });
   assertEquals(ok.status, 200);
@@ -835,7 +842,7 @@ Deno.test('community: shared-works 发布与重复发布', async () => {
   assert(fake.readJson('shared-work-index').includes('sw-1'));
 
   const dup = await request(app, `${P}/shared-works`, {
-    token: tokenFor('sw-user'),
+    token: await tokenFor('sw-user'),
     body: { workId: 'sw-1', title: 'Work One' },
   });
   assertEquals((await jsonBody(dup)).alreadyShared, true);
@@ -894,7 +901,7 @@ Deno.test('community: fork 作品并写入通知链', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/works/fork`, {
-    token: tokenFor('forker'),
+    token: await tokenFor('forker'),
     body: { userId: 'forker', originalWorkId: '', title: '' },
   });
   assertEquals(invalid.status, 400);
@@ -903,7 +910,7 @@ Deno.test('community: fork 作品并写入通知链', async () => {
     workId: 'orig-w', userId: 'orig-owner', userName: 'Owner', title: 'Orig',
   });
   const ok = await request(app, `${P}/works/fork`, {
-    token: tokenFor('forker'),
+    token: await tokenFor('forker'),
     body: {
       userId: 'forker', userName: 'Forker', originalWorkId: 'orig-w',
       originalAuthor: 'Owner', title: 'Fork Title',
@@ -925,7 +932,7 @@ Deno.test('community: fork 作品并写入通知链', async () => {
   assertEquals(down.status, 500);
 
   const broken = await request(app, `${P}/works/fork`, {
-    token: tokenFor('forker'),
+    token: await tokenFor('forker'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -938,7 +945,7 @@ Deno.test('community: copyright 申请/查询/校验', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/copyright/apply`, {
-    token: tokenFor('copy-user'),
+    token: await tokenFor('copy-user'),
     body: { userId: 'copy-user' },
   });
   assertEquals(invalid.status, 400);
@@ -950,7 +957,7 @@ Deno.test('community: copyright 申请/查询/校验', async () => {
     workTitle: 'CW', workTheme: 'happy', workLyrics: ['a', 'b'], createdAt,
   };
   const ok = await request(app, `${P}/copyright/apply`, {
-    token: tokenFor('copy-user'),
+    token: await tokenFor('copy-user'),
     body: applyBody,
   });
   assertEquals(ok.status, 200);

@@ -1,8 +1,8 @@
 /**
  * A3/A4 契约工具单测：分页解析与统一错误体
  */
-import { assertEquals } from 'jsr:@std/assert@1';
-import { apiError, ERROR_CODES, pageMeta, parsePagination } from '../src/api-contract.ts';
+import { assertEquals } from '@std/assert';
+import { apiError, ERROR_CODES, pageMeta, parsePagination } from '../src/services/api-contract.ts';
 
 function mockContext(query: Record<string, string>) {
   let body: any;

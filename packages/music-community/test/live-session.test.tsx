@@ -1,10 +1,12 @@
 /**
  * @file LiveSessionPanel 实时互动测试
  * @description 覆盖在线听众、弹幕拉取/发送、发送失败、未登录态、退出与会话终止
+ * @note 自主仓上游化（2026-11-20）：发送失败用例断言对齐合并后语义——乐观清空输入、错误记录、发送态恢复
  */
 import { createElement } from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiFetch } from '@yyc3/music-utils'
 import { I18nProvider } from '@yyc3/music-hooks'
@@ -17,6 +19,11 @@ vi.mock('@yyc3/music-utils', async (importOriginal) => {
 
 const api = vi.mocked(apiFetch) as unknown as ReturnType<typeof vi.fn>
 const now = Date.now()
+
+// jsdom 未实现 scrollIntoView（弹幕列表自动滚底用）；两仓环境自足，不依赖宿主 setup
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn()
+}
 
 function listener(over: Record<string, unknown> = {}) {
   return {
@@ -76,6 +83,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  cleanup()
   localStorage.clear()
 })
 
@@ -152,7 +160,7 @@ describe('LiveSessionPanel', () => {
     )
   })
 
-  it('发送失败时记录错误并恢复可发送状态', async () => {
+  it('发送失败时记录错误并恢复可发送状态（乐观清空不回填）', async () => {
     const viewer = userEvent.setup()
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     api.mockImplementation((async (path: string, options?: RequestInit) => {
@@ -163,7 +171,8 @@ describe('LiveSessionPanel', () => {
     setup()
     await viewer.type(screen.getByPlaceholderText('发送弹幕...'), 'fail{enter}')
     await waitFor(() => expect(errorSpy).toHaveBeenCalledWith('Send danmaku error:', expect.any(Error)))
-    expect(screen.getByPlaceholderText('发送弹幕...')).toHaveValue('fail')
+    // 合并后实现为乐观发送：输入即时清空，失败仅记录错误并恢复发送态，不回填文本
+    expect(screen.getByPlaceholderText('发送弹幕...')).toHaveValue('')
     errorSpy.mockRestore()
   })
 

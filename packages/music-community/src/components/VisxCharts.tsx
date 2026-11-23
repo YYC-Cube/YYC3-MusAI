@@ -84,7 +84,8 @@ export const VisxBarChart: React.FC<VisxBarChartProps> = ({
   const margin = { top: 40, right: 30, bottom: 50, left: 60 };
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
-  const maxVal = Math.max(...data.map(d => d.value), 0);
+  // 下限取 1 而非 0：空数据时 domain [0,0] 除零产生 NaN 几何（修复前 rect/path 属性为 "NaN"）
+  const maxVal = Math.max(...data.map(d => d.value), 1);
   const y = linearScale({ domain: [0, maxVal], range: [yMax, 0] });
   const x = bandScale({ domain: data.map(d => d.name), range: [0, xMax] });
 
@@ -138,7 +139,8 @@ export const VisxLineChart: React.FC<VisxLineChartProps> = ({
   const dates = data.map(d => new Date(d.date));
   const t0 = Math.min(...dates.map(d => d.getTime()));
   const t1 = Math.max(...dates.map(d => d.getTime()));
-  const maxVal = Math.max(...data.map(d => d.value), 0);
+  // 下限取 1 而非 0：空数据时 domain [0,0] 除零产生 NaN 几何（修复前 rect/path 属性为 "NaN"）
+  const maxVal = Math.max(...data.map(d => d.value), 1);
   const xs = timeScale({ domain: [new Date(t0), new Date(t1)], range: [0, xMax] });
   const ys = linearScale({ domain: [0, maxVal], range: [yMax, 0] });
 
@@ -236,7 +238,8 @@ export const VisxAreaChart: React.FC<VisxAreaChartProps> = ({
   const dates = data.map(d => new Date(d.date));
   const t0 = Math.min(...dates.map(d => d.getTime()));
   const t1 = Math.max(...dates.map(d => d.getTime()));
-  const maxVal = Math.max(...data.map(d => d.value), 0);
+  // 下限取 1 而非 0：空数据时 domain [0,0] 除零产生 NaN 几何（修复前 rect/path 属性为 "NaN"）
+  const maxVal = Math.max(...data.map(d => d.value), 1);
   const xs = timeScale({ domain: [new Date(t0), new Date(t1)], range: [0, xMax] });
   const ys = linearScale({ domain: [0, maxVal], range: [yMax, 0] });
 

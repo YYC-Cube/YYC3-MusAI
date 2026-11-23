@@ -3,9 +3,13 @@
  * @description 使用真实引擎 + 局部浏览器 API mock，覆盖初始渲染、录音开关、
  *              识别结果展示、语音播报、语言切换、上下文/高级面板、命令历史与销毁。
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { VoiceControlPanel } from '../src/components/VoiceControlPanel'
+import { VoiceControlPanel } from '../src'
 import {
   installMicrophoneEnv,
   installRecognitionEnv,

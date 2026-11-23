@@ -1,9 +1,13 @@
 {
   "name": "@yyc3/music-live",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "description": "YYC³ D-Music 直播组件包 — 直播间 UI / 弹幕渲染 / 礼物动画（对接 music-server /live/ws）",
   "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit"
@@ -14,18 +18,28 @@
     "@yyc3/music-utils": "workspace:*",
     "lucide-react": "0.487.0",
     "motion": "12.23.24",
-    "sonner": "^2.0.8",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "sonner": "^2.0.8"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
-    "typescript": "^5.9.2",
-    "@types/node": "^22.10.2",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "5.2.0",
-    "vite": "^5.4.19"
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   },
   "keywords": [
     "yyc3",
@@ -33,17 +47,6 @@
     "live",
     "danmaku"
   ],
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "files": [
-    "dist"
-  ],
   "author": "YYC³ Team <admin@0379.email>",
-  "license": "MIT",
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  }
+  "license": "MIT"
 }

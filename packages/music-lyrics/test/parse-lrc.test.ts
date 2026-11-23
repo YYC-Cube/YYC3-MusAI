@@ -1,6 +1,6 @@
 // YYC³ music-lyrics — parseLrc 单元测试
 import { describe, it, expect } from 'vitest'
-import { parseLrc } from '../src/parseLrc'
+import { parseLrc } from '../src'
 
 describe('parseLrc', () => {
   it('解析基础时间标签与文本', () => {

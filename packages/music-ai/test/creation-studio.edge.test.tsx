@@ -97,7 +97,8 @@ describe('CreationStudio 英文界面分支', () => {
     setupClipboard()
   })
 
-  it('英文模式下完整走通创作、大师、改编与作品列表', async () => {
+  // 重型端到端用例（四模式全链路）：超出默认 5s，显式放宽到 40s（两仓测试基建一致）
+  it('英文模式下完整走通创作、大师、改编与作品列表', { timeout: 40_000 }, async () => {
     const viewer = userEvent.setup()
     const writeText = setupClipboard()
     const onCreateTrack = vi.fn()

@@ -3,7 +3,7 @@
  * @description 覆盖皮肤注册/应用/切换、DOM 渲染、事件派发与状态更新
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import PlayerUI from '../src/PlayerUI.js'
+import PlayerUI from '../src/ui/PlayerUI.js'
 
 type PlayerUIAny = InstanceType<typeof PlayerUI> & {
   currentSkin: any

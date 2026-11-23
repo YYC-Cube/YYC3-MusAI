@@ -29,6 +29,7 @@ describe('E2EE 密钥生命周期（IndexedDB）', () => {
   let kp: E2EKeyPair
 
   beforeEach(async () => {
+    // eslint-disable-next-line no-global-assign -- 测试环境注入 fake-indexeddb
     indexedDB = new (await import('fake-indexeddb')).IDBFactory()
     kp = await generateKeyPair('user-a')
   })
@@ -84,6 +85,7 @@ describe('E2EE 密钥生命周期（IndexedDB）', () => {
 
 describe('密钥备份与恢复（passphrase 派生）', () => {
   beforeEach(async () => {
+    // eslint-disable-next-line no-global-assign -- 测试环境注入 fake-indexeddb
     indexedDB = new (await import('fake-indexeddb')).IDBFactory()
     await generateKeyPair('user-c')
   })

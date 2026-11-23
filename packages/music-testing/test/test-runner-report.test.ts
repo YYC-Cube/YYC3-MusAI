@@ -1,7 +1,7 @@
 // printResults 汇总输出测试（test-runner.ts 的报告分支）
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { assertTruthy, createSuite, printResults } from '../src/test-runner'
-import type { TestSuiteResult } from '../src/test-runner'
+import { assertTruthy, createSuite, printResults } from '../src'
+import type { TestSuiteResult } from '../src'
 
 const makeSuite = (overrides: Partial<TestSuiteResult> = {}): TestSuiteResult => ({
   suiteName: 'suite',

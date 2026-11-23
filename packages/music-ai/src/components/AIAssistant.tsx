@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 import {
-  Mic, MicOff, X, ChevronDown, Sparkles,
+  Mic, MicOff, X, ChevronDown,
   BrainCircuit, Clock, MessageSquare,
 } from 'lucide-react';
 import type { AITip, VoiceCommand } from '@yyc3/music-hooks';
@@ -84,7 +84,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   externalExpanded,
   onExternalExpandedChange,
 }) => {
-  const { t, lang } = useI18n();
+  const { lang } = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const tipContainerRef = useRef<HTMLDivElement>(null);

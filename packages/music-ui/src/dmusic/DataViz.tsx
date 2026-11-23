@@ -563,6 +563,10 @@ export const RankingList: React.FC<RankingListProps> = ({
             key={item.rank}
             role="listitem"
             onClick={() => onItemClick?.(item)}
+            tabIndex={onItemClick ? 0 : undefined}
+            onKeyDown={onItemClick ? (e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onItemClick(item); }
+            } : undefined}
             className={cn(
               'flex items-center gap-2 px-2 py-2 rounded-lg transition-colors relative overflow-hidden',
               onItemClick && 'cursor-pointer hover:bg-[var(--dm-hover-bg)]',

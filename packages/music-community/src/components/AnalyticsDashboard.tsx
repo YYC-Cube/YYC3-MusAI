@@ -17,8 +17,6 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@yyc3/music-ui';
-import { Badge } from '@yyc3/music-ui';
-import { Progress } from '@yyc3/music-ui';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, XAxis as BarXAxis, YAxis as BarYAxis,
@@ -63,7 +61,8 @@ const StatCard = ({
     <CardContent>
       <div className="text-2xl font-bold text-white">{value}</div>
       <div className="flex items-center gap-1 mt-1 text-xs">
-        <span className={`text-${trend.startsWith('-') ? 'red-400' : 'green-400'}`}>
+        {/* Tailwind 类必须字面量（动态拼接类名扫描不到，正负趋势着色此前不生效） */}
+        <span className={trend.startsWith('-') ? 'text-red-400' : 'text-green-400'}>
           {trend}
         </span>
         <span className="text-white/30">{trendLabel}</span>
@@ -103,23 +102,26 @@ const EmotionPie = ({ data }: { data: Array<{ emotion: string; pct: number }> })
       <CardTitle className="text-xs text-white/40 font-normal">情绪分布</CardTitle>
     </CardHeader>
     <CardContent className="h-64 flex items-center justify-center">
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="pct"
-          nameKey="emotion"
-          cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={80}
-          fill="#8884d8"
-          label
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={EMOTION_COLORS[entry.emotion as keyof typeof EMOTION_COLORS] ?? '#94a3b8'} />
-          ))}
-        </Pie>
-      </PieChart>
+      {/* 必须包 ResponsiveContainer：裸 PieChart 无 width/height 时 recharts 直接 render null（修复前生产同样空白） */}
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="pct"
+            nameKey="emotion"
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={80}
+            fill="#8884d8"
+            label
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={EMOTION_COLORS[entry.emotion as keyof typeof EMOTION_COLORS] ?? '#94a3b8'} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ResponsiveContainer>
     </CardContent>
   </Card>
 );

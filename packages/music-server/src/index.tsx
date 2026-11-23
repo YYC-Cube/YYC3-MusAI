@@ -23,31 +23,31 @@
  *   - ROUTE_PREFIX, kv, requireAuth, wilsonScore, song index, shared work helpers
  */
 
-import { Hono } from "npm:hono";
-import { cors } from "npm:hono/cors";
-import { logger } from "npm:hono/logger";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 
 // §2.2 Route modules
-import { registerAuthRoutes } from "./routes-auth.ts";
-import { registerMusicRoutes } from "./routes-music.ts";
-import { registerStarpowerRoutes } from "./routes-starpower.ts";
-import { registerUserRoutes } from "./routes-user.ts";
-import { registerCommunityRoutes } from "./routes-community.ts";
-import { registerAiRoutes } from "./routes-ai.ts";
-import { registerAnalyticsRoutes } from "./routes-analytics.ts";
-import { registerSocialRoutes } from "./routes-social.ts";
-import { registerSpacetimeRoutes } from "./routes-spacetime.ts";
-import { registerChallengeRoutes } from "./routes-challenge.ts";
-import { registerLiveSessionRoutes } from "./routes-live.ts";
-import { registerLiveStreamRoutes } from "./live-stream.ts";
-import { registerLiveStreamRoutes as registerLivestreamRoomRoutes } from "./routes-livestream.ts";
-import { registerPlaylistRoutes } from "./routes-playlist.ts";
-import { registerFollowRoutes } from "./routes-follow.ts";
-import { registerAlbumRoutes } from "./routes-albums.ts";
-import { registerPkiRoutes } from "./routes-pki.ts";
-import { registerMarketRoutes } from "./routes-market.ts";
-import { registerDiagnosticsRoutes } from "./routes-diagnostics.ts";
-import { registerUploadRoutes } from "./routes-upload.ts";
+import { registerAuthRoutes } from "./routes/routes-auth.ts";
+import { registerMusicRoutes } from "./routes/routes-music.ts";
+import { registerStarpowerRoutes } from "./routes/routes-starpower.ts";
+import { registerUserRoutes } from "./routes/routes-user.ts";
+import { registerCommunityRoutes } from "./routes/routes-community.ts";
+import { registerAiRoutes } from "./routes/routes-ai.ts";
+import { registerAnalyticsRoutes } from "./routes/routes-analytics.ts";
+import { registerSocialRoutes } from "./routes/routes-social.ts";
+import { registerSpacetimeRoutes } from "./routes/routes-spacetime.ts";
+import { registerChallengeRoutes } from "./routes/routes-challenge.ts";
+import { registerLiveSessionRoutes } from "./routes/routes-live.ts";
+import { registerLiveStreamRoutes } from "./services/live-stream.ts";
+import { registerLiveStreamRoutes as registerLivestreamRoomRoutes } from "./routes/routes-livestream.ts";
+import { registerPlaylistRoutes } from "./routes/routes-playlist.ts";
+import { registerFollowRoutes } from "./routes/routes-follow.ts";
+import { registerAlbumRoutes } from "./routes/routes-albums.ts";
+import { registerPkiRoutes } from "./routes/routes-pki.ts";
+import { registerMarketRoutes } from "./routes/routes-market.ts";
+import { registerDiagnosticsRoutes } from "./routes/routes-diagnostics.ts";
+import { registerUploadRoutes } from "./routes/routes-upload.ts";
 
 const app = new Hono();
 

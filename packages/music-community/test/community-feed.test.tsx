@@ -2,6 +2,53 @@
  * @file CommunityFeed 社区动态测试
  * @description 覆盖空态/加载态、四类动态渲染、时间格式化、统计、下拉刷新、增量加载与关闭
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+
 import { createElement } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'

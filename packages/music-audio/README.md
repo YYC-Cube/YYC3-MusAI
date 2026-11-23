@@ -49,9 +49,9 @@ export function AudioDemo() {
 }
 ```
 
-## 已知分层债务（W7-P2-1 处理）
+## 分层结构（W7-P1 已清偿平铺债务）
 
-实验/教学组件（SmartTip、InteractiveCodeBlock、InteractiveMindMap、PlayerUI）与引擎同层平铺，W7 将收敛为 `engines/ + ui/` 分层并评估教学组件迁出。
+源码已从平铺收敛为两层：`src/engines/`（AdvancedPlayer、WebAudioPlayer、SoundResourceManager、PageFlipInteraction — 无头播放能力）与 `src/ui/`（PlayerUI、EmotionAudioPlayer、EmotionDetector、SmartTip、InteractiveCodeBlock、InteractiveMindMap — 情感音频实验与文档交互组件）。公开导出面不变，统一走 `src/index.ts` barrel；深路径导入请使用包根入口。
 
 ## 对标来源（开源组件库目录）
 

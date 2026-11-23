@@ -3,7 +3,7 @@
  * @description 覆盖语言注册、偏好持久化、语言检测、语音性别识别与统计能力
  */
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
-import { MultilingualManager } from '../src/MultilingualManager'
+import { MultilingualManager } from '../src'
 
 describe('MultilingualManager', () => {
   let manager: MultilingualManager

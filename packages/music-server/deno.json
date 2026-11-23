@@ -1,5 +1,14 @@
 {
   "nodeModulesDir": "auto",
+  "exclude": ["test", "node_modules", "dist"],
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any", "require-await"]
+    }
+  },
   "tasks": {
     "test": "deno test --allow-all test-deno"
   }

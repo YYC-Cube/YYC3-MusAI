@@ -2,6 +2,54 @@
  * @file 浮层类组件测试
  * @description Dialog / Sheet / Drawer / AlertDialog / Popover / Tooltip / HoverCard 的打开、关闭与可访问性
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -14,7 +62,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../src/ui/dialog'
+} from '../src'
 import {
   Sheet,
   SheetClose,
@@ -24,7 +72,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '../src/ui/sheet'
+} from '../src'
 import {
   Drawer,
   DrawerClose,
@@ -34,7 +82,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '../src/ui/drawer'
+} from '../src'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,10 +93,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '../src/ui/alert-dialog'
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '../src/ui/popover'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../src/ui/tooltip'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '../src/ui/hover-card'
+} from '../src'
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '../src'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../src'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '../src'
 
 describe('Dialog', () => {
   it('点击触发器打开，关闭按钮与 Escape 关闭', async () => {
@@ -124,7 +172,6 @@ describe('Sheet', () => {
 
 describe('Drawer', () => {
   it('点击触发器打开抽屉并展示标题/描述/底部', async () => {
-    const user = userEvent.setup()
     render(
       <Drawer>
         <DrawerTrigger>打开抽屉</DrawerTrigger>

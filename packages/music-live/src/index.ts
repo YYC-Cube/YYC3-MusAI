@@ -25,6 +25,6 @@ export type {
   LiveUser,
   GiftItem,
   GiftType,
-  DEFAULT_GIFTS,
-  DEFAULT_EMOJIS,
 } from './types';
+// 运行时常量必须用值导出（修复前混入 export type，barrel 消费方拿到 undefined）
+export { DEFAULT_GIFTS, DEFAULT_EMOJIS } from './types';

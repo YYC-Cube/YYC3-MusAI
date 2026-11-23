@@ -10,6 +10,7 @@
   "scripts": {
     "deploy": "supabase functions deploy make-server-f626b673 --project-ref $SUPABASE_PROJECT_REF",
     "prisma:validate": "prisma validate",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:deno": "env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno test --allow-all test-deno",
     "test:deno:coverage": "rm -rf /tmp/deno-cov && env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno test --allow-all --coverage=/tmp/deno-cov test-deno && env -u NODE_OPTIONS -u VSCODE_INSPECTOR_OPTIONS deno coverage /tmp/deno-cov --exclude=test-deno --exclude=src/index.ts --lcov --output=/tmp/deno-src.lcov"
   },
@@ -21,15 +22,6 @@
   ],
   "author": "YYC³ Team <admin@0379.email>",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git",
-    "directory": "packages/music-server"
-  },
-  "homepage": "https://musai.yyc3.vip",
-  "bugs": {
-    "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
-  },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@supabase/supabase-js": "^2.119.0",
@@ -41,6 +33,7 @@
   "devDependencies": {
     "@types/node": "^22.10.2",
     "@types/pg": "^8.11.10",
+    "@types/ws": "^8.18.0",
     "prisma": "7.10.1",
     "typescript": "^5.9.3"
   }

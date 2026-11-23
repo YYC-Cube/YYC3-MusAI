@@ -1,6 +1,6 @@
 {
   "name": "@yyc3/music-community",
-  "version": "2.0.1",
+  "version": "1.0.0",
   "description": "YYC³ D-Music 社区组件 — 动态/评论/时间线/Fork 树/挑战/直播/时空面板/上传/分享/E2E 加密",
   "type": "module",
   "main": "./src/index.ts",
@@ -20,8 +20,7 @@
     "clsx": "2.1.1",
     "lucide-react": "0.577.0",
     "motion": "12.23.24",
-    "recharts": "2.15.2",
-    "@visx/visx": "^4.0.0"
+    "recharts": "2.15.2"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
@@ -50,15 +49,5 @@
     "community"
   ],
   "author": "YYC³ Team <admin@0379.email>",
-  "license": "MIT",
-  "sideEffects": false,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/YYC-Cube/YYC3-MusAI.git",
-    "directory": "packages/music-community"
-  },
-  "homepage": "https://musai.yyc3.vip",
-  "bugs": {
-    "url": "https://github.com/YYC-Cube/YYC3-MusAI/issues"
-  }
+  "license": "MIT"
 }

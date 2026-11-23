@@ -3,7 +3,7 @@
  * @description 覆盖上下文创建/切换/合并、规则与实体提取、意图理解与统计
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { VoiceContextManager } from '../src/VoiceContextManager'
+import { VoiceContextManager } from '../src'
 
 describe('VoiceContextManager', () => {
   let manager: VoiceContextManager
@@ -215,5 +215,144 @@ describe('VoiceContextManager', () => {
       expect(manager.getAllContexts()).toEqual([])
       expect(manager.getCurrentContext()).toBeNull()
     })
+  })
+})
+
+describe('VoiceContextManager 过期清理与规则分支（W5 补流）', () => {
+  let manager: VoiceContextManager
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    manager = new VoiceContextManager()
+  })
+
+  afterEach(() => {
+    manager.destroy()
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('过期且轮次少于 3 的上下文被定时清理并派发事件', () => {
+    const cleaned = vi.fn()
+    manager.on('context-cleaned', cleaned)
+    const id = manager.createContext()
+
+    // 每分钟检查一次；推进到超过 5 分钟超时
+    vi.advanceTimersByTime(360_000)
+
+    expect(manager.getAllContexts()).toHaveLength(0)
+    expect(cleaned).toHaveBeenCalledTimes(1)
+    expect(cleaned.mock.calls[0][0]).toMatchObject({ contextId: id, reason: 'timeout' })
+    expect(console.log).toHaveBeenCalledWith('清理了 1 个旧上下文')
+  })
+
+  it('多次交互（轮次 >= 3）的上下文不会被清理', () => {
+    const id = manager.createContext()
+    manager.addToContext(id, 'user', '你好')
+    manager.addToContext(id, 'user', '创建弹窗')
+    manager.addToContext(id, 'user', '要 3 个')
+
+    vi.advanceTimersByTime(360_000)
+
+    expect(manager.getAllContexts()).toHaveLength(1)
+    expect(manager.getCurrentContext()?.id).toBe(id)
+    expect(console.log).not.toHaveBeenCalledWith('清理了 1 个旧上下文')
+  })
+
+  it('方向、颜色与提问规则更新状态并影响意图与建议', () => {
+    const id = manager.createContext()
+    manager.addToContext(id, 'user', '向左滑动')
+    expect(manager.getContext(id)?.state.direction).toBe('左')
+
+    manager.addToContext(id, 'user', '背景换成红色')
+    expect(manager.getContext(id)?.state.color).toBe('红')
+
+    manager.addToContext(id, 'user', '这是什么？')
+    expect(manager.getContext(id)?.topic).toBe('question')
+    expect(manager.getContext(id)?.state.isQuestion).toBe(true)
+
+    const result = manager.understandIntent('还有别的吗？')
+    expect(result?.intent).toBe('question')
+    expect(result?.suggestions).toContain('您可以问关于弹窗、布局或智能体的问题')
+
+    // 方向与颜色进入建议（最多 3 条）
+    const guided = manager.understandIntent('继续')
+    expect(guided?.suggestions.some((s) => s.includes('左方向'))).toBe(true)
+    expect(guided?.suggestions.some((s) => s.includes('红色'))).toBe(true)
+    expect(guided!.suggestions.length).toBeLessThanOrEqual(3)
+  })
+
+  it('时间与日期实体按模式提取（类型取提取器键）', () => {
+    const id = manager.createContext()
+    const ctx = manager.addToContext(id, 'user', '明天 2026年11月21日 11月21日 3:30 开 10 分钟会，马上开始')
+
+    // 实体外层 type 为提取器键（time/date/number），内部模式差异体现在 value 上
+    const types = new Set(ctx?.entities.map((e) => e.type))
+    expect(types.has('time')).toBe(true)
+    expect(types.has('date')).toBe(true)
+    expect(types.has('number')).toBe(true)
+
+    const dateValues = ctx?.entities.filter((e) => e.type === 'date').map((e) => e.value)
+    expect(dateValues).toContain('明天') // relative_date
+    expect(dateValues).toContain('2026年11月21日') // absolute_date
+    expect(dateValues?.filter((v) => v === '11月21日')).toHaveLength(2) // month_day
+
+    const timeValues = ctx?.entities.filter((e) => e.type === 'time').map((e) => e.value)
+    expect(timeValues).toContain('3:30')
+    expect(timeValues).toContain('10 分钟')
+    expect(timeValues).toContain('马上')
+  })
+
+  it('实体数量超过 20 时裁剪到 20', () => {
+    const id = manager.createContext()
+    const numbers = Array.from({ length: 25 }, (_, i) => i + 1).join(' ')
+    const ctx = manager.addToContext(id, 'user', numbers)
+    expect(ctx?.entities).toHaveLength(20)
+    // 裁剪保留末尾（高索引）实体
+    expect(ctx?.entities.at(-1)?.value).toBe(25)
+  })
+
+  it('规则动作抛错时记录错误且不影响其他规则', () => {
+    manager.addContextRule({
+      pattern: /爆炸/,
+      action: () => {
+        throw new Error('rule boom')
+      },
+      priority: 0,
+    })
+    const id = manager.createContext()
+    const ctx = manager.addToContext(id, 'user', '爆炸了 好讨厌')
+    expect(console.error).toHaveBeenCalledWith('应用上下文规则失败:', expect.any(Error))
+    // 抛错规则之后的其他规则（情感词不落 state，但命令规则等）仍执行
+    expect(ctx?.metadata.turnCount).toBe(1)
+  })
+
+  it('close_popup 意图与 popupCount 建议分支', () => {
+    const id = manager.createContext()
+    const ctx = manager.getContext(id)!
+    ctx.topic = 'popup'
+    ctx.state.action = '关闭'
+    expect(manager.understandIntent('关闭弹窗')?.intent).toBe('close_popup')
+    expect(manager.understandIntent('关闭弹窗')?.suggestions).toContain(
+      '您要关闭所有弹窗还是特定弹窗？',
+    )
+
+    ctx.state.action = '创建'
+    ctx.state.popupCount = 3
+    const result = manager.understandIntent('创建弹窗')
+    expect(result?.intent).toBe('create_popup')
+    expect(result?.suggestions).toContain('您要创建3个弹窗吗？')
+  })
+
+  it('无任何上下文时统计平均轮次为 0', () => {
+    const stats = manager.getContextStatistics()
+    expect(stats.totalContexts).toBe(0)
+    expect(stats.activeContexts).toBe(0)
+    expect(stats.totalTurns).toBe(0)
+    expect(stats.averageTurns).toBe(0)
+    expect(manager.getContextSummary()).toBeNull()
   })
 })

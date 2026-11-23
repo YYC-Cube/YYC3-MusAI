@@ -1,6 +1,6 @@
 // YYC³ music-hooks — i18n 翻译完整性测试（对应 core-tests §8.4 双语键完整性的 Vitest 化）
 import { describe, it, expect } from 'vitest'
-import { translations } from '../src/i18n-translations'
+import { translations } from '../src/i18n/i18n-translations'
 
 describe('i18n 翻译完整性', () => {
   it('翻译键数量充足（>100）', () => {

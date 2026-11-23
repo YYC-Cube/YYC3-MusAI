@@ -1,7 +1,8 @@
 /**
  * Albums / Market / PKI / Diagnostics / Upload 路由测试
  */
-import { assert, assertEquals, assertMatch } from 'jsr:@std/assert@1';
+import { assert, assertEquals, assertMatch, assertRejects } from '@std/assert';
+import * as fs from 'node:fs';
 
 import { FakeSupabase } from './helpers/fake-supabase.ts';
 import {
@@ -10,7 +11,7 @@ import {
   request,
   tokenFor,
 } from './helpers/test-app.ts';
-import { queryCache } from '../src/server-utils.ts';
+import { queryCache } from '../src/services/server-utils.ts';
 
 const fake = new FakeSupabase();
 fake.install();
@@ -22,7 +23,7 @@ Deno.env.delete('OPENAI_API_KEY');
 
 const app = createTestApp();
 const P = '/make-server-f626b673';
-const auth = (id: string) => tokenFor(id);
+const auth = async (id: string) => tokenFor(id);
 
 let customAlbumId = '';
 let uploadedMediaId = '';
@@ -106,13 +107,13 @@ Deno.test('albums: 创建（鉴权/校验/成功）', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/albums`, {
-    token: auth('artist-m'),
+    token: await auth('artist-m'),
     body: { creatorId: 'artist-m', title: '' },
   });
   assertEquals(invalid.status, 400);
 
   const ok = await request(app, `${P}/albums`, {
-    token: auth('artist-m'),
+    token: await auth('artist-m'),
     body: {
       creatorId: 'artist-m', creatorName: 'Artist M', title: '自建专辑',
       genre: 'Pop', tracks: [{ title: 'Track A', duration: 200 }, { songId: 'song-1', title: 'Track B' }],
@@ -131,7 +132,7 @@ Deno.test('albums: 创建（鉴权/校验/成功）', async () => {
   assertEquals(fake.readJson('album:creator:artist-m').includes(album.id), true);
 
   const broken = await request(app, `${P}/albums`, {
-    token: auth('artist-m'),
+    token: await auth('artist-m'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -144,21 +145,21 @@ Deno.test('albums: 购买各分支', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/albums/album-neon-nights/purchase`, {
-    token: auth('album-buyer'),
+    token: await auth('album-buyer'),
     body: {},
   });
   assertEquals(invalid.status, 400);
 
   fake.seedJson('album:ownership:album-neon-nights:owned-user', { albumId: 'album-neon-nights' });
   const owned = await request(app, `${P}/albums/album-neon-nights/purchase`, {
-    token: auth('owned-user'),
+    token: await auth('owned-user'),
     body: { userId: 'owned-user' },
   });
   assertEquals(owned.status, 409);
   assertEquals((await jsonBody(owned)).alreadyOwned, true);
 
   const missing = await request(app, `${P}/albums/no-album/purchase`, {
-    token: auth('album-buyer'),
+    token: await auth('album-buyer'),
     body: { userId: 'album-buyer' },
   });
   assertEquals(missing.status, 404);
@@ -168,7 +169,7 @@ Deno.test('albums: 购买各分支', async () => {
     limitedEdition: true, maxSupply: 1, circulatingSupply: 1, totalSales: 1,
   });
   const soldOut = await request(app, `${P}/albums/album-soldout/purchase`, {
-    token: auth('album-buyer'),
+    token: await auth('album-buyer'),
     body: { userId: 'album-buyer' },
   });
   assertEquals(soldOut.status, 409);
@@ -176,7 +177,7 @@ Deno.test('albums: 购买各分支', async () => {
 
   fake.seed('user:poor-buyer:starpower', '10');
   const poor = await request(app, `${P}/albums/album-neon-nights/purchase`, {
-    token: auth('poor-buyer'),
+    token: await auth('poor-buyer'),
     body: { userId: 'poor-buyer' },
   });
   assertEquals(poor.status, 402);
@@ -184,7 +185,7 @@ Deno.test('albums: 购买各分支', async () => {
   // 成功：system 创作者，不产生创作者分成
   fake.seed('user:album-buyer:starpower', '500');
   const ok = await request(app, `${P}/albums/album-neon-nights/purchase`, {
-    token: auth('album-buyer'),
+    token: await auth('album-buyer'),
     body: { userId: 'album-buyer' },
   });
   assertEquals(ok.status, 200);
@@ -201,7 +202,7 @@ Deno.test('albums: 购买各分支', async () => {
   fake.seed('user:buyer-art:starpower', '1000');
   fake.seed('user:artist-m:starpower', '0');
   const custom = await request(app, `${P}/albums/${customAlbumId}/purchase`, {
-    token: auth('buyer-art'),
+    token: await auth('buyer-art'),
     body: { userId: 'buyer-art' },
   });
   assertEquals(custom.status, 200);
@@ -215,7 +216,7 @@ Deno.test('albums: 购买各分支', async () => {
   fake.seed('user:race-buyer:starpower', '500');
   fake.kvSequence.set('user:race-buyer:starpower', ['500', '5']);
   const race = await request(app, `${P}/albums/album-race/purchase`, {
-    token: auth('race-buyer'),
+    token: await auth('race-buyer'),
     body: { userId: 'race-buyer' },
   });
   assertEquals(race.status, 402);
@@ -233,14 +234,14 @@ Deno.test('albums: 购买各分支', async () => {
     JSON.stringify({ ...raceAlbum, circulatingSupply: 1 }),
   ]);
   const raceSold = await request(app, `${P}/albums/album-racesold/purchase`, {
-    token: auth('sold-buyer'),
+    token: await auth('sold-buyer'),
     body: { userId: 'sold-buyer' },
   });
   assertEquals(raceSold.status, 409);
   assertMatch((await jsonBody(raceSold)).error, /concurrent/);
 
   const broken = await request(app, `${P}/albums/album-neon-nights/purchase`, {
-    token: auth('album-buyer'),
+    token: await auth('album-buyer'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -302,19 +303,19 @@ Deno.test('market: 挂单校验/成功/重复', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/market/list`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: {},
   });
   assertEquals(invalid.status, 400);
 
   const notOwned = await request(app, `${P}/market/list`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: { userId: 'seller-1', albumId: 'album-cosmic-dreams', price: 100 },
   });
   assertEquals(notOwned.status, 403);
 
   const ok = await request(app, `${P}/market/list`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: { userId: 'seller-1', userName: 'Seller', albumId: 'album-mkt', price: 100 },
   });
   assertEquals(ok.status, 200);
@@ -325,7 +326,7 @@ Deno.test('market: 挂单校验/成功/重复', async () => {
   assertEquals(fake.readJson('market:listing-index').length, 1);
 
   const dup = await request(app, `${P}/market/list`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: { userId: 'seller-1', albumId: 'album-mkt', price: 120 },
   });
   assertEquals(dup.status, 409);
@@ -344,13 +345,13 @@ Deno.test('market: 挂单校验/成功/重复', async () => {
   });
   fake.seedJson('market:listing-index', [listing.id, 'mkt-old']);
   const relist = await request(app, `${P}/market/list`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: { userId: 'seller-1', albumId: 'album-mkt3', price: 130 },
   });
   assertEquals(relist.status, 200);
 
   const broken = await request(app, `${P}/market/list`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -390,33 +391,33 @@ Deno.test('market: 购买各分支与收益分配', async () => {
   assertEquals(anonymous.status, 401);
 
   const invalid = await request(app, `${P}/market/buy/${listingId}`, {
-    token: auth('buyer-1'),
+    token: await auth('buyer-1'),
     body: {},
   });
   assertEquals(invalid.status, 400);
 
   const missing = await request(app, `${P}/market/buy/mkt-nope`, {
-    token: auth('buyer-1'),
+    token: await auth('buyer-1'),
     body: { userId: 'buyer-1' },
   });
   assertEquals(missing.status, 404);
 
   const own = await request(app, `${P}/market/buy/${listingId}`, {
-    token: auth('seller-1'),
+    token: await auth('seller-1'),
     body: { userId: 'seller-1' },
   });
   assertEquals(own.status, 400);
 
   fake.seed('user:buyer-poor:starpower', '1');
   const poor = await request(app, `${P}/market/buy/${listingId}`, {
-    token: auth('buyer-poor'),
+    token: await auth('buyer-poor'),
     body: { userId: 'buyer-poor' },
   });
   assertEquals(poor.status, 402);
 
   fake.seed('user:buyer-1:starpower', '500');
   const ok = await request(app, `${P}/market/buy/${listingId}`, {
-    token: auth('buyer-1'),
+    token: await auth('buyer-1'),
     body: { userId: 'buyer-1', userName: 'Buyer' },
   });
   assertEquals(ok.status, 200);
@@ -438,7 +439,7 @@ Deno.test('market: 购买各分支与收益分配', async () => {
 
   // 已售出挂单 -> 410
   const soldAgain = await request(app, `${P}/market/buy/${listingId}`, {
-    token: auth('buyer-1'),
+    token: await auth('buyer-1'),
     body: { userId: 'buyer-1' },
   });
   assertEquals(soldAgain.status, 410);
@@ -453,7 +454,7 @@ Deno.test('market: 购买各分支与收益分配', async () => {
   fake.seed('user:race-market:starpower', '500');
   fake.kvSequence.set('user:race-market:starpower', ['500', '3']);
   const race = await request(app, `${P}/market/buy/mkt-race`, {
-    token: auth('race-market'),
+    token: await auth('race-market'),
     body: { userId: 'race-market' },
   });
   assertEquals(race.status, 402);
@@ -468,14 +469,14 @@ Deno.test('market: 购买各分支与收益分配', async () => {
     JSON.stringify({ ...raceListing, id: 'mkt-race2', status: 'sold' }),
   ]);
   const race2 = await request(app, `${P}/market/buy/mkt-race2`, {
-    token: auth('race2-market'),
+    token: await auth('race2-market'),
     body: { userId: 'race2-market' },
   });
   assertEquals(race2.status, 410);
   assertMatch((await jsonBody(race2)).error, /concurrent/);
 
   const broken = await request(app, `${P}/market/buy/mkt-race2`, {
-    token: auth('race2-market'),
+    token: await auth('race2-market'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -560,19 +561,19 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
   assertEquals(anonymous.status, 401);
 
   const mismatched = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('another-user'),
+    token: await tokenFor('another-user'),
     body: { userId: 'pki-user', publicKeyJwk: { kty: 'RSA', n: 'n', e: 'AQAB' } },
   });
   assertEquals(mismatched.status, 403);
 
   const missing = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('pki-user'),
+    token: await tokenFor('pki-user'),
     body: {},
   });
   assertEquals(missing.status, 400);
 
   const invalid = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('pki-user'),
+    token: await tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: { kty: 'RSA' } },
   });
   assertEquals(invalid.status, 400);
@@ -581,7 +582,7 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
     kty: 'RSA', n: 'abcdefghijklmnopqrstuvwxyz0123456789ABCD', e: 'AQAB',
   };
   const created = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('pki-user'),
+    token: await tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: jwk },
   });
   assertEquals(created.status, 200);
@@ -591,7 +592,7 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
   assert(fake.readJson('pki:enrollment-log').includes('pki-user'));
 
   const updated = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('pki-user'),
+    token: await tokenFor('pki-user'),
     body: { userId: 'pki-user', publicKeyJwk: { ...jwk, n: 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' } },
   });
   assertEquals((await jsonBody(updated)).isNew, false);
@@ -612,36 +613,38 @@ Deno.test('pki: 公钥上传/更新/查询/删除', async () => {
 
   const deleteMismatched = await request(app, `${P}/pki/public-key/pki-user`, {
     method: 'DELETE',
-    token: tokenFor('another-user'),
+    token: await tokenFor('another-user'),
   });
   assertEquals(deleteMismatched.status, 403);
 
   const deleted = await request(app, `${P}/pki/public-key/pki-user`, {
     method: 'DELETE',
-    token: tokenFor('pki-user'),
+    token: await tokenFor('pki-user'),
   });
   assertEquals(deleted.status, 200);
   assertEquals(fake.read('pki:public-key:pki-user'), undefined);
   assertEquals(fake.readJson('pki:enrollment-log').includes('pki-user'), false);
 
+  // KV 故障段：令牌预先签发（issueAccessToken 需写 KV 会话）
+  const pkiToken = await tokenFor('pki-user');
   fake.kvDown = true;
   const downGet = await request(app, `${P}/pki/public-key/pki-user`);
   const downPost = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('pki-user'),
+    token: pkiToken,
     body: { userId: 'pki-user', publicKeyJwk: jwk },
   });
   const downDelete = await request(app, `${P}/pki/public-key/pki-user`, {
     method: 'DELETE',
-    token: tokenFor('pki-user'),
+    token: pkiToken,
   });
   fake.kvDown = false;
   assertEquals(downGet.status, 500);
-  // KV 不可用时鉴权链路先失败，写操作返回 401
-  assertEquals(downPost.status, 401);
-  assertEquals(downDelete.status, 401);
+  // KV 不可用时鉴权链路抛错，由 Hono 默认错误处理兜底为 500
+  assertEquals(downPost.status, 500);
+  assertEquals(downDelete.status, 500);
 
   const broken = await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('pki-user'),
+    token: await tokenFor('pki-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -652,7 +655,7 @@ Deno.test('pki: 密钥备份与状态', async () => {
   assertEquals(anonymous.status, 401);
 
   const missing = await request(app, `${P}/pki/key-backup`, {
-    token: tokenFor('bk-user'),
+    token: await tokenFor('bk-user'),
     body: { userId: 'bk-user' },
   });
   assertEquals(missing.status, 400);
@@ -662,14 +665,14 @@ Deno.test('pki: 密钥备份与状态', async () => {
     publicKeyJwk: { kty: 'RSA', n: 'n' },
   };
   const created = await request(app, `${P}/pki/key-backup`, {
-    token: tokenFor('bk-user'),
+    token: await tokenFor('bk-user'),
     body: payload,
   });
   assertEquals(created.status, 200);
   assertEquals((await jsonBody(created)).isNew, true);
 
   const updated = await request(app, `${P}/pki/key-backup`, {
-    token: tokenFor('bk-user'),
+    token: await tokenFor('bk-user'),
     body: payload,
   });
   assertEquals((await jsonBody(updated)).isNew, false);
@@ -678,12 +681,12 @@ Deno.test('pki: 密钥备份与状态', async () => {
   assertEquals(fetchAnonymous.status, 401);
 
   const fetchMismatched = await request(app, `${P}/pki/key-backup/bk-user`, {
-    token: tokenFor('another-user'),
+    token: await tokenFor('another-user'),
   });
   assertEquals(fetchMismatched.status, 403);
 
   const fetched = await request(app, `${P}/pki/key-backup/bk-user`, {
-    token: tokenFor('bk-user'),
+    token: await tokenFor('bk-user'),
   });
   assertEquals(fetched.status, 200);
   const backup = await jsonBody(fetched);
@@ -691,12 +694,12 @@ Deno.test('pki: 密钥备份与状态', async () => {
   assertEquals(backup.encryptedPrivateKey, 'cipher');
 
   const noBackup = await request(app, `${P}/pki/key-backup/none`, {
-    token: tokenFor('none'),
+    token: await tokenFor('none'),
   });
   assertEquals(noBackup.status, 404);
 
   await request(app, `${P}/pki/public-key`, {
-    token: tokenFor('bk-user'),
+    token: await tokenFor('bk-user'),
     body: { userId: 'bk-user', publicKeyJwk: { kty: 'RSA', n: 'abc', e: 'AQAB' } },
   });
   const status = await jsonBody(await request(app, `${P}/pki/status/bk-user`));
@@ -709,18 +712,20 @@ Deno.test('pki: 密钥备份与状态', async () => {
   assertEquals(none.enrolled, false);
   assertEquals(none.fingerprint, null);
 
+  const bkToken = await tokenFor('bk-user');
   fake.kvDown = true;
+  // 需鉴权的备份读取在 KV 不可用时于会话校验处抛错 → Hono 默认错误处理兜底 500；
+  // 公开的状态查询由路由内部 catch 返回 500
   const downBackup = await request(app, `${P}/pki/key-backup/bk-user`, {
-    token: tokenFor('bk-user'),
+    token: bkToken,
   });
   const downStatus = await request(app, `${P}/pki/status/bk-user`);
   fake.kvDown = false;
-  // 需鉴权的备份读取在 KV 不可用时先返回 401；公开的状态查询返回 500
-  assertEquals(downBackup.status, 401);
+  assertEquals(downBackup.status, 500);
   assertEquals(downStatus.status, 500);
 
   const broken = await request(app, `${P}/pki/key-backup`, {
-    token: tokenFor('bk-user'),
+    token: await tokenFor('bk-user'),
     body: '{bad',
   });
   assertEquals(broken.status, 500);
@@ -752,8 +757,6 @@ Deno.test('diagnostics: kv-stats 前缀统计', async () => {
   assertEquals(body.prefixStats[0].count >= body.prefixStats[body.prefixStats.length - 1].count, true);
   const userGroup = body.prefixStats.find((p: any) => p.prefix === 'user:');
   assertEquals(userGroup.count, userKeys.length);
-  assertEquals(body.summary.uncategorizedCount, body.uncategorizedKeys.length);
-  assertEquals(body.uncategorizedKeys.includes('misc:unknown'), true);
   assertEquals(body.domainStats.userDomain >= userKeys.length, true);
   assertEquals(body.domainStats.songDomain >= 3, true);
   assertEquals(body.domainStats.spacetimeDomain >= 2, true);
@@ -761,24 +764,17 @@ Deno.test('diagnostics: kv-stats 前缀统计', async () => {
   assertEquals(body.domainStats.systemDomain >= 2, true);
   assertEquals(body.emptyPrefixes.length, 0);
   assert(body.cacheStats);
+  assertEquals(body.summary.uncategorizedCount >= body.uncategorizedKeys.length, true);
+  // uncategorizedKeys 为前 20 条采样（uncategorizedCount 为全量计数）
+  assertEquals(body.uncategorizedKeys.length, Math.min(body.summary.uncategorizedCount, 20));
+  assert(body.uncategorizedKeys.every((k: string) => !k.startsWith('user:')));
 
-  fake.countError = true;
-  const countFail = await request(app, `${P}/diagnostics/kv-stats`);
-  fake.countError = false;
-  assertEquals(countFail.status, 500);
-  assertMatch((await jsonBody(countFail)).error, /count rows/);
-
-  fake.keysError = true;
-  const keysFail = await request(app, `${P}/diagnostics/kv-stats`);
-  fake.keysError = false;
-  assertEquals(keysFail.status, 500);
-  assertMatch((await jsonBody(keysFail)).error, /fetch keys/);
-
-  Deno.env.delete('SUPABASE_URL');
-  const catchFail = await request(app, `${P}/diagnostics/kv-stats`);
-  Deno.env.set('SUPABASE_URL', 'http://localhost:54321');
-  assertEquals(catchFail.status, 500);
-  assertMatch((await jsonBody(catchFail)).error, /Diagnostics failed/);
+  // KV 不可用：键枚举失败被路由内部容错吸收，返回空统计而非 500
+  fake.kvDown = true;
+  const downStats = await request(app, `${P}/diagnostics/kv-stats`);
+  fake.kvDown = false;
+  assertEquals(downStats.status, 200);
+  assertEquals((await jsonBody(downStats)).summary.totalRows, 0);
 });
 
 Deno.test('diagnostics: health 检查项', async () => {
@@ -786,24 +782,21 @@ Deno.test('diagnostics: health 检查项', async () => {
   const res = await request(app, `${P}/diagnostics/health`);
   assertEquals(res.status, 200);
   const body = await jsonBody(res);
-  assertEquals(body.environment.supabaseUrl, 'configured');
-  assertEquals(body.environment.serviceRoleKey, 'configured');
+  // 现行实现为应用层 JWT + KV/关系表：检查项为 kvStore/auth/db/queryCache/openAI
+  assertEquals(body.environment.jwtSecret, 'configured');
   assertEquals(body.environment.openAiKey, 'configured');
-  assertEquals(body.environment.dbUrl, 'missing');
+  assertEquals(body.environment.db, 'missing'); // 测试未配置 PG_HOST
   assertEquals(body.routeModules, 15);
   assertEquals(body.checks.kvStore.status, 'ok');
-  assertEquals(body.checks.storage.status, 'ok');
+  assertEquals(body.checks.auth.status, 'ok'); // test-app 注入 JWT_SECRET
   assertEquals(body.checks.openAI.status, 'configured');
   assert(['healthy', 'degraded'].includes(body.status));
 
   fake.kvDown = true;
-  fake.storageDown = true;
   const degraded = await jsonBody(await request(app, `${P}/diagnostics/health`));
   fake.kvDown = false;
-  fake.storageDown = false;
   assertEquals(degraded.status, 'degraded');
   assertEquals(degraded.checks.kvStore.status, 'error');
-  assertEquals(degraded.checks.storage.status, 'degraded');
   Deno.env.delete('OPENAI_API_KEY');
 });
 
@@ -842,7 +835,8 @@ Deno.test('upload: 单文件上传校验与成功', async () => {
   assertEquals(media.coverPath.endsWith('-cover.png'), true);
   assert(media.signedUrl);
   assert(media.coverSignedUrl);
-  assert(fake.buckets.has('make-f626b673-media'));
+  // 现行实现为本地文件存储：媒体文件直接落盘（uploads/{userId}/）
+  assert(fs.existsSync(media.filePath));
   assert(fake.readJson('media:user:media-user').includes(media.id));
   assert(fake.readJson('media:index').includes(media.id));
 
@@ -866,11 +860,10 @@ Deno.test('upload: 单文件上传校验与成功', async () => {
   assertEquals(invalidCover.status, 200);
   assertEquals((await jsonBody(invalidCover)).media.coverPath, null);
 
-  fake.uploadError = 'storage down';
+  // 存储层故障（本地写盘失败：userId 含 NUL 字节使路径非法）→ 500
   const uploadFail = await request(app, `${P}/upload/media`, {
-    body: { fileBase64: 'AAAA', mimeType: 'audio/mpeg', title: 'Fail', userId: 'media-user' },
+    body: { fileBase64: 'AAAA', mimeType: 'audio/mpeg', title: 'Fail', userId: 'bad\u0000user' },
   });
-  fake.uploadError = null;
   assertEquals(uploadFail.status, 500);
   assertMatch((await jsonBody(uploadFail)).error, /Upload failed/);
 
@@ -958,21 +951,19 @@ Deno.test('upload: 分片上传全流程', async () => {
   });
   assertEquals(missingComplete.status, 404);
 
-  // 完成阶段存储失败
+  // 完成阶段存储失败（userId 含 NUL 字节使本地写盘失败）
   const init2 = await jsonBody(await request(app, `${P}/upload/chunk/init`, {
     body: {
       fileName: 'fail.mp3', mimeType: 'audio/mpeg', totalChunks: 1,
-      totalSize: 3, title: 'Fail', userId: 'chunk-user',
+      totalSize: 3, title: 'Fail', userId: 'bad\u0000chunker',
     },
   }));
   await request(app, `${P}/upload/chunk/${init2.sessionId}`, {
     body: { chunkIndex: 0, chunkBase64: 'AAAA' },
   });
-  fake.uploadError = 'complete failed';
   const failComplete = await request(app, `${P}/upload/chunk/${init2.sessionId}/complete`, {
     method: 'POST',
   });
-  fake.uploadError = null;
   assertEquals(failComplete.status, 500);
   assertMatch((await jsonBody(failComplete)).error, /finalization failed/);
 });
@@ -1043,11 +1034,7 @@ Deno.test('upload: 列表与详情', async () => {
   assert(detailMedia.coverSignedUrl);
   assertEquals(detailMedia.lyrics.length, 2);
 
-  fake.signError = 'sign failed';
-  const signFail = await request(app, `${P}/upload/media/${uploadedWithCoverId}`);
-  fake.signError = null;
-  assertEquals(signFail.status, 500);
-
+  // KV 不可用时：媒体列表/详情均无法读取（媒体元数据的键读取无关系表兜底）→ 500
   fake.kvDown = true;
   const downList = await request(app, `${P}/upload/media?userId=media-user`);
   const downDetail = await request(app, `${P}/upload/media/${uploadedWithCoverId}`);

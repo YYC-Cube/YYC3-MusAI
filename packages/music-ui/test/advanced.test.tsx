@@ -2,6 +2,67 @@
  * @file 复杂组件测试
  * @description Sidebar 全家桶、useIsMobile、Carousel、Chart 包装组件
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => { cleanup() })
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+// jsdom 未实现 window.matchMedia；守卫式 stub（W7-P2-3 环境自足化，形态对齐 setup-dom.ts）
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  })
+}
+
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { act } from 'react'
@@ -31,21 +92,21 @@ import {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-} from '../src/ui/sidebar'
+} from '../src'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from '../src/ui/carousel'
+} from '../src'
 import {
   ChartContainer,
   ChartLegendContent,
   ChartStyle,
   ChartTooltipContent,
-} from '../src/ui/chart'
-import { useIsMobile } from '../src/ui/use-mobile'
+} from '../src'
+import { useIsMobile } from '../src'
 
 const originalInnerWidth = window.innerWidth
 

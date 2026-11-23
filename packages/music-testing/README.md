@@ -4,7 +4,6 @@
 
 | 属性 | 值 |
 | --- | --- |
-| 版本 | 1.0.0 |
 | 定位 | 测试套件与运行器 |
 | 许可证 | MIT |
 | 仓库 | https://github.com/YYC-Cube/YYC3-MusAI |
@@ -42,13 +41,19 @@ printResults([suite.run()])
 | `assertEqual(actual, expected)` | 轻量断言，失败抛出 AssertionError 信息 |
 | `printResults(suites)` | 控制台汇总通过/失败/耗时 |
 
-## 说明
+## 说明（双轨模型，W7-P2-2 收敛）
 
-本包用于浏览器内与无框架环境的冒烟验证；仓库主测试仍以 Vitest 为准。
+本包采用「场景库 + 单一执行通道」双轨模型：
+
+- `src/`＝**验收场景库**：TestSuite 定义数据即用例（core-tests / full-test-suite / e2e-specs，150+ 场景），供浏览器内与无框架环境冒烟验证；作为纯定义数据已豁免根 vitest 覆盖率计量
+- `test/`＝**唯一执行通道**：全部经根 Vitest 运行（含 runner/断言器/场景抽样的单元测试），覆盖率门禁 85% 只计此处实现代码
+- `legacy/`＝**历史夹具隔离区**：仅存档不再执行
+
+新增验收场景请写入 `src/`（数据），并同步在 `test/` 落一个 Vitest 用例保证可执行性。
 
 ## 兼容性
 
-- React 19+（组件包 peer 依赖）
+- React 18+（与各组件包 peer 依赖一致）
 - TypeScript 5.6+ / Node.js 20.19+
 - 现代浏览器（Chrome/Edge/Safari/Firefox 最近两个大版本）
 

@@ -126,25 +126,27 @@ export const PlaylistSortableList = ({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div
-        className={className}
-        style={{ display: 'flex', flexDirection: 'column', gap: 0 }}
+      {/* 列表共享单个 SortableContext（dnd-kit 惯例）：拖拽中兄弟条目位移策略才能生效。
+          修复前每条目包一层单元素 context，排序回调虽正确但拖拽视觉协作退化。 */}
+      <SortableContext
+        items={items.map((i) => ({ id: i.id }))}
+        strategy={verticalListSortingStrategy}
       >
-        {items.map((item, index) => (
-          <SortableContext
-            key={item.id}
-            items={[{ id: item.id }]}
-            strategy={verticalListSortingStrategy}
-          >
+        <div
+          className={className}
+          style={{ display: 'flex', flexDirection: 'column', gap: 0 }}
+        >
+          {items.map((item, index) => (
             <SortableItem
+              key={item.id}
               id={item.id}
               index={index}
               title={item.title}
               artist={item.artist}
             />
-          </SortableContext>
-        ))}
-      </div>
+          ))}
+        </div>
+      </SortableContext>
     </DndContext>
   );
 };

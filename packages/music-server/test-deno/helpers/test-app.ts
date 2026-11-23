@@ -2,28 +2,32 @@
  * 测试用 Hono app 工厂 + 请求辅助函数。
  * 注册顺序与 src/index.tsx 保持一致（同名路由以先注册者为准）。
  */
-import { Hono } from 'npm:hono';
-import { cors } from 'npm:hono/cors';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 
-// P1b：关系表在测试中禁用（fake KV 为唯一数据源，避免命中本机 PG 真实数据）
-Deno.env.set('DB_DISABLED', '1');
+// P1b：关系表走内存驱动（DB_DRIVER=memory，见 src/services/db_memory.ts），
+// 避免命中本机 PG 真实数据；应用层鉴权依赖 users 表，内存驱动提供离线语义。
+Deno.env.set('DB_DRIVER', 'memory');
 
-import { registerAuthRoutes } from '../../src/routes-auth.ts';
-import { registerMusicRoutes } from '../../src/routes-music.ts';
-import { registerStarpowerRoutes } from '../../src/routes-starpower.ts';
-import { registerUserRoutes } from '../../src/routes-user.ts';
-import { registerCommunityRoutes } from '../../src/routes-community.ts';
-import { registerAiRoutes } from '../../src/routes-ai.ts';
-import { registerAnalyticsRoutes } from '../../src/routes-analytics.ts';
-import { registerSocialRoutes } from '../../src/routes-social.ts';
-import { registerSpacetimeRoutes } from '../../src/routes-spacetime.ts';
-import { registerChallengeRoutes } from '../../src/routes-challenge.ts';
-import { registerLiveSessionRoutes } from '../../src/routes-live.ts';
-import { registerAlbumRoutes } from '../../src/routes-albums.ts';
-import { registerPkiRoutes } from '../../src/routes-pki.ts';
-import { registerMarketRoutes } from '../../src/routes-market.ts';
-import { registerDiagnosticsRoutes } from '../../src/routes-diagnostics.ts';
-import { registerUploadRoutes } from '../../src/routes-upload.ts';
+// 应用层 JWT（auth.ts）签名密钥：未配置时注册/鉴权链路直接 500
+Deno.env.set('JWT_SECRET', 'test-jwt-secret');
+
+import { registerAuthRoutes } from '../../src/routes/routes-auth.ts';
+import { registerMusicRoutes } from '../../src/routes/routes-music.ts';
+import { registerStarpowerRoutes } from '../../src/routes/routes-starpower.ts';
+import { registerUserRoutes } from '../../src/routes/routes-user.ts';
+import { registerCommunityRoutes } from '../../src/routes/routes-community.ts';
+import { registerAiRoutes } from '../../src/routes/routes-ai.ts';
+import { registerAnalyticsRoutes } from '../../src/routes/routes-analytics.ts';
+import { registerSocialRoutes } from '../../src/routes/routes-social.ts';
+import { registerSpacetimeRoutes } from '../../src/routes/routes-spacetime.ts';
+import { registerChallengeRoutes } from '../../src/routes/routes-challenge.ts';
+import { registerLiveSessionRoutes } from '../../src/routes/routes-live.ts';
+import { registerAlbumRoutes } from '../../src/routes/routes-albums.ts';
+import { registerPkiRoutes } from '../../src/routes/routes-pki.ts';
+import { registerMarketRoutes } from '../../src/routes/routes-market.ts';
+import { registerDiagnosticsRoutes } from '../../src/routes/routes-diagnostics.ts';
+import { registerUploadRoutes } from '../../src/routes/routes-upload.ts';
 
 export function createTestApp(): Hono {
   const app = new Hono();
@@ -110,6 +114,16 @@ export async function jsonBody(res: Response): Promise<any> {
   }
 }
 
-export function tokenFor(userId: string): string {
-  return `token-${userId}`;
+/**
+ * 签发真实可验证的访问令牌（应用层 JWT）：
+ * 先在内存 users 表确保用户存在（默认 role=user，可传 role 提权），
+ * 再经 issueAccessToken 签发并登记 KV 会话（登出可吊销）。
+ */
+export async function tokenFor(userId: string, role = 'user'): Promise<string> {
+  const { upsertUserProfile } = await import('../../src/services/db.ts');
+  const { issueAccessToken } = await import('../../src/services/auth.ts');
+  const email = `${userId}@example.com`;
+  await upsertUserProfile(userId, { email, role });
+  const { accessToken } = await issueAccessToken({ userId, email, role });
+  return accessToken;
 }

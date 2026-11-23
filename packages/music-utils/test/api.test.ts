@@ -25,7 +25,7 @@ import {
   albumApi,
   pkiApi,
   marketApi,
-} from '../src/api'
+} from '../src'
 
 const apiFetchMock = apiFetch as unknown as ReturnType<typeof vi.fn>
 
@@ -71,7 +71,7 @@ describe('播放器与互动 API', () => {
     expect(lastCall()[0]).toBe('/comments/s1')
 
     await commentApi.postComment('s1', { userId: 'u1', userName: 'Ann', content: 'nice', timestamp: 12 })
-    let [path, init] = lastCall()
+    const [path, init] = lastCall()
     expect(path).toBe('/comments/s1')
     expect(init.method).toBe('POST')
     expect(JSON.parse(init.body)).toEqual({ userId: 'u1', userName: 'Ann', content: 'nice', timestamp: 12 })

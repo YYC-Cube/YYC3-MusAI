@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Loader2, CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { cn } from '../../ui/utils';
 
 import { feedbackConfig } from './shared';

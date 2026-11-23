@@ -9,11 +9,14 @@ import { VirtualList } from '../src/ui/virtual-list';
 const ITEMS = Array.from({ length: 100 }, (_, i) => ({ id: `item-${i}`, title: `歌曲 ${i}` }));
 
 // jsdom 无 ResizeObserver 且容器无尺寸 → stub 观察器并给定可见视口
-vi.stubGlobal('ResizeObserver', class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-});
+// 守卫：宿主 setup 可能已用 defineProperty 写入不可重定义的全局（主仓 setup-dom 场景），此时沿用宿主实现
+if (!('ResizeObserver' in window)) {
+  vi.stubGlobal('ResizeObserver', class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  });
+}
 vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
   width: 400,
   height: 500,

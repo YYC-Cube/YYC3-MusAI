@@ -1,12 +1,12 @@
 /**
  * AI 路由 + AIModelManager + Analytics/Leaderboard 测试
  */
-import { assert, assertEquals, assertMatch } from 'jsr:@std/assert@1';
+import { assert, assertEquals, assertMatch } from '@std/assert';
 
 import { FakeSupabase } from './helpers/fake-supabase.ts';
 import { createTestApp, jsonBody, request } from './helpers/test-app.ts';
-import { aiModelManager } from '../src/ai-model-manager.ts';
-import { queryCache, registerSongId } from '../src/server-utils.ts';
+import { aiModelManager } from '../src/services/ai-model-manager.ts';
+import { queryCache, registerSongId } from '../src/services/server-utils.ts';
 
 const fake = new FakeSupabase();
 fake.install();
@@ -260,7 +260,10 @@ Deno.test('manager: 流式转录与用量统计', async () => {
   const status = aiModelManager.getStatus();
   assertEquals(status.activeProvider, 'template');
   assertEquals(status.openaiAvailable, false);
-  assertEquals(status.providers.length, 2);
+  // 现行 getStatus 列出全部注册 provider（含不可用项，available 标记区分）
+  assertEquals(status.providers.length, 4);
+  assertEquals(status.providers.find((p: any) => p.name === 'openai')?.available, false);
+  assertEquals(status.providers.find((p: any) => p.name === 'template')?.available, true);
 
   withKey();
   assertEquals(aiModelManager.isAIAvailable(), true);

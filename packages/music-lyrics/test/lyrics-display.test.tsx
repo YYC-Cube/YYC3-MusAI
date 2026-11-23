@@ -2,6 +2,58 @@
  * @file LyricsDisplay 深度测试
  * @description 覆盖歌词高亮/时间轴/自动滚动/翻译/情感标注/粒子动画等分支
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+// jsdom 未实现 scrollIntoView；守卫式 stub（W7-P2-3 环境自足化，不覆盖宿主已有实现）
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
+
+
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LyricsDisplay } from '../src'
@@ -67,7 +119,7 @@ describe('LyricsDisplay 高亮与时间轴', () => {
 
 describe('LyricsDisplay 情感指示与标注统计', () => {
   it('无标注时使用歌词自带情绪渲染指示点', () => {
-    const { container } = render(<LyricsDisplay currentTime={0} lyrics={baseLyrics} />)
+    render(<LyricsDisplay currentTime={0} lyrics={baseLyrics} />)
     const firstLine = screen.getByText('第一句歌词').closest('.group') as HTMLElement
     const dot = firstLine.querySelector('[style*="background-color"], [style*="background-color"]') as HTMLElement
     expect(dot).not.toBeNull()
@@ -79,7 +131,7 @@ describe('LyricsDisplay 情感指示与标注统计', () => {
       0: { happy: 5, unknown: 4, sad: 3, calm: 2 },
       1: {},
     }
-    const { container } = render(
+    render(
       <LyricsDisplay currentTime={0} lyrics={baseLyrics} annotations={annotations} />
     )
     const firstLine = screen.getByText('第一句歌词').closest('.group') as HTMLElement

@@ -4,8 +4,12 @@
  * YYC³ music-ui — CmdK 命令面板（基于 cmdk，MIT）
  *
  * 对应 INTEGRATION-STATUS.md：pacocoursey/cmdk → music-ui Command palette（Planned → Done）。
- * shadcn 风格，全局快捷键（默认 Cmd+K / Ctrl+K）触发，支持分组与快捷键提示。
+ * shadcn 风格，全局快捷键（默认 Cmd+K / Ctrl+K）触发（disableShortcut 可关闭），
+ * 支持受控（open/onOpenChange）与非受控两种用法；支持分组与快捷键提示。
  * 集成 /api/search 全局搜索：歌曲、歌单、艺术家、专辑分组展示。
+ *
+ * W8 修复：搜索结果项 value 携带标题/副标题，避免按歌名搜索时结果被 cmdk
+ * 默认过滤吞掉（修复前 value=result.id，仅 id 命中查询时可见）。
  */
 
 import * as React from 'react';
@@ -28,23 +32,50 @@ interface SearchResult {
 }
 
 interface CmdKPaletteProps {
+  /** 受控开启态；不传则组件内部自管（⌘K 可直接开合） */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** 关闭内置 ⌘K / Ctrl+K 全局快捷键（宿主自行接管时使用） */
+  disableShortcut?: boolean;
   className?: string;
   children?: React.ReactNode;
   onSelectSearchResult?: (result: SearchResult) => void;
 }
 
 export const CmdKPalette: React.FC<CmdKPaletteProps> = ({
-  open = false,
+  open,
   onOpenChange,
+  disableShortcut = false,
   className,
   children,
   onSelectSearchResult,
 }) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
+
+  const isOpen = open ?? uncontrolledOpen;
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      onOpenChange?.(next);
+      if (open === undefined) setUncontrolledOpen(next);
+    },
+    [onOpenChange, open]
+  );
+
+  // 内置全局快捷键 ⌘K / Ctrl+K（W8 补齐：README 承诺但组件此前未实现）
+  React.useEffect(() => {
+    if (disableShortcut) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setOpen(!isOpen);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [disableShortcut, isOpen, setOpen]);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -73,11 +104,11 @@ export const CmdKPalette: React.FC<CmdKPaletteProps> = ({
 
   const handleSearchResultSelect = (result: SearchResult) => {
     onSelectSearchResult?.(result);
-    onOpenChange?.(false);
+    setOpen(false);
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog open={isOpen} onOpenChange={setOpen}>
       <CommandList className={cn('w-full max-w-md', className)}>
         <CommandInput
           placeholder="搜索命令（⌘K / Ctrl+K）"
@@ -105,14 +136,19 @@ export const CmdKPalette: React.FC<CmdKPaletteProps> = ({
         {searchQuery.trim() && (
           <CommandGroup heading="搜索结果">
             {isSearching ? (
-              <CommandItem disabled>搜索中...</CommandItem>
+              /* value=当前查询 → 始终通过 cmdk 过滤，保证「搜索中」可见 */
+              <CommandItem disabled value={searchQuery}>
+                搜索中...
+              </CommandItem>
             ) : searchResults.length === 0 ? (
-              <CommandItem disabled>没有搜索结果</CommandItem>
+              <CommandItem disabled value={searchQuery}>
+                没有搜索结果
+              </CommandItem>
             ) : (
               searchResults.map((result) => (
                 <CommandItem
                   key={result.id}
-                  value={result.id}
+                  value={`${result.title} ${result.subtitle ?? ''} ${result.id}`}
                   onSelect={() => handleSearchResultSelect(result)}
                 >
                   <div className="flex items-center gap-3">

@@ -5,7 +5,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { disposeSharedAudioContext } from '@yyc3/music-utils'
-import { SpeechRecognitionEngine } from '../src/SpeechRecognitionEngine'
+import { SpeechRecognitionEngine } from '../src'
 import {
   createAudioContextMock,
   installMicrophoneEnv,

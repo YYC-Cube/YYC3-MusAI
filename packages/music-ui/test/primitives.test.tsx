@@ -2,14 +2,62 @@
  * @file music-ui 基础组件交互测试
  * @description 覆盖 shadcn/Radix 基础组件的渲染、可访问性与点击/输入交互
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+
 import { createElement } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../src/ui/accordion'
-import { Alert, AlertDescription, AlertTitle } from '../src/ui/alert'
-import { Badge } from '../src/ui/badge'
-import { Button } from '../src/ui/button'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../src'
+import { Alert, AlertDescription, AlertTitle } from '../src'
+import { Badge } from '../src'
+import { Button } from '../src'
 import {
   Card,
   CardAction,
@@ -18,15 +66,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '../src/ui/card'
-import { Checkbox } from '../src/ui/checkbox'
-import { Input } from '../src/ui/input'
-import { Label } from '../src/ui/label'
-import { Progress } from '../src/ui/progress'
-import { Separator } from '../src/ui/separator'
-import { Switch } from '../src/ui/switch'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../src/ui/tabs'
-import { Textarea } from '../src/ui/textarea'
+} from '../src'
+import { Checkbox } from '../src'
+import { Input } from '../src'
+import { Label } from '../src'
+import { Progress } from '../src'
+import { Separator } from '../src'
+import { Switch } from '../src'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../src'
+import { Textarea } from '../src'
 
 describe('Button', () => {
   it('渲染文本并响应点击', async () => {

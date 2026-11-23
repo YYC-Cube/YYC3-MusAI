@@ -4,7 +4,7 @@
  *              语音选择、朗读/队列、暂停恢复停止、事件、历史与销毁。
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { SpeechSynthesisEngine } from '../src/SpeechSynthesisEngine'
+import { SpeechSynthesisEngine } from '../src'
 import { createVoices, installSynthesisEnv, type SynthesisEnv } from './helpers/voice-env'
 
 describe('SpeechSynthesisEngine', () => {

@@ -50,7 +50,6 @@ export function VirtualList<Item>({
   });
 
   const scrollOffset = virtualizer.scrollOffset ?? 0;
-  const range = virtualizer.range;
   const virtualItems = virtualizer.getVirtualItems();
 
   const totalHeight = virtualizer.getTotalSize();

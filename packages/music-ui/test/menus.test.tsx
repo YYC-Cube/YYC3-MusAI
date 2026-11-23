@@ -2,6 +2,54 @@
  * @file 菜单 / 命令面板 / 下拉选择测试
  * @description DropdownMenu、ContextMenu、Menubar、NavigationMenu、Command、Select 的交互行为
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -21,7 +69,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '../src/ui/dropdown-menu'
+} from '../src'
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -38,7 +86,7 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger,
-} from '../src/ui/context-menu'
+} from '../src'
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -56,7 +104,7 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger,
-} from '../src/ui/menubar'
+} from '../src'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -66,7 +114,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from '../src/ui/navigation-menu'
+} from '../src'
 import {
   Command,
   CommandDialog,
@@ -77,7 +125,7 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '../src/ui/command'
+} from '../src'
 import {
   Select,
   SelectContent,
@@ -87,7 +135,7 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from '../src/ui/select'
+} from '../src'
 
 describe('DropdownMenu', () => {
   it('点击触发器打开完整菜单并处理各菜单项交互', async () => {

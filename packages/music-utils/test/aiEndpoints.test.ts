@@ -7,7 +7,7 @@ import {
   getOllamaChatUrl,
   getOllamaTagsUrl,
   getOllamaEndpointInfo,
-} from '../src/aiEndpoints'
+} from '../src'
 
 describe('isLocalDeployment', () => {
   it('识别本地与内网地址', () => {

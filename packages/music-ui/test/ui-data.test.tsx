@@ -3,6 +3,50 @@
  * @description Table / Pagination / Breadcrumb / Avatar / Skeleton / AspectRatio / ScrollArea / RadioGroup /
  * Slider / Toggle / ToggleGroup / Collapsible / InputOTP / Calendar / Form / Resizable / Sonner
  */
+// W7-P2-3 上游化收编：主仓独有测试归入源仓；以下环境自足化注入由收编流程生成
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+
+// RTL 挂载手动清理：源仓 vitest 不依赖 globals auto-cleanup（W7-P2-3 环境自足化）
+afterEach(() => { cleanup() })
+
+// jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }),
+    })
+  }
+  if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
+    class ResizeObserverStub {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    ;(globalThis as { ResizeObserver?: unknown }).ResizeObserver = ResizeObserverStub
+  }
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {}
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
+}
+
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
@@ -17,7 +61,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../src/ui/table'
+} from '../src'
 import {
   Pagination,
   PaginationContent,
@@ -26,7 +70,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '../src/ui/pagination'
+} from '../src'
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -35,18 +79,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '../src/ui/breadcrumb'
-import { Avatar, AvatarFallback, AvatarImage } from '../src/ui/avatar'
-import { Skeleton } from '../src/ui/skeleton'
-import { AspectRatio } from '../src/ui/aspect-ratio'
-import { ScrollArea, ScrollBar } from '../src/ui/scroll-area'
-import { RadioGroup, RadioGroupItem } from '../src/ui/radio-group'
-import { Slider } from '../src/ui/slider'
-import { Toggle } from '../src/ui/toggle'
-import { ToggleGroup, ToggleGroupItem } from '../src/ui/toggle-group'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../src/ui/collapsible'
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../src/ui/input-otp'
-import { Calendar } from '../src/ui/calendar'
+} from '../src'
+import { Avatar, AvatarFallback, AvatarImage } from '../src'
+import { Skeleton } from '../src'
+import { AspectRatio } from '../src'
+import { ScrollArea, ScrollBar } from '../src'
+import { RadioGroup, RadioGroupItem } from '../src'
+import { Slider } from '../src'
+import { Toggle } from '../src'
+import { ToggleGroup, ToggleGroupItem } from '../src'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../src'
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../src'
+import { Calendar } from '../src'
 import {
   Form,
   FormControl,
@@ -55,12 +99,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../src/ui/form'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../src/ui/resizable'
-import { Toaster } from '../src/ui/sonner'
-import { Badge } from '../src/ui/badge'
-import { Button } from '../src/ui/button'
-import { Progress } from '../src/ui/progress'
+} from '../src'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../src'
+import { Toaster } from '../src'
+import { Badge } from '../src'
+import { Button } from '../src'
+import { Progress } from '../src'
 
 const originalElementFromPoint = document.elementFromPoint
 

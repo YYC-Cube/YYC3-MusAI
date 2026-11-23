@@ -1,7 +1,7 @@
 // YYC³ music-lyrics — 打拍生成歌词时间轴单元测试
 import { describe, it, expect } from 'vitest'
-import { normalizeTaps, assignTimestamps, serializeLrc } from '../src/tapSync'
-import { parseLrc } from '../src/parseLrc'
+import { normalizeTaps, assignTimestamps, serializeLrc } from '../src'
+import { parseLrc } from '../src'
 
 describe('normalizeTaps', () => {
   it('过滤非有限数与负数', () => {

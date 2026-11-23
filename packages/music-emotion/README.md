@@ -4,7 +4,6 @@
 
 | 属性 | 值 |
 | --- | --- |
-| 版本 | 2.0.0 |
 | 定位 | 情感角色系统（小语） |
 | 许可证 | MIT |
 | 仓库 | https://github.com/YYC-Cube/YYC3-MusAI |

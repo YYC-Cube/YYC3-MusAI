@@ -253,7 +253,12 @@ export const LiveSessionPanel: React.FC<LiveSessionPanelProps> = ({
             setMessages(prev => {
               const ids = new Set(prev.map(m => m.id));
               const incoming = data.recent
-                .filter((m: any) => m.id && !ids.has(m.id))
+                .filter((m: any) => {
+                  // 同批次内重复 id 也要去重：filter 只比对 prev 集合时批内重复会全部上屏（W8 修复）
+                  if (!m.id || ids.has(m.id)) return false;
+                  ids.add(m.id);
+                  return true;
+                })
                 .map((m: any) => ({
                   id: m.id, userId: m.userId, userName: m.userName, text: m.text,
                   trackId: '', timestamp: m.timestamp, color: DANMAKU_COLORS[Math.abs(hashString(m.userId || '')) % DANMAKU_COLORS.length],

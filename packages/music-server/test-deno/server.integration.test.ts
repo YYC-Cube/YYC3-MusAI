@@ -6,12 +6,12 @@
  * 运行：deno test --allow-all packages/music-server/test-deno
  * 说明：不依赖 Supabase / OpenAI 真实凭据，AI 路由自动降级到本地模板引擎。
  */
-import { Hono } from 'npm:hono'
-import { cors } from 'npm:hono/cors'
-import { assertEquals, assertExists } from 'jsr:@std/assert@1'
-import { registerAuthRoutes } from '../src/routes-auth.ts'
-import { registerAiRoutes } from '../src/routes-ai.ts'
-import { ROUTE_PREFIX } from '../src/server-utils.ts'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { assertEquals, assertExists } from '@std/assert'
+import { registerAuthRoutes } from '../src/routes/routes-auth.ts'
+import { registerAiRoutes } from '../src/routes/routes-ai.ts'
+import { ROUTE_PREFIX } from '../src/services/server-utils.ts'
 
 function createApp() {
   const app = new Hono()

@@ -53,7 +53,7 @@ export const SpaceTimePanel: React.FC<SpaceTimePanelProps> = ({
   const {
     attachLocation, setAttachLocation, userLocation, setUserLocation,
     geoLoading, geoSupported,
-    nearbyMessages, setNearbyMessages, nearbyLoading,
+    nearbyMessages, nearbyLoading,
     requestLocation, fetchNearby,
   } = useSpaceGeo();
 

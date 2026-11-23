@@ -3,7 +3,7 @@
  * @description 覆盖 NLP 情感打分、行为模式分析、情绪合成与建议生成
  */
 import { describe, expect, it, vi } from 'vitest'
-import EmotionDetector from '../src/EmotionDetector'
+import EmotionDetector from '../src/ui/EmotionDetector'
 
 const behavior = (overrides: Partial<Record<string, number>> = {}) => ({
   clickFrequency: 2,

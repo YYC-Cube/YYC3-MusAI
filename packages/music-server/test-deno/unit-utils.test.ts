@@ -10,7 +10,7 @@ import {
   assertEquals,
   assertMatch,
   assertRejects,
-} from 'jsr:@std/assert@1';
+} from '@std/assert';
 
 import { FakeSupabase } from './helpers/fake-supabase.ts';
 
@@ -21,7 +21,8 @@ Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'test-service-key');
 Deno.env.set('SUPABASE_ANON_KEY', 'test-anon-key');
 Deno.env.set('KV_DRIVER', 'supabase');
 
-import * as kv from '../src/kv_store.ts';
+import * as kv from '../src/services/kv_store.ts';
+import { currentKvDriver } from '../src/services/kv.ts';
 import {
   ROUTE_PREFIX,
   QueryCache,
@@ -33,13 +34,14 @@ import {
   registerSongId,
   getUserFromRequest,
   requireAuth,
-  createAdminClient,
   getSharedWorkIndex,
   getSharedWork,
   saveSharedWork,
   addToSharedWorkIndex,
   getAllSharedWorks,
-} from '../src/server-utils.ts';
+} from '../src/services/server-utils.ts';
+import { revokeToken } from '../src/services/auth.ts';
+import { tokenFor } from './helpers/test-app.ts';
 
 // ============================================================
 // kv_store
@@ -360,26 +362,31 @@ function mockContext(authorization?: string) {
   return ctx;
 }
 
-Deno.test('getUserFromRequest: 缺失/无效/成功/角色/异常', async () => {
+Deno.test('getUserFromRequest: 缺失/无效/成功/角色/吊销', async () => {
   fake.reset();
   assertEquals(await getUserFromRequest(mockContext()), null);
   assertEquals(await getUserFromRequest(mockContext('Bearer invalid-token')), null);
 
-  const user = await getUserFromRequest(mockContext('Bearer token-alice'));
-  assertEquals(user, { id: 'alice', email: 'alice@example.com', role: 'user' });
+  // 应用层 JWT：先签发真实令牌（内存 users 表 + KV 会话）
+  const aliceToken = await tokenFor('alice');
+  const user = await getUserFromRequest(mockContext(`Bearer ${aliceToken}`));
+  assertEquals(user?.id, 'alice');
+  assertEquals(user?.email, 'alice@example.com');
+  assertEquals(user?.role, 'user');
 
-  fake.seed('user:bob:role', 'admin');
-  const admin = await getUserFromRequest(mockContext('Bearer token-bob'));
+  const adminToken = await tokenFor('bob', 'admin');
+  const admin = await getUserFromRequest(mockContext(`Bearer ${adminToken}`));
+  assertEquals(admin?.id, 'bob');
   assertEquals(admin?.role, 'admin');
 
-  // Auth 服务故障
-  fake.authDown = true;
-  assertEquals(await getUserFromRequest(mockContext('Bearer token-alice')), null);
-  fake.authDown = false;
+  // 会话吊销（登出删除 jti 会话）后不再放行
+  await revokeToken(aliceToken);
+  assertEquals(await getUserFromRequest(mockContext(`Bearer ${aliceToken}`)), null);
 
-  // 角色读取失败 → catch 返回 null
+  // KV 故障 → 会话读取失败，拒绝放行（抛错而非静默通过）
+  const carolToken = await tokenFor('carol');
   fake.kvDown = true;
-  assertEquals(await getUserFromRequest(mockContext('Bearer token-alice')), null);
+  await assertRejects(() => getUserFromRequest(mockContext(`Bearer ${carolToken}`)));
   fake.kvDown = false;
 });
 
@@ -394,7 +401,7 @@ Deno.test('requireAuth: 未授权 401 / 授权后注入用户', async () => {
   assertMatch(res.body.error, /Unauthorized/);
   assertEquals(nextCalled, false);
 
-  const ctx = mockContext('Bearer token-carol');
+  const ctx = mockContext(`Bearer ${await tokenFor('carol')}`);
   await requireAuth(ctx, async () => {
     nextCalled = true;
   });
@@ -411,10 +418,10 @@ Deno.test('常量与全局实例', () => {
   assertEquals(ROUTE_PREFIX, '/make-server-f626b673');
   assert(queryCache instanceof QueryCache);
 
-  const admin = createAdminClient();
-  assert(typeof admin.from === 'function');
-  assert(typeof admin.auth.getSession === 'function');
-  assert(typeof admin.storage.listBuckets === 'function');
+  // 三驱 KV 架构下已无独立 admin 客户端：断言现行 kv 门面与驱动解析可用
+  const driver = currentKvDriver();
+  assert(typeof driver === 'string');
+  assert(kv != null && typeof kv.get === 'function' && typeof kv.set === 'function');
 });
 
 Deno.test('queryCache 全局实例可正常读写', () => {

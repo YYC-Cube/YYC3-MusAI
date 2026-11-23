@@ -3,7 +3,7 @@
  * @description 覆盖音效皮肤注册/切换、加载缓存、播放参数、音量静音与事件
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import SoundResourceManager from '../src/SoundResourceManager.js'
+import SoundResourceManager from '../src/engines/SoundResourceManager.js'
 
 type Listener = (event?: any) => void
 

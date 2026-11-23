@@ -9,6 +9,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { DEFAULT_GIFTS } from './types';
 import type { LiveRoom as LiveRoomType, LiveUser, GiftItem } from './types';
 import { LiveClient } from './LiveClient';
 import { DanmakuBoard } from './DanmakuBoard';
@@ -26,9 +27,11 @@ interface LiveRoomProps {
   wsUrl: string;
   /** 自定义播放器渲染（接收 HLS 地址与直播状态）；不传则用内置占位播放区 */
   renderPlayer?: (hlsUrl: string | null, live: boolean) => React.ReactNode;
+  /** 礼物清单；不传用 DEFAULT_GIFTS（修复前固定空数组，礼物按钮 UI 上不可达） */
+  gifts?: GiftItem[];
 }
 
-export const LiveRoom: React.FC<LiveRoomProps> = ({ room, user, wsUrl, renderPlayer }) => {
+export const LiveRoom: React.FC<LiveRoomProps> = ({ room, user, wsUrl, renderPlayer, gifts = DEFAULT_GIFTS }) => {
   const clientRef = useRef<InstanceType<typeof LiveClient> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(room.viewerCount);
@@ -126,7 +129,7 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ room, user, wsUrl, renderPla
           <EmojiPanel onEmoji={sendEmoji} />
         </div>
 
-        <GiftPanel gifts={[] as GiftItem[]} onGift={sendGift} isModerator={user.isModerator} />
+        <GiftPanel gifts={gifts} onGift={sendGift} isModerator={user.isModerator} />
 
         {user.isModerator && (
           <ModerationPanel onModerate={onModerate} isModerator={true} />

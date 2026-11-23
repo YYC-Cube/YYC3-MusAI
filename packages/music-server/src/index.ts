@@ -8,9 +8,9 @@
 import { serve } from "@hono/node-server";
 import { createRequire } from "node:module";
 import { app } from "./app.ts";
-import { closePool } from "./db.ts";
-import { closeKvPool } from "./kv_store_pg.ts";
-import { verifyAccessToken } from "./auth.ts";
+import { closePool } from "./services/db.ts";
+import { closeKvPool } from "./services/kv_store_pg.ts";
+import { verifyAccessToken } from "./services/auth.ts";
 
 const port = Number(process.env.PORT ?? 8080);
 const hostname = process.env.HOST ?? '0.0.0.0';
@@ -28,8 +28,15 @@ const wsRequireAuth = process.env.WS_ALLOW_ANONYMOUS !== '1';
 let wssRef: any = null;
 
 try {
-  const require = createRequire(import.meta.url);
-  const { WebSocketServer } = require('ws');
+  // Deno 运行时下 createRequire 加载 CJS 包会误判为 ESM（"require is not defined"），
+  // 优先走 ESM 动态导入；Node 运行时回退到 createRequire。（联调实测缺陷修复 2026-11-21）
+  let WebSocketServer: typeof import('ws').WebSocketServer;
+  try {
+    ({ WebSocketServer } = await import('ws'));
+  } catch {
+    const require = createRequire(import.meta.url);
+    ({ WebSocketServer } = require('ws'));
+  }
   const wss = new WebSocketServer({
     server: server as any,
     path: '/ws/live',

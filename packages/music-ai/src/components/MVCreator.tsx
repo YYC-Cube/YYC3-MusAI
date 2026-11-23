@@ -141,7 +141,6 @@ export const MVCreator: React.FC<MVCreatorProps> = ({
 
   // Current lyric line
   const currentLyric = [...effectiveLyrics].reverse().find(l => l.time <= currentTime);
-  const nextLyric = effectiveLyrics.find(l => l.time > currentTime);
 
   // ========== Canvas Rendering Loop ==========
   const render = useCallback(() => {

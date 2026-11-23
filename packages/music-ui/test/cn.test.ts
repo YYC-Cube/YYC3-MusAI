@@ -8,6 +8,7 @@ describe('cn 类名合并', () => {
   })
 
   it('忽略 falsy 值', () => {
+    // eslint-disable-next-line no-constant-binary-expression -- 故意传常量 falsy 验证 cn 过滤
     expect(cn('a', false && 'b', undefined, null, 'c')).toBe('a c')
   })
 

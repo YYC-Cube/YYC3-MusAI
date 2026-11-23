@@ -1,24 +1,24 @@
 /**
  * live-stream 安全测试 — assertPublicHttpUrl SSRF 防护矩阵
  *
- * 被测模块为 Deno Edge Function（依赖 npm:/kv 等运行时模块），
+ * 被测模块依赖三驱 KV 门面（kv.ts）等运行时模块，
  * 全部依赖以 vi.mock 替换，仅测导出的纯校验函数。
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── 替换全部外部依赖（模块顶层 import 均被拦截，无需真实解析） ──
 // 路径相对测试文件解析，需与被测模块的 import 指向同一绝对路径
-vi.mock('../src/kv_store.tsx', () => ({ get: vi.fn(), set: vi.fn() }));
-vi.mock('../src/server-utils.ts', () => ({ ROUTE_PREFIX: '/test' }));
-vi.mock('../src/rate-limit.ts', () => ({
+vi.mock('../src/services/kv.ts', () => ({ kv: { get: vi.fn(), set: vi.fn() } }));
+vi.mock('../src/services/server-utils.ts', () => ({ ROUTE_PREFIX: '/test' }));
+vi.mock('../src/services/rate-limit.ts', () => ({
   rateLimit: () => (_c: any, _next: any) => {},
   RATE_STANDARD: 0,
 }));
-vi.mock('../src/validation.ts', () => ({
+vi.mock('../src/services/validation.ts', () => ({
   // 原样透传 body（绕过真实 zod schema，聚焦路由逻辑）
   validate: (_schema: unknown, data: unknown) => ({ success: true, data }),
 }));
-vi.mock('npm:zod@3.24.1', () => {
+vi.mock('zod', () => {
   // 可无限链式调用的占位代理（z.string().min().max().optional() 均合法）
   const chain: any = new Proxy(function chainFn() {}, {
     get: (_t, prop) => {
@@ -30,17 +30,19 @@ vi.mock('npm:zod@3.24.1', () => {
   return { z: chain };
 });
 
-// ── KV mock：记录 set/get 调用，供路由级测试断言 ──
+// ── KV 门面 mock：记录 set/get 调用，供路由级测试断言 ──
 const kvStore = new Map<string, string>();
-vi.mock('../src/kv_store.tsx', () => ({
-  get: vi.fn((key: string) => kvStore.get(key) ?? null),
-  set: vi.fn((key: string, value: string) => {
-    kvStore.set(key, value);
-  }),
+vi.mock('../src/services/kv.ts', () => ({
+  kv: {
+    get: vi.fn((key: string) => kvStore.get(key) ?? null),
+    set: vi.fn((key: string, value: string) => {
+      kvStore.set(key, value);
+    }),
+  },
 }));
 
-import { assertPublicHttpUrl, registerLiveStreamRoutes } from '../src/live-stream.ts';
-import * as kv from '../src/kv_store.tsx';
+import { assertPublicHttpUrl, registerLiveStreamRoutes } from '../src/services/live-stream.ts';
+import { kv } from '../src/services/kv.ts';
 
 /** 构造最小 Hono 风格 app/c 上下文 */
 function makeApp() {

@@ -1,0 +1,60 @@
+/**
+ * YYC³ music-design-tokens — 静态令牌兜底（W8-P2-5 样式自治）
+ *
+ * 作用：在 themes.ts 运行时注入主题之前，为所有 --dm-* 变量提供「深空」主题默认值，
+ * 使组件包在独立渲染（测试 / 文档 / 首帧）时不依赖宿主样式表。
+ *
+ * 集成契约：
+ *   1. 宿主应用在样式入口引入一次：`@import '@yyc3/music-design-tokens/tokens.css';`
+ *   2. 宿主随后调用 themes.ts 的 applyTheme（或挂载 ThemeSwitcher）即完成运行时主题接管
+ *   3. shadcn/Radix 系变量（--border/--popover/--sidebar-* 等）属宿主应用主题面，不在本文件
+ *
+ * 变量集与 themes.ts 的 setProperty 映射一一对应；改主题字段请两处同步。
+ */
+:root {
+  /* 背景层 */
+  --dm-bg: #0A0E2F;
+  --dm-bg-panel: #0D1235;
+  --dm-bg-elevated: #111640;
+  --dm-bg-overlay: rgba(10, 14, 47, 0.85);
+
+  /* 文本层 */
+  --dm-text-primary: rgba(255, 255, 255, 0.95);
+  --dm-text-secondary: rgba(255, 255, 255, 0.6);
+  --dm-text-tertiary: rgba(255, 255, 255, 0.35);
+  --dm-text-disabled: rgba(255, 255, 255, 0.2);
+  --dm-text-inverse: #0A0E2F;
+
+  /* 品牌渐变与光效 */
+  --dm-glow-rgb: 102, 126, 234;
+  --dm-accent-from: #8B5CF6;
+  --dm-accent-to: #EC4899;
+  --dm-star-rgb: 140, 140, 255;
+  --dm-selection-bg: rgba(236, 72, 153, 0.3);
+  --dm-header-from: #0A0E2F;
+  --dm-header-via: rgba(10, 14, 47, 0.8);
+  --dm-progress-from: #8B5CF6;
+  --dm-progress-to: #EC4899;
+  --dm-brand-from: #FCD34D;
+  --dm-brand-via: #FDE68A;
+  --dm-brand-to: #FBBF24;
+
+  /* 语义色 */
+  --dm-success: #22C55E;
+  --dm-warning: #F59E0B;
+  --dm-error: #EF4444;
+  --dm-info: #3B82F6;
+
+  /* 交互态 */
+  --dm-hover-bg: rgba(255, 255, 255, 0.06);
+  --dm-active-bg: rgba(255, 255, 255, 0.1);
+  --dm-focus-ring: #8B5CF6;
+
+  /* 描边与投影 */
+  --dm-border: rgba(255, 255, 255, 0.1);
+  --dm-border-subtle: rgba(255, 255, 255, 0.06);
+  --dm-border-strong: rgba(255, 255, 255, 0.2);
+  --dm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --dm-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --dm-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+}

@@ -15,7 +15,7 @@ import {
   starPowerAddSchema,
   timelineCommentSchema,
   validate,
-} from '../src/validation'
+} from '../src/services/validation.ts'
 
 describe('validation schemas', () => {
   it('shareWorkSchema 为可选字段填充默认值', () => {

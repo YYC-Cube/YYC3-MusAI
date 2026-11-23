@@ -19,7 +19,7 @@ vi.mock('hls.js', () => ({
   },
 }));
 
-vi.mock('../src/PlayerUI.js', () => ({
+vi.mock('../src/ui/PlayerUI.js', () => ({
   default: class MockPlayerUI {
     on = vi.fn();
     updatePlayerState = vi.fn();
@@ -27,7 +27,7 @@ vi.mock('../src/PlayerUI.js', () => ({
   },
 }));
 
-vi.mock('../src/SoundResourceManager.js', () => ({
+vi.mock('../src/engines/SoundResourceManager.js', () => ({
   default: class MockSoundManager {
     preloadAllSounds = vi.fn();
     playSound = vi.fn();
@@ -62,7 +62,7 @@ class FakeAudio {
 
 vi.stubGlobal('Audio', FakeAudio);
 
-import AdvancedPlayer from '../src/AdvancedPlayer.js';
+import AdvancedPlayer from '../src/engines/AdvancedPlayer.js';
 
 const PLAYLIST = [
   { src: 'https://cdn.example.com/live/stream.m3u8', title: '直播流' },

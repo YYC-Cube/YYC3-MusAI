@@ -3,9 +3,9 @@
  * @description 覆盖曲目加载、播放控制、UI 事件桥接、音频事件与播放列表管理
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import AdvancedPlayer from '../src/AdvancedPlayer.js'
-import PlayerUI from '../src/PlayerUI.js'
-import SoundResourceManager from '../src/SoundResourceManager.js'
+import AdvancedPlayer from '../src/engines/AdvancedPlayer.js'
+import PlayerUI from '../src/ui/PlayerUI.js'
+import SoundResourceManager from '../src/engines/SoundResourceManager.js'
 
 type Listener = (event?: any) => void
 

@@ -34,7 +34,7 @@ export const CreationStudio: React.FC<CreationStudioProps> = ({
   starPower = 0,
   onStarPowerUpdate,
 }) => {
-  const { t, lang } = useI18n();
+  const { lang } = useI18n();
   const [activeMode, setActiveMode] = useState<CreationMode | null>(null);
   const [unlockedPremium, setUnlockedPremium] = useState<Set<string>>(new Set());
 

@@ -15,7 +15,6 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import type { Emotion } from '@yyc3/music-hooks';
 import type { CommunityActivity } from '@yyc3/music-data';
 import { useI18n } from '@yyc3/music-hooks';
 import { useVirtualList } from '@yyc3/music-hooks';
