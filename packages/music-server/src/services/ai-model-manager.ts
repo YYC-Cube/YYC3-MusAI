@@ -179,6 +179,11 @@ async function resolveModelId(baseUrl: string, apiKey?: string): Promise<string 
 
 /** 调用 OpenAI 兼容 /chat/completions，返回首条消息内容 */
 async function chatCompletion(opts: ChatOptions): Promise<string> {
+  // SSRF 纵深防御（W8）：baseUrl 虽全部来自部署期 env 常量（当前仅 api.openai.com），
+  // 仍在出口处限定 http/https 协议，杜绝未来配置项引入异常 scheme 的通道
+  if (!/^https?:\/\//.test(opts.baseUrl)) {
+    throw new Error(`chatCompletion: baseUrl must be http(s), got: ${opts.baseUrl.slice(0, 40)}`);
+  }
   const response = await fetch(`${opts.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
