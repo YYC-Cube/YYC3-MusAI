@@ -860,12 +860,13 @@ Deno.test('upload: 单文件上传校验与成功', async () => {
   assertEquals(invalidCover.status, 200);
   assertEquals((await jsonBody(invalidCover)).media.coverPath, null);
 
-  // 存储层故障（本地写盘失败：userId 含 NUL 字节使路径非法）→ 500
+  // 恶意 userId（含 NUL 字节的路径穿越尝试）→ 入口 400 拒绝（W8 安全加固：
+  // 此前依赖写盘失败兜底 500，现于路由入口校验 [A-Za-z0-9_-]{1,64} 提前拒绝）
   const uploadFail = await request(app, `${P}/upload/media`, {
     body: { fileBase64: 'AAAA', mimeType: 'audio/mpeg', title: 'Fail', userId: 'bad\u0000user' },
   });
-  assertEquals(uploadFail.status, 500);
-  assertMatch((await jsonBody(uploadFail)).error, /Upload failed/);
+  assertEquals(uploadFail.status, 400);
+  assertMatch((await jsonBody(uploadFail)).error, /Invalid userId/);
 
   const tooLarge = await request(app, `${P}/upload/media`, {
     body: {
@@ -951,21 +952,16 @@ Deno.test('upload: 分片上传全流程', async () => {
   });
   assertEquals(missingComplete.status, 404);
 
-  // 完成阶段存储失败（userId 含 NUL 字节使本地写盘失败）
-  const init2 = await jsonBody(await request(app, `${P}/upload/chunk/init`, {
+  // 恶意 userId 的分片会话创建 → 入口 400 拒绝（W8 安全加固：路径穿越尝试提前拦截，
+  // 不再依赖 finalize 阶段写盘失败兜底 500）
+  const badInit = await request(app, `${P}/upload/chunk/init`, {
     body: {
       fileName: 'fail.mp3', mimeType: 'audio/mpeg', totalChunks: 1,
       totalSize: 3, title: 'Fail', userId: 'bad\u0000chunker',
     },
-  }));
-  await request(app, `${P}/upload/chunk/${init2.sessionId}`, {
-    body: { chunkIndex: 0, chunkBase64: 'AAAA' },
   });
-  const failComplete = await request(app, `${P}/upload/chunk/${init2.sessionId}/complete`, {
-    method: 'POST',
-  });
-  assertEquals(failComplete.status, 500);
-  assertMatch((await jsonBody(failComplete)).error, /finalization failed/);
+  assertEquals(badInit.status, 400);
+  assertMatch((await jsonBody(badInit)).error, /Invalid userId/);
 });
 
 Deno.test('upload: 歌词保存/读取', async () => {

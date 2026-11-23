@@ -230,6 +230,11 @@ async function finalizeUpload(
     tags: string[]; coverBase64?: string; coverMimeType?: string;
   }
 ): Promise<{ media: MediaMeta & { signedUrl: string | null; coverSignedUrl: string | null } }> {
+  // 路径穿越守卫（W8 安全加固，Mimosa high）：userId 为请求可控值，
+  // 直接参与 path.join 存储路径——只允许字母数字下划线连字符，1–64 位
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) {
+    throw new Error(`Invalid userId: ${JSON.stringify(userId.slice(0, 32))}`);
+  }
   const mediaId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ext = getExtension(opts.mimeType);
   const filePath = path.join(UPLOAD_DIR, userId, `${mediaId}.${ext}`);
@@ -341,6 +346,9 @@ export function registerUploadRoutes(app: any) {
       }
 
       const userId = body.userId || 'anon';
+      if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) {
+        return c.json({ error: 'Invalid userId: use [A-Za-z0-9_-]{1,64}' }, 400);
+      }
       const userName = body.userName || 'Anonymous';
 
       const result = await finalizeUpload(fileBytes, userId, userName, {
@@ -368,6 +376,9 @@ export function registerUploadRoutes(app: any) {
       }
       const data = parsed.data;
       const userId = body.userId || 'anon';
+      if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) {
+        return c.json({ error: 'Invalid userId: use [A-Za-z0-9_-]{1,64}' }, 400);
+      }
       const userName = body.userName || 'Anonymous';
 
       const sessionId = `cs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
