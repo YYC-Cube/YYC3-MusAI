@@ -66,7 +66,9 @@ app.use(
   "/*",
   cors({
     origin: (origin: string) => {
-      if (!origin) return '*';
+      // 安全加固（W8）：无 Origin 属同源/服务端调用，CORS 本不适用——不再回退通配符放行
+      // （ Mimosa high：CORS 过度开放；同源请求与 curl 类非浏览器客户端无需 ACAO 头）
+      if (!origin) return '';
       if (isLocalOrigin(origin)) return origin;
       if (readAllowedOrigins().includes(origin)) return origin;
       console.log(`[CORS] blocked origin: ${origin}`);

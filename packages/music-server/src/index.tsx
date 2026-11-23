@@ -58,8 +58,9 @@ app.use(
   "/*",
   cors({
     origin: (origin: string) => {
-      // Allow Figma Make proxy domains and local development
-      if (!origin) return '*';
+      // 安全加固（W8）：无 Origin 属同源/服务端调用，CORS 本不适用——不再回退通配符放行
+      if (!origin) return '';
+      // Figma Make 预览域（后缀白名单，限定 https 子域）与本地开发
       if (
         origin.endsWith('.figma.site') ||
         origin.endsWith('.supabase.co') ||
@@ -67,9 +68,9 @@ app.use(
       ) {
         return origin;
       }
-      // Fallback: allow with log for auditing (can tighten to reject later)
+      // 未识别来源：拒绝并审计（此前放行任意来源，Mimosa 标记 CORS 过度开放）
       console.log(`[CORS] Unrecognized origin: ${origin}`);
-      return origin;
+      return '';
     },
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

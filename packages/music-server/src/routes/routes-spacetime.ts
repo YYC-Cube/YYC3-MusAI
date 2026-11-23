@@ -323,7 +323,12 @@ export function registerSpacetimeRoutes(app: any) {
       const { audioBase64, language } = body;
       if (!audioBase64) return c.json({ error: 'audioBase64 required' }, 400);
       const localApiUrl = process.env.DMUSIC_LOCAL_API;
-      if (localApiUrl) {
+      // SSRF 加固（W8）：env 值属部署期信任边界，但仍限定 http/https 协议，
+      // 防 file:/data: 等异常 scheme 进入 fetch 通道（Mimosa 标记位）
+      if (
+        localApiUrl &&
+        (localApiUrl.startsWith('https://') || localApiUrl.startsWith('http://'))
+      ) {
         try {
           const resp = await fetch(`${localApiUrl}/api/v1/stt/transcribe`, {
             method: 'POST',
