@@ -5,13 +5,13 @@
  * Extracted from index.tsx for modularization.
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-import * as kv from "./kv_store.tsx";
-import { requireAuth, ROUTE_PREFIX } from "./server-utils.ts";
-import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
+import { createClient } from "@supabase/supabase-js";
+import * as kv from "../services/kv_store.ts";
+import { requireAuth, ROUTE_PREFIX } from "../services/server-utils.ts";
+import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "../services/rate-limit.ts";
 import {
   validate, spaceTimeMessageSchema, spaceTimeReplySchema, timeCapsuleSchema,
-} from "./validation.ts";
+} from "../services/validation.ts";
 
 const P = ROUTE_PREFIX;
 
@@ -23,7 +23,7 @@ let voiceBucketReady = false;
 async function ensureVoiceBucket() {
   if (voiceBucketReady) return;
   try {
-    const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data: buckets } = await sb.storage.listBuckets();
     if (!buckets?.some((b: any) => b.name === VOICE_BUCKET)) {
       await sb.storage.createBucket(VOICE_BUCKET, { public: false });
@@ -96,7 +96,7 @@ export function registerSpacetimeRoutes(app: any) {
       const body = await c.req.json();
       const { userId } = body;
       const existing = await kv.get("spacetime:messages");
-      let messages = existing ? JSON.parse(existing as string) : [];
+      const messages = existing ? JSON.parse(existing as string) : [];
       const idx = messages.findIndex((m: any) => m.id === messageId);
       if (idx === -1) return c.json({ error: "Message not found" }, 404);
 
@@ -138,7 +138,7 @@ export function registerSpacetimeRoutes(app: any) {
       await kv.set(repliesKey, JSON.stringify(replies));
 
       const existing = await kv.get("spacetime:messages");
-      let messages = existing ? JSON.parse(existing as string) : [];
+      const messages = existing ? JSON.parse(existing as string) : [];
       const idx = messages.findIndex((m: any) => m.id === messageId);
       if (idx >= 0) {
         messages[idx].replies = (messages[idx].replies || 0) + 1;
@@ -235,7 +235,7 @@ export function registerSpacetimeRoutes(app: any) {
     const capsuleId = c.req.param("capsuleId");
     try {
       const existing = await kv.get("spacetime:capsules");
-      let capsules = existing ? JSON.parse(existing as string) : [];
+      const capsules = existing ? JSON.parse(existing as string) : [];
       const idx = capsules.findIndex((cap: any) => cap.id === capsuleId);
       if (idx === -1) return c.json({ error: "Capsule not found" }, 404);
       capsules[idx].likes = (capsules[idx].likes || 0) + 1;
@@ -256,7 +256,7 @@ export function registerSpacetimeRoutes(app: any) {
       if (!lat && !lng) return c.json({ messages: [] });
 
       const existing = await kv.get("spacetime:messages");
-      let messages = existing ? JSON.parse(existing as string) : [];
+      const messages = existing ? JSON.parse(existing as string) : [];
 
       const toRad = (d: number) => d * Math.PI / 180;
       const haversine = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -288,7 +288,7 @@ export function registerSpacetimeRoutes(app: any) {
       const { userId, audioBase64, mimeType } = body;
       if (!userId || !audioBase64) return c.json({ error: 'userId and audioBase64 required' }, 400);
       await ensureVoiceBucket();
-      const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const base64Data = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
       const binaryStr = atob(base64Data);
       const bytes = new Uint8Array(binaryStr.length);
@@ -309,21 +309,26 @@ export function registerSpacetimeRoutes(app: any) {
       const filePath = c.req.query("path");
       if (!filePath) return c.json({ error: 'path query required' }, 400);
       await ensureVoiceBucket();
-      const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const { data, error } = await sb.storage.from(VOICE_BUCKET).createSignedUrl(filePath, 3600);
       if (error) return c.json({ error: `URL failed: ${error.message}` }, 500);
       return c.json({ signedUrl: data?.signedUrl });
     } catch (error) { console.log('Voice URL error:', error); return c.json({ error: `Failed: ${error}` }, 500); }
   });
 
-  // --- STT Proxy ---
-  app.post(`${P}/stt/transcribe`, async (c: any) => {
+  // --- STT Proxy（避免与 routes-ai 的 /stt/transcribe 重复注册） ---
+  app.post(`${P}/voice/stt`, async (c: any) => {
     try {
       const body = await c.req.json();
       const { audioBase64, language } = body;
       if (!audioBase64) return c.json({ error: 'audioBase64 required' }, 400);
-      const localApiUrl = Deno.env.get('DMUSIC_LOCAL_API');
-      if (localApiUrl) {
+      const localApiUrl = process.env.DMUSIC_LOCAL_API;
+      // SSRF 加固（W8）：env 值属部署期信任边界，但仍限定 http/https 协议，
+      // 防 file:/data: 等异常 scheme 进入 fetch 通道（Mimosa 标记位）
+      if (
+        localApiUrl &&
+        (localApiUrl.startsWith('https://') || localApiUrl.startsWith('http://'))
+      ) {
         try {
           const resp = await fetch(`${localApiUrl}/api/v1/stt/transcribe`, {
             method: 'POST',

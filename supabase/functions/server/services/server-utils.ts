@@ -9,8 +9,10 @@
  *   - Route prefix constant
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-import * as kv from "./kv_store.tsx";
+import { kv } from "./kv.ts";
+import { getUserFromRequest as getUserFromAuth } from "./auth.ts";
+
+export { kv };
 
 // ==========================================
 // Constants
@@ -216,20 +218,8 @@ export async function registerSongId(songId: string): Promise<void> {
 // ==========================================
 
 export async function getUserFromRequest(c: any): Promise<{ id: string; email: string; role?: string } | null> {
-  const accessToken = c.req.header('Authorization')?.split(' ')[1];
-  if (!accessToken) return null;
-  try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
-    const { data, error } = await supabase.auth.getUser(accessToken);
-    if (error || !data?.user) return null;
-    const roleVal = await kv.get(`user:${data.user.id}:role`);
-    return { id: data.user.id, email: data.user.email || '', role: (roleVal as string) || 'user' };
-  } catch {
-    return null;
-  }
+  const authorization = c.req.header('Authorization') ?? null;
+  return getUserFromAuth(authorization);
 }
 
 export async function requireAuth(c: any, next: () => Promise<void>) {
@@ -241,19 +231,7 @@ export async function requireAuth(c: any, next: () => Promise<void>) {
   return next();
 }
 
-// ==========================================
-// Supabase Admin Client Factory
-// ==========================================
-
-export function createAdminClient() {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
-}
-
-// Re-export kv for convenience
-export { kv };
+// kv 已在顶部按 KV_DRIVER 双驱导出，路由层直接从 server-utils 导入使用
 
 // ==========================================
 // §8.2 — Shared Work Helpers

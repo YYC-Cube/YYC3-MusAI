@@ -7,8 +7,7 @@
  *   GET /diagnostics/health     — 系统健康检查（含缓存、Auth、Storage 状态）
  */
 
-import { ROUTE_PREFIX, kv, queryCache, requireAuth, createAdminClient } from "./server-utils.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { ROUTE_PREFIX, kv, queryCache } from "../services/server-utils.ts";
 
 // KV prefix groups for statistics
 const KV_PREFIX_GROUPS = [
@@ -47,32 +46,14 @@ export function registerDiagnosticsRoutes(app: any) {
   // ---- GET /diagnostics/kv-stats — KV 表行数统计 ----
   app.get(`${ROUTE_PREFIX}/diagnostics/kv-stats`, async (c: any) => {
     try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
-
-      // 1. Total row count
-      const { count: totalRows, error: countError } = await supabase
-        .from('kv_store_f626b673')
-        .select('key', { count: 'exact', head: true });
-
-      if (countError) {
-        console.log(`[Diagnostics] Count error: ${countError.message}`);
-        return c.json({ error: `Failed to count rows: ${countError.message}` }, 500);
+      // 1. Fetch all keys via KV 驱动（getKeysByPrefix 返回键列表）
+      let keys: string[] = [];
+      try {
+        const all = await kv.getKeysByPrefix("");
+        keys = Array.isArray(all) ? all.map(String) : [];
+      } catch {
+        keys = [];
       }
-
-      // 2. Fetch all keys (for prefix grouping)
-      const { data: allKeys, error: keysError } = await supabase
-        .from('kv_store_f626b673')
-        .select('key');
-
-      if (keysError) {
-        console.log(`[Diagnostics] Keys error: ${keysError.message}`);
-        return c.json({ error: `Failed to fetch keys: ${keysError.message}` }, 500);
-      }
-
-      const keys: string[] = allKeys?.map((r: any) => r.key) || [];
 
       // 3. Group by prefix
       const prefixStats: Array<{
@@ -134,7 +115,7 @@ export function registerDiagnosticsRoutes(app: any) {
 
       const result = {
         summary: {
-          totalRows: totalRows || keys.length,
+          totalRows: keys.length,
           totalPrefixGroups: KV_PREFIX_GROUPS.length,
           uncategorizedCount: uncategorized.length,
           estimatedSizeKB,
@@ -169,31 +150,26 @@ export function registerDiagnosticsRoutes(app: any) {
       checks.kvStore = { status: 'error', latencyMs: Date.now() - kvStart, detail: String(e) };
     }
 
-    // 2. Auth service
+    // 2. Auth service（应用层 JWT）
     const authStart = Date.now();
     try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
-      const { error } = await supabase.auth.getSession();
-      checks.auth = { status: error ? 'degraded' : 'ok', latencyMs: Date.now() - authStart };
+      const jwtConfigured = !!process.env.JWT_SECRET;
+      checks.auth = {
+        status: jwtConfigured ? 'ok' : 'degraded',
+        latencyMs: Date.now() - authStart,
+        detail: jwtConfigured ? 'JWT_SECRET configured' : 'JWT_SECRET missing',
+      };
     } catch (e) {
       checks.auth = { status: 'error', latencyMs: Date.now() - authStart, detail: String(e) };
     }
 
-    // 3. Storage service
-    const storageStart = Date.now();
+    // 3. DB 连接池（musai schema）
+    const dbStart = Date.now();
     try {
-      const adminClient = createAdminClient();
-      const { data: buckets, error } = await adminClient.storage.listBuckets();
-      checks.storage = {
-        status: error ? 'degraded' : 'ok',
-        latencyMs: Date.now() - storageStart,
-        detail: `${buckets?.length || 0} bucket(s)`,
-      };
+      await kv.get('__diagnostics_health__');
+      checks.db = { status: 'ok', latencyMs: Date.now() - dbStart };
     } catch (e) {
-      checks.storage = { status: 'error', latencyMs: Date.now() - storageStart, detail: String(e) };
+      checks.db = { status: 'error', latencyMs: Date.now() - dbStart, detail: String(e) };
     }
 
     // 4. Query Cache
@@ -201,7 +177,7 @@ export function registerDiagnosticsRoutes(app: any) {
 
     // 5. OpenAI key presence
     checks.openAI = {
-      status: Deno.env.get('OPENAI_API_KEY') ? 'configured' : 'missing',
+      status: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
     };
 
     const allOk = Object.values(checks).every(c => c.status === 'ok' || c.status === 'configured');
@@ -211,14 +187,12 @@ export function registerDiagnosticsRoutes(app: any) {
       timestamp: new Date().toISOString(),
       checks,
       environment: {
-        supabaseUrl: Deno.env.get('SUPABASE_URL') ? 'configured' : 'missing',
-        serviceRoleKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'configured' : 'missing',
-        anonKey: Deno.env.get('SUPABASE_ANON_KEY') ? 'configured' : 'missing',
-        dbUrl: Deno.env.get('SUPABASE_DB_URL') ? 'configured' : 'missing',
-        openAiKey: Deno.env.get('OPENAI_API_KEY') ? 'configured' : 'missing',
+        jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing',
+        db: process.env.PG_HOST ? 'configured' : 'missing',
+        openAiKey: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
       },
       routeModules: 15,
-      version: 'v11.1+',
+      version: 'v11.2+',
     });
   });
 }

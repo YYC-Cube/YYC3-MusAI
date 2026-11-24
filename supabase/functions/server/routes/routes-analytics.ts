@@ -5,8 +5,8 @@
  * §6.2 — QueryCache applied to leaderboard (TTL 30s) and analytics overview (TTL 20s)
  */
 
-import { ROUTE_PREFIX, kv, wilsonScore, getAllSongIds, registerSongId, queryCache } from "./server-utils.ts";
-import { aiModelManager } from "./ai-model-manager.ts";
+import { ROUTE_PREFIX, kv, wilsonScore, getAllSongIds, queryCache } from "../services/server-utils.ts";
+import { aiModelManager } from "../services/ai-model-manager.ts";
 
 // ==========================================
 // Internal: compute leaderboard data (reused by cache)
@@ -160,7 +160,7 @@ export function registerAnalyticsRoutes(app: any) {
 
       const prefKey = `user:${userId}:emotion-prefs`;
       const prefVal = await kv.get(prefKey);
-      let prefs: Record<string, number> = prefVal
+      const prefs: Record<string, number> = prefVal
         ? JSON.parse(prefVal as string)
         : { happy: 0, sad: 0, energetic: 0, calm: 0, neutral: 0 };
 

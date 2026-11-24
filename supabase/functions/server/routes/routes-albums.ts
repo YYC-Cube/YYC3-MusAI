@@ -19,10 +19,14 @@
  *   album:likes:{albumId}                 — Like count (number)
  */
 
-import { ROUTE_PREFIX, kv, requireAuth, queryCache } from "./server-utils.ts";
-import { rateLimit, RATE_STARPOWER } from "./rate-limit.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { validate, albumCreateSchema, albumPurchaseSchema } from "./validation.ts";
+import { ROUTE_PREFIX, kv, requireAuth, queryCache } from "../services/server-utils.ts";
+import { rateLimit, RATE_STARPOWER } from "../services/rate-limit.ts";
+import { validate, albumCreateSchema, albumPurchaseSchema } from "../services/validation.ts";
+import {
+  getAlbumByLegacyId, listAlbums as listAlbumsFromDb, listAlbumsByCreator,
+  upsertAlbum, updateAlbumLikes, addAlbumOwnership, listOwnedAlbumIds,
+} from "../services/db.ts";
+import { apiError, parsePagination, pageMeta } from "../services/api-contract.ts";
 
 // ==========================================
 // Types
@@ -183,6 +187,9 @@ async function getAlbumIndex(): Promise<string[]> {
 }
 
 async function getAlbum(albumId: string): Promise<Album | null> {
+  // P1b: 读优先关系表（legacy_id 对齐），未命中回退 KV
+  const fromDb = await getAlbumByLegacyId(albumId);
+  if (fromDb) return fromDb as Album;
   const raw = await kv.get(`album:${albumId}`);
   if (!raw) return null;
   try { return JSON.parse(raw as string); } catch { return null; }
@@ -209,8 +216,21 @@ export function registerAlbumRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/albums`, async (c: any) => {
     try {
       await ensureSeed();
+      // A3：统一分页（?page=&limit=），响应键 albums 不变
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
       const cached = queryCache.get<Album[]>('albums:list');
-      if (cached) return c.json({ albums: cached, total: cached.length });
+      if (cached) {
+        const items = cached.slice(pager.offset, pager.offset + pager.limit);
+        return c.json({ albums: items, ...pageMeta(cached.length, pager) });
+      }
+
+      // P1b: 读优先关系表，空则回退 KV 索引
+      const fromDb = await listAlbumsFromDb();
+      if (fromDb.length > 0) {
+        queryCache.set('albums:list', fromDb, 30_000);
+        const items = fromDb.slice(pager.offset, pager.offset + pager.limit);
+        return c.json({ albums: items, ...pageMeta(fromDb.length, pager) });
+      }
 
       const albumIds = await getAlbumIndex();
       const albums: Album[] = [];
@@ -226,10 +246,11 @@ export function registerAlbumRoutes(app: any) {
       // Sort by release date descending
       albums.sort((a, b) => b.releaseDate - a.releaseDate);
       queryCache.set('albums:list', albums, 30_000); // 30s cache
-      return c.json({ albums, total: albums.length });
+      const items = albums.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ albums: items, ...pageMeta(albums.length, pager) });
     } catch (error) {
       console.log(`[Albums] Error listing albums:`, error);
-      return c.json({ error: 'Failed to list albums', detail: String(error) }, 500);
+      return apiError(c, 500, 'Failed to list albums', { detail: String(error) });
     }
   });
 
@@ -302,6 +323,9 @@ export function registerAlbumRoutes(app: any) {
       const creatorAlbums: string[] = creatorRaw ? JSON.parse(creatorRaw as string) : [];
       creatorAlbums.push(albumId);
       await kv.set(`album:creator:${creatorId}`, JSON.stringify(creatorAlbums));
+
+      // P1b: 关系表侧尽力同步（uuid 创作者才落库，system/demo 仅留在 KV）
+      await upsertAlbum(album);
 
       queryCache.invalidatePrefix('albums:');
       return c.json({ success: true, album });
@@ -404,6 +428,10 @@ export function registerAlbumRoutes(app: any) {
       collection.push(albumId);
       await kv.set(`album:collection:${userId}`, JSON.stringify(collection));
 
+      // P1b: 关系表侧尽力同步（专辑状态 + 购买归属）
+      await upsertAlbum(album);
+      await addAlbumOwnership(albumId, userId, album.price, ownership.edition);
+
       // Give Star Power to creator (80% of price)
       if (album.creatorId !== 'system') {
         const creatorSpRaw = await kv.get(`user:${album.creatorId}:starpower`);
@@ -432,7 +460,9 @@ export function registerAlbumRoutes(app: any) {
     const userId = c.req.param('userId');
     try {
       await ensureSeed();
-      const albumIds = await getUserCollection(userId);
+      // P1b: 读优先关系表归属，空则回退 KV 收藏索引
+      const dbOwnedIds = await listOwnedAlbumIds(userId);
+      const albumIds = dbOwnedIds.length > 0 ? dbOwnedIds : await getUserCollection(userId);
       const albums: Array<Album & { ownership: OwnershipRecord }> = [];
 
       for (const id of albumIds) {
@@ -441,6 +471,12 @@ export function registerAlbumRoutes(app: any) {
         if (album && ownershipRaw) {
           const ownership = JSON.parse(ownershipRaw as string);
           albums.push({ ...album, ownership });
+        } else if (album && dbOwnedIds.includes(id)) {
+          // 关系表有归属但 KV 无明细：给出最小可用归属信息
+          albums.push({
+            ...album,
+            ownership: { albumId: id, userId, purchasedAt: 0, price: album.price, edition: 0 },
+          });
         }
       }
 
@@ -456,6 +492,11 @@ export function registerAlbumRoutes(app: any) {
     const userId = c.req.param('userId');
     try {
       await ensureSeed();
+      // P1b: 读优先关系表，空则回退 KV 创作者索引
+      const dbAlbums = await listAlbumsByCreator(userId);
+      if (dbAlbums.length > 0) {
+        return c.json({ albums: dbAlbums, total: dbAlbums.length });
+      }
       const creatorRaw = await kv.get(`album:creator:${userId}`);
       const albumIds: string[] = creatorRaw ? JSON.parse(creatorRaw as string) : [];
       const albums: Album[] = [];
@@ -485,6 +526,9 @@ export function registerAlbumRoutes(app: any) {
         album.likes = likes;
         await kv.set(`album:${albumId}`, JSON.stringify(album));
       }
+
+      // P1b: 关系表侧尽力同步点赞数
+      await updateAlbumLikes(albumId, likes);
 
       queryCache.invalidatePrefix('albums:');
       return c.json({ likes });

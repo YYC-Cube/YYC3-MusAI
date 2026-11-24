@@ -111,6 +111,7 @@ export interface StreamTranscribeChunk {
 export interface ModelUsageStats {
   totalCalls: number;
   openaiCalls: number;
+  localCalls: number;
   templateFallbacks: number;
   cacheHits: number;
   estimatedCostUSD: number;
@@ -124,96 +125,135 @@ export interface ModelUsageStats {
 interface ModelProvider {
   name: string;
   isAvailable(): boolean;
-  generateLyrics(req: LyricsRequest): Promise<string[]>;
+  generateLyrics?(req: LyricsRequest): Promise<string[]>;
   analyzeEmotion?(req: EmotionAnalysisRequest): Promise<EmotionAnalysisResponse>;
   transcribeAudio?(req: TranscribeRequest): Promise<TranscribeResponse>;
 }
 
 // ==========================================
-// Provider 1: OpenAI GPT-4o-mini
+// 共享工具：OpenAI 兼容 Chat Completions
+//
+// 云端 OpenAI 与本地 vLLM（NVIDIA Sync Model Launcher）共用同一套
+// 请求/解析逻辑，仅 baseUrl / apiKey / model 不同。
 // ==========================================
 
-class OpenAIProvider implements ModelProvider {
-  name = 'openai';
+const OPENAI_BASE_URL = 'https://api.openai.com/v1';
+const OPENAI_MODEL = 'gpt-4o-mini';
 
-  isAvailable(): boolean {
-    const key = Deno.env.get('OPENAI_API_KEY');
-    return !!key && key.length > 10 && key !== 'sk-placeholder';
+interface ChatOptions {
+  baseUrl: string;
+  apiKey?: string;
+  model: string;
+  /** 单轮快捷写法 */
+  system?: string;
+  user?: string;
+  /** 多轮对话（优先于 system/user） */
+  messages?: Array<{ role: string; content: string }>;
+  temperature: number;
+  maxTokens: number;
+}
+
+/** 缓存各 baseUrl 解析出的模型 id（vLLM /v1/models） */
+const modelIdCache = new Map<string, string>();
+
+/** 从 OpenAI 兼容端点的 /models 解析首个模型 id */
+async function resolveModelId(baseUrl: string, apiKey?: string): Promise<string | null> {
+  const cached = modelIdCache.get(baseUrl);
+  if (cached) return cached;
+  try {
+    const res = await fetch(`${baseUrl}/models`, {
+      headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const id = data?.data?.[0]?.id;
+    if (typeof id === 'string' && id) {
+      modelIdCache.set(baseUrl, id);
+      return id;
+    }
+  } catch {
+    // 端点不可达时返回 null，由调用方决定降级
+  }
+  return null;
+}
+
+/** 调用 OpenAI 兼容 /chat/completions，返回首条消息内容 */
+async function chatCompletion(opts: ChatOptions): Promise<string> {
+  // SSRF 纵深防御（W8）：baseUrl 虽全部来自部署期 env 常量（当前仅 api.openai.com），
+  // 仍在出口处限定 http/https 协议，杜绝未来配置项引入异常 scheme 的通道
+  if (!/^https?:\/\//.test(opts.baseUrl)) {
+    throw new Error(`chatCompletion: baseUrl must be http(s), got: ${opts.baseUrl.slice(0, 40)}`);
+  }
+  const response = await fetch(`${opts.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(opts.apiKey ? { Authorization: `Bearer ${opts.apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model: opts.model,
+      messages: opts.messages ?? [
+        { role: 'system', content: opts.system ?? '' },
+        { role: 'user', content: opts.user ?? '' },
+      ],
+      temperature: opts.temperature,
+      max_tokens: opts.maxTokens,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    throw new Error(`Chat completion error ${response.status}: ${errText.slice(0, 200)}`);
   }
 
-  async generateLyrics(req: LyricsRequest): Promise<string[]> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content || '';
+}
 
-    const themeLabels: Record<string, string> = {
-      happy: 'joyful and uplifting', sad: 'melancholic and reflective',
-      energetic: 'high-energy and powerful', calm: 'peaceful and serene',
-      love: 'romantic and tender',
-    };
+/** 构建歌词生成 prompt（云端与本地共用） */
+function buildLyricsPrompts(req: LyricsRequest): { system: string; user: string } {
+  const themeLabels: Record<string, string> = {
+    happy: 'joyful and uplifting', sad: 'melancholic and reflective',
+    energetic: 'high-energy and powerful', calm: 'peaceful and serene',
+    love: 'romantic and tender',
+  };
 
-    const themeDesc = themeLabels[req.theme] || req.theme;
-    const lineCount = req.lines || 8;
-    const keywordsHint = req.keywords && req.keywords.length > 0
-      ? `\nIncorporate these keywords naturally: ${req.keywords.join(', ')}`
-      : '';
-    const langHint = req.language === 'zh' ? '\nWrite the lyrics in Chinese (中文).' : '';
+  const themeDesc = themeLabels[req.theme] || req.theme;
+  const lineCount = req.lines || 8;
+  const keywordsHint = req.keywords && req.keywords.length > 0
+    ? `\nIncorporate these keywords naturally: ${req.keywords.join(', ')}`
+    : '';
+  const langHint = req.language === 'zh' ? '\nWrite the lyrics in Chinese (中文).' : '';
 
-    const systemPrompt = `You are a professional songwriter. Generate exactly ${lineCount} lines of song lyrics.
+  const system = `You are a professional songwriter. Generate exactly ${lineCount} lines of song lyrics.
 Return ONLY the lyrics, one line per line. No numbering, no titles, no explanations.`;
 
-    const userPrompt = `Write ${lineCount} lines of ${themeDesc} song lyrics.${keywordsHint}${langHint}
+  const user = `Write ${lineCount} lines of ${themeDesc} song lyrics.${keywordsHint}${langHint}
 The lyrics should be poetic, rhythmic, and emotionally resonant.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.85,
-        max_tokens: 500,
-      }),
-    });
+  return { system, user };
+}
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`OpenAI API error ${response.status}: ${errText.slice(0, 200)}`);
-    }
+/** 解析歌词文本为行数组 */
+function parseLyricsContent(content: string, lineCount: number): string[] {
+  return content
+    .split('\n')
+    .map((l: string) => l.trim())
+    .filter((l: string) => l.length > 0)
+    .slice(0, lineCount);
+}
 
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content || '';
-    const lines = content
-      .split('\n')
-      .map((l: string) => l.trim())
-      .filter((l: string) => l.length > 0)
-      .slice(0, lineCount);
+/** 构建评审 prompt（云端与本地共用） */
+function buildJudgePrompts(req: EmotionAnalysisRequest): { system: string; user: string } {
+  const lyricsText = req.workLyrics && req.workLyrics.length > 0
+    ? `\nLyrics:\n${req.workLyrics.join('\n')}`
+    : '';
 
-    if (lines.length === 0) {
-      throw new Error('OpenAI returned empty lyrics');
-    }
+  const challengeContext = req.challengeTheme
+    ? `\nChallenge theme: "${req.challengeTheme}" (tags: ${(req.challengeTags || []).join(', ')})`
+    : '';
 
-    return lines;
-  }
-
-  async analyzeEmotion(req: EmotionAnalysisRequest): Promise<EmotionAnalysisResponse> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
-
-    const lyricsText = req.workLyrics && req.workLyrics.length > 0
-      ? `\nLyrics:\n${req.workLyrics.join('\n')}`
-      : '';
-
-    const challengeContext = req.challengeTheme
-      ? `\nChallenge theme: "${req.challengeTheme}" (tags: ${(req.challengeTags || []).join(', ')})`
-      : '';
-
-    const systemPrompt = `You are an expert music critic and AI judge for a creative challenge competition.
+  const system = `You are an expert music critic and AI judge for a creative challenge competition.
 Evaluate the submitted work and provide scores in exactly this JSON format:
 {
   "themeRelevance": <0-30>,
@@ -225,66 +265,98 @@ Evaluate the submitted work and provide scores in exactly this JSON format:
 Be fair but encouraging. Score realistically — average works should score 55-70 total, exceptional works 80-95.
 Return ONLY valid JSON, no markdown.`;
 
-    const userPrompt = `Evaluate this music submission:
+  const user = `Evaluate this music submission:
 Title: "${req.workTitle}"
 Theme/mood: "${req.workTheme || 'unspecified'}"${challengeContext}${lyricsText}
 
 Provide your JSON evaluation.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.4,
-        max_tokens: 300,
-      }),
+  return { system, user };
+}
+
+/** 解析评审 JSON 响应 */
+function parseJudgeContent(content: string, provider: string): EmotionAnalysisResponse {
+  const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  let parsed: any;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    throw new Error(`Failed to parse AI judge response: ${content.slice(0, 200)}`);
+  }
+
+  const breakdown = {
+    themeRelevance: Math.min(30, Math.max(0, Number(parsed.themeRelevance) || 15)),
+    emotionalDepth: Math.min(30, Math.max(0, Number(parsed.emotionalDepth) || 15)),
+    creativity: Math.min(25, Math.max(0, Number(parsed.creativity) || 12)),
+    technicalQuality: Math.min(15, Math.max(0, Number(parsed.technicalQuality) || 7)),
+  };
+
+  const totalScore = breakdown.themeRelevance + breakdown.emotionalDepth + breakdown.creativity + breakdown.technicalQuality;
+
+  return {
+    score: Math.round(totalScore * 10) / 10,
+    breakdown,
+    feedback: parsed.feedback || 'Good effort!',
+    provider,
+    cached: false,
+  };
+}
+
+// ==========================================
+// Provider 1: OpenAI GPT-4o-mini
+// ==========================================
+
+class OpenAIProvider implements ModelProvider {
+  name = 'openai';
+
+  isAvailable(): boolean {
+    const key = process.env.OPENAI_API_KEY;
+    return !!key && key.length > 10 && key !== 'sk-placeholder';
+  }
+
+  async generateLyrics(req: LyricsRequest): Promise<string[]> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
+
+    const { system, user } = buildLyricsPrompts(req);
+    const content = await chatCompletion({
+      baseUrl: OPENAI_BASE_URL,
+      apiKey,
+      model: OPENAI_MODEL,
+      system,
+      user,
+      temperature: 0.85,
+      maxTokens: 500,
     });
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`OpenAI API error ${response.status}: ${errText.slice(0, 200)}`);
+    const lines = parseLyricsContent(content, req.lines || 8);
+    if (lines.length === 0) {
+      throw new Error('OpenAI returned empty lyrics');
     }
 
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content || '';
+    return lines;
+  }
 
-    // Parse JSON from response (strip markdown fences if present)
-    const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    let parsed: any;
-    try {
-      parsed = JSON.parse(jsonStr);
-    } catch {
-      throw new Error(`Failed to parse AI judge response: ${content.slice(0, 200)}`);
-    }
+  async analyzeEmotion(req: EmotionAnalysisRequest): Promise<EmotionAnalysisResponse> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
 
-    const breakdown = {
-      themeRelevance: Math.min(30, Math.max(0, Number(parsed.themeRelevance) || 15)),
-      emotionalDepth: Math.min(30, Math.max(0, Number(parsed.emotionalDepth) || 15)),
-      creativity: Math.min(25, Math.max(0, Number(parsed.creativity) || 12)),
-      technicalQuality: Math.min(15, Math.max(0, Number(parsed.technicalQuality) || 7)),
-    };
+    const { system, user } = buildJudgePrompts(req);
+    const content = await chatCompletion({
+      baseUrl: OPENAI_BASE_URL,
+      apiKey,
+      model: OPENAI_MODEL,
+      system,
+      user,
+      temperature: 0.4,
+      maxTokens: 300,
+    });
 
-    const totalScore = breakdown.themeRelevance + breakdown.emotionalDepth + breakdown.creativity + breakdown.technicalQuality;
-
-    return {
-      score: Math.round(totalScore * 10) / 10,
-      breakdown,
-      feedback: parsed.feedback || 'Good effort!',
-      provider: 'openai',
-      cached: false,
-    };
+    return parseJudgeContent(content, 'openai');
   }
 
   async transcribeAudio(req: TranscribeRequest): Promise<TranscribeResponse> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
 
     // Decode base64 audio to binary
@@ -333,6 +405,147 @@ Provide your JSON evaluation.`;
       language: result.language || req.language || 'unknown',
       duration: result.duration,
       provider: 'openai',
+      cached: false,
+    };
+  }
+}
+
+// ==========================================
+// Provider 1b: OpenAI 兼容端点（vLLM / NVIDIA Sync Model Launcher）
+//
+// 环境变量：
+//   VLLM_BASE_URL  形如 http://127.0.0.1:8000/v1（必须带 /v1）
+//   VLLM_API_KEY   可选；LAN 模式启用 API Key 时填写
+//   VLLM_MODEL     可选；留空则从 /v1/models 自动解析首个模型 id
+// ==========================================
+
+class OpenAICompatibleProvider implements ModelProvider {
+  name = 'vllm';
+
+  private baseUrl(): string {
+    return (process.env.VLLM_BASE_URL ?? '').replace(/\/+$/, '');
+  }
+
+  private apiKey(): string | undefined {
+    const key = process.env.VLLM_API_KEY;
+    return key && key.trim() ? key.trim() : undefined;
+  }
+
+  isAvailable(): boolean {
+    return this.baseUrl().length > 0;
+  }
+
+  private async model(): Promise<string> {
+    const configured = process.env.VLLM_MODEL?.trim();
+    if (configured) return configured;
+    const resolved = await resolveModelId(this.baseUrl(), this.apiKey());
+    if (!resolved) {
+      throw new Error('无法从 /v1/models 解析模型 id，请设置 VLLM_MODEL');
+    }
+    return resolved;
+  }
+
+  async generateLyrics(req: LyricsRequest): Promise<string[]> {
+    const { system, user } = buildLyricsPrompts(req);
+    const content = await chatCompletion({
+      baseUrl: this.baseUrl(),
+      apiKey: this.apiKey(),
+      model: await this.model(),
+      system,
+      user,
+      temperature: 0.85,
+      maxTokens: 500,
+    });
+
+    const lines = parseLyricsContent(content, req.lines || 8);
+    if (lines.length === 0) {
+      throw new Error('vLLM returned empty lyrics');
+    }
+    return lines;
+  }
+
+  async analyzeEmotion(req: EmotionAnalysisRequest): Promise<EmotionAnalysisResponse> {
+    const { system, user } = buildJudgePrompts(req);
+    const content = await chatCompletion({
+      baseUrl: this.baseUrl(),
+      apiKey: this.apiKey(),
+      model: await this.model(),
+      system,
+      user,
+      temperature: 0.4,
+      maxTokens: 300,
+    });
+
+    return parseJudgeContent(content, 'vllm');
+  }
+}
+
+// ==========================================
+// Provider 1c: 自托管 STT（OpenAI 兼容 /v1/audio/transcriptions）
+//
+// 环境变量：
+//   STT_BASE_URL  形如 http://127.0.0.1:8001/v1（faster-whisper-server 等）
+//   STT_API_KEY   可选
+//   STT_MODEL     默认 whisper-1
+// ==========================================
+
+class OpenAICompatibleSTTProvider implements ModelProvider {
+  name = 'stt-local';
+
+  private baseUrl(): string {
+    return (process.env.STT_BASE_URL ?? '').replace(/\/+$/, '');
+  }
+
+  private apiKey(): string | undefined {
+    const key = process.env.STT_API_KEY;
+    return key && key.trim() ? key.trim() : undefined;
+  }
+
+  private model(): string {
+    return process.env.STT_MODEL?.trim() || 'whisper-1';
+  }
+
+  isAvailable(): boolean {
+    return this.baseUrl().length > 0;
+  }
+
+  async transcribeAudio(req: TranscribeRequest): Promise<TranscribeResponse> {
+    const binaryStr = atob(req.audioBase64);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    const mimeType = req.mimeType || 'audio/webm';
+    const extMap: Record<string, string> = {
+      'audio/webm': 'webm', 'audio/mp4': 'mp4', 'audio/mpeg': 'mp3',
+      'audio/wav': 'wav', 'audio/ogg': 'ogg', 'audio/flac': 'flac',
+    };
+    const ext = extMap[mimeType] || 'webm';
+
+    const formData = new FormData();
+    formData.append('file', new Blob([bytes], { type: mimeType }), `audio.${ext}`);
+    formData.append('model', this.model());
+    if (req.language) formData.append('language', req.language);
+    formData.append('response_format', 'json');
+
+    const response = await fetch(`${this.baseUrl()}/audio/transcriptions`, {
+      method: 'POST',
+      headers: this.apiKey() ? { Authorization: `Bearer ${this.apiKey()}` } : {},
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error(`STT error ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const result = await response.json();
+    return {
+      text: result.text || '',
+      language: result.language || req.language || 'unknown',
+      duration: result.duration,
+      provider: 'stt-local',
       cached: false,
     };
   }
@@ -485,8 +698,10 @@ class AIModelManagerImpl {
   constructor() {
     // Order matters: first available provider is used
     this.providers = [
-      new OpenAIProvider(),
-      new TemplateFallbackProvider(),
+      new OpenAICompatibleSTTProvider(), // 自托管 ASR（OpenAI 兼容）
+      new OpenAICompatibleProvider(),    // 本地/局域网推理优先（vLLM / NVIDIA Sync）
+      new OpenAIProvider(),              // 云端 OpenAI
+      new TemplateFallbackProvider(),    // 零成本兜底
     ];
     console.log('[AIModelManager] Initialized with providers:', this.providers.map(p => p.name));
   }
@@ -494,14 +709,63 @@ class AIModelManagerImpl {
   /** Check which provider will be used */
   getActiveProvider(): string {
     for (const p of this.providers) {
+      if (!p.generateLyrics) continue;
       if (p.isAvailable()) return p.name;
     }
     return 'none';
   }
 
-  /** Check if real AI (OpenAI) is available */
+  /** 是否存在可用的真实模型（本地 vLLM 或云端 OpenAI） */
   isAIAvailable(): boolean {
-    return this.providers[0]?.isAvailable() ?? false;
+    return this.providers.some((p) => p.name !== 'template' && p.isAvailable());
+  }
+
+  /**
+   * 解析当前可用的对话模型配置（vLLM 优先，其次 OpenAI）。
+   * 供需要自由对话（如偏好分析）的场景复用。
+   */
+  private async chatConfig(): Promise<{ baseUrl: string; apiKey?: string; model: string; provider: string } | null> {
+    const vllmBase = (process.env.VLLM_BASE_URL ?? '').replace(/\/+$/, '');
+    if (vllmBase) {
+      const apiKey = process.env.VLLM_API_KEY?.trim() || undefined;
+      const model = process.env.VLLM_MODEL?.trim() || (await resolveModelId(vllmBase, apiKey));
+      if (model) return { baseUrl: vllmBase, apiKey, model, provider: 'vllm' };
+    }
+
+    const key = process.env.OPENAI_API_KEY;
+    if (key && key.length > 10 && key !== 'sk-placeholder') {
+      return { baseUrl: OPENAI_BASE_URL, apiKey: key, model: OPENAI_MODEL, provider: 'openai' };
+    }
+
+    return null;
+  }
+
+  /**
+   * 通用多轮对话（AI 助手）。
+   * 未配置任何对话模型时抛出 code=NO_MODEL，由路由层转 503。
+   */
+  async chat(
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+    opts: { temperature?: number; maxTokens?: number } = {},
+  ): Promise<{ content: string; provider: string }> {
+    const cfg = await this.chatConfig();
+    if (!cfg) {
+      const err: any = new Error('未配置可用的对话模型（VLLM_BASE_URL 或 OPENAI_API_KEY）');
+      err.code = 'NO_MODEL';
+      throw err;
+    }
+
+    const content = await chatCompletion({
+      baseUrl: cfg.baseUrl,
+      apiKey: cfg.apiKey,
+      model: cfg.model,
+      messages,
+      temperature: opts.temperature ?? 0.7,
+      maxTokens: opts.maxTokens ?? 800,
+    });
+
+    await this.recordUsage(cfg.provider);
+    return { content, provider: cfg.provider };
   }
 
   /** Generate lyrics with automatic fallback + caching */
@@ -524,6 +788,7 @@ class AIModelManagerImpl {
         console.log(`[AIModelManager] Provider '${provider.name}' not available, skipping`);
         continue;
       }
+      if (!provider.generateLyrics) continue;
 
       try {
         console.log(`[AIModelManager] Attempting lyrics generation with '${provider.name}'`);
@@ -626,8 +891,8 @@ class AIModelManagerImpl {
     }
 
     // Record usage (Whisper is ~$0.006/min, estimate 15s avg)
-    if (result.provider === 'openai') {
-      await this.recordUsage('openai');
+    if (result.provider !== 'template') {
+      await this.recordUsage(result.provider);
     }
 
     return result;
@@ -644,12 +909,12 @@ class AIModelManagerImpl {
       return { ...cached, cached: true };
     }
 
-    // Attempt OpenAI first
-    if (this.isAIAvailable()) {
+    // 优先本地 vLLM，其次云端 OpenAI
+    if (await this.chatConfig()) {
       try {
         const result = await this.gptAnalyzePreferences(req);
         queryCache.set(cacheKey, result, 900_000); // 15 min
-        await this.recordUsage('openai');
+        await this.recordUsage(result.provider);
         return result;
       } catch (err) {
         console.log(`[AIModelManager] GPT preference analysis failed, falling back: ${err}`);
@@ -663,10 +928,10 @@ class AIModelManagerImpl {
     return result;
   }
 
-  /** GPT-powered user preference analysis */
+  /** 模型驱动的用户偏好分析（vLLM 优先，OpenAI 兜底） */
   private async gptAnalyzePreferences(req: UserPreferenceAnalysisRequest): Promise<UserPreferenceAnalysisResponse> {
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
+    const cfg = await this.chatConfig();
+    if (!cfg) throw new Error('未配置可用的对话模型（VLLM_BASE_URL 或 OPENAI_API_KEY）');
 
     const prefsSummary = Object.entries(req.emotionPrefs)
       .sort(([, a], [, b]) => b - a)
@@ -700,30 +965,15 @@ Recent listening history:
 
 Analyze this user's music personality and suggest what they might enjoy next.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.6,
-        max_tokens: 600,
-      }),
+    const content = await chatCompletion({
+      baseUrl: cfg.baseUrl,
+      apiKey: cfg.apiKey,
+      model: cfg.model,
+      system: systemPrompt,
+      user: userPrompt,
+      temperature: 0.6,
+      maxTokens: 600,
     });
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`OpenAI API error ${response.status}: ${errText.slice(0, 200)}`);
-    }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content || '';
     const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     let parsed: any;
@@ -742,7 +992,7 @@ Analyze this user's music personality and suggest what they might enjoy next.`;
         ? parsed.engagementLevel
         : req.totalListeningEvents > 50 ? 'enthusiast' : req.totalListeningEvents > 20 ? 'regular' : 'casual',
       recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
-      provider: 'openai',
+      provider: cfg.provider,
       cached: false,
     };
   }
@@ -839,8 +1089,11 @@ Analyze this user's music personality and suggest what they might enjoy next.`;
         // GPT-4o-mini estimated cost: ~$0.00015 per 1K input tokens + $0.0006 per 1K output tokens
         // Typical lyrics request: ~200 input tokens + ~150 output tokens ≈ $0.00012
         stats.estimatedCostUSD += 0.00012;
-      } else {
+      } else if (provider === 'template') {
         stats.templateFallbacks++;
+      } else {
+        // 本地推理（vLLM / NVIDIA Sync）零边际成本
+        stats.localCalls = (stats.localCalls || 0) + 1;
       }
       await kv.set(this.usageKey, JSON.stringify(stats));
     } catch (err) {
@@ -857,6 +1110,7 @@ Analyze this user's music personality and suggest what they might enjoy next.`;
     return {
       totalCalls: 0,
       openaiCalls: 0,
+      localCalls: 0,
       templateFallbacks: 0,
       cacheHits: 0,
       estimatedCostUSD: 0,
@@ -867,7 +1121,7 @@ Analyze this user's music personality and suggest what they might enjoy next.`;
   /** Reset usage statistics */
   async resetUsageStats(): Promise<void> {
     const fresh: ModelUsageStats = {
-      totalCalls: 0, openaiCalls: 0, templateFallbacks: 0,
+      totalCalls: 0, openaiCalls: 0, localCalls: 0, templateFallbacks: 0,
       cacheHits: 0, estimatedCostUSD: 0, lastReset: Date.now(),
     };
     await kv.set(this.usageKey, JSON.stringify(fresh));

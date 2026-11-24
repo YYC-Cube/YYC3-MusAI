@@ -5,10 +5,10 @@
  * Extracted from index.tsx for modularization.
  */
 
-import * as kv from "./kv_store.tsx";
-import { requireAuth, ROUTE_PREFIX } from "./server-utils.ts";
-import { aiModelManager } from "./ai-model-manager.ts";
-import { validate, challengeSubmitSchema, challengeVoteSchema } from "./validation.ts";
+import * as kv from "../services/kv_store.ts";
+import { requireAuth, ROUTE_PREFIX } from "../services/server-utils.ts";
+import { aiModelManager } from "../services/ai-model-manager.ts";
+import { validate, challengeSubmitSchema, challengeVoteSchema } from "../services/validation.ts";
 
 const P = ROUTE_PREFIX;
 
@@ -27,7 +27,7 @@ export function registerChallengeRoutes(app: any) {
   app.get(`${P}/challenges/active`, async (c: any) => {
     try {
       const challengeKey = `challenges:active`;
-      let challengeRaw = await kv.get(challengeKey);
+      const challengeRaw = await kv.get(challengeKey);
       let challenge = challengeRaw ? JSON.parse(challengeRaw as string) : null;
       const now = Date.now();
       let autoFinalizeResult: any = null;
@@ -83,7 +83,8 @@ export function registerChallengeRoutes(app: any) {
         }
         const theme = CHALLENGE_THEMES[Math.floor(Math.random() * CHALLENGE_THEMES.length)];
         challenge = {
-          id: `challenge-${Date.now()}`, ...theme,
+          ...theme,
+          id: `challenge-${Date.now()}`,
           startsAt: now, endsAt: now + 7 * 86400000,
           week: Math.floor(now / (7 * 86400000)),
           judgeWeight: 0.7, communityWeight: 0.3,
@@ -113,7 +114,7 @@ export function registerChallengeRoutes(app: any) {
 
       const entriesKey = `challenges:entries:${challengeId}`;
       const entriesRaw = await kv.get(entriesKey);
-      let entries = entriesRaw ? JSON.parse(entriesRaw as string) : [];
+      const entries = entriesRaw ? JSON.parse(entriesRaw as string) : [];
       if (entries.some((e: any) => e.userId === userId)) return c.json({ error: 'Already submitted', alreadySubmitted: true }, 400);
 
       // §M-4 — AI-powered judge scoring via AIModelManager (replaces Math.random())
@@ -204,7 +205,7 @@ export function registerChallengeRoutes(app: any) {
       await kv.set(voteDedupKey, entryId);
       const entriesKey = `challenges:entries:${challengeId}`;
       const entriesRaw = await kv.get(entriesKey);
-      let entries = entriesRaw ? JSON.parse(entriesRaw as string) : [];
+      const entries = entriesRaw ? JSON.parse(entriesRaw as string) : [];
       const idx = entries.findIndex((e: any) => e.id === entryId);
       if (idx === -1) return c.json({ error: 'Entry not found' }, 404);
       entries[idx].communityVotes = (entries[idx].communityVotes || 0) + 1;

@@ -3,10 +3,12 @@
  * Routes: likes, annotations, play, comments, songs index/register
  */
 
-import { ROUTE_PREFIX, kv, registerSongId, getAllSongIds, queryCache } from "./server-utils.ts";
-import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
-import { validate, annotationSchema, commentSchema, songRegisterSchema } from "./validation.ts";
-import { requireAuth } from "./server-utils.ts";
+import { ROUTE_PREFIX, kv, registerSongId, getAllSongIds, queryCache } from "../services/server-utils.ts";
+import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "../services/rate-limit.ts";
+import { validate, annotationSchema, commentSchema, songRegisterSchema } from "../services/validation.ts";
+import { requireAuth } from "../services/server-utils.ts";
+import { getSongStatsByLegacyId, updateSongStats } from "../services/db.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "../services/api-contract.ts";
 
 export function registerMusicRoutes(app: any) {
   // ==========================================
@@ -15,6 +17,9 @@ export function registerMusicRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/likes/:songId`, async (c: any) => {
     const songId = c.req.param("songId");
     try {
+      // P1b: 读优先关系表，未命中回退 KV
+      const dbStats = await getSongStatsByLegacyId(songId);
+      if (dbStats) return c.json({ likes: dbStats.like_count ?? 0 });
       const value = await kv.get(`song:${songId}:likes`);
       const likes = value ? parseInt(value as string) : 0;
       return c.json({ likes });
@@ -34,9 +39,12 @@ export function registerMusicRoutes(app: any) {
       await kv.set(`song:${songId}:likes`, newLikes.toString());
 
       const statsVal = await kv.get(`song:${songId}:stats`);
-      let stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
+      const stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
       stats.likes = newLikes;
       await kv.set(`song:${songId}:stats`, JSON.stringify(stats));
+
+      // P1b: 关系表侧尽力同步
+      await updateSongStats(songId, { likes: newLikes });
 
       // §6.2 — Invalidate cached leaderboard on likes change
       queryCache.invalidate('cache:leaderboard');
@@ -99,9 +107,12 @@ export function registerMusicRoutes(app: any) {
     try {
       await registerSongId(songId);
       const statsVal = await kv.get(`song:${songId}:stats`);
-      let stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
+      const stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
       stats.plays += 1;
       await kv.set(`song:${songId}:stats`, JSON.stringify(stats));
+
+      // P1b: 关系表侧尽力同步
+      await updateSongStats(songId, { plays: stats.plays });
 
       const hour = new Date().toISOString().slice(0, 13);
       const hourlyKey = `analytics:plays:${hour}`;
@@ -159,9 +170,12 @@ export function registerMusicRoutes(app: any) {
       await kv.set(`song:${songId}:comments`, JSON.stringify(comments));
 
       const statsVal = await kv.get(`song:${songId}:stats`);
-      let stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
+      const stats = statsVal ? JSON.parse(statsVal as string) : { plays: 0, likes: 0, comments: 0 };
       stats.comments = comments.length;
       await kv.set(`song:${songId}:stats`, JSON.stringify(stats));
+
+      // P1b: 关系表侧尽力同步评论数
+      await updateSongStats(songId, { comments: stats.comments });
 
       return c.json({ success: true, comment });
     } catch (error) {
@@ -178,7 +192,7 @@ export function registerMusicRoutes(app: any) {
       const { userId } = body;
 
       const existing = await kv.get(`song:${songId}:comments`);
-      let comments = existing ? JSON.parse(existing as string) : [];
+      const comments = existing ? JSON.parse(existing as string) : [];
 
       const idx = comments.findIndex((cm: any) => cm.id === commentId);
       if (idx === -1) return c.json({ error: "Comment not found" }, 404);
@@ -208,10 +222,12 @@ export function registerMusicRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/songs/index`, async (c: any) => {
     try {
       const songIds = await getAllSongIds();
-      return c.json({ songIds, total: songIds.length });
+      // A3：统一分页
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 200 });
+      const limited = songIds.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ songIds: limited, ...pageMeta(songIds.length, pager) });
     } catch (error) {
-      console.log("Error fetching song index:", error);
-      return c.json({ error: `Song index failed: ${error}` }, 500);
+      return apiError(c, 500, 'Song index failed', { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 

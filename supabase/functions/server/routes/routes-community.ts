@@ -7,9 +7,10 @@ import {
   ROUTE_PREFIX, kv, requireAuth,
   getSharedWorkIndex, getSharedWork, saveSharedWork, addToSharedWorkIndex, getAllSharedWorks,
   hashContent, verifyContentHash,
-} from "./server-utils.ts";
-import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
-import { validate, shareWorkSchema, forkWorkSchema } from "./validation.ts";
+} from "../services/server-utils.ts";
+import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "../services/rate-limit.ts";
+import { validate, shareWorkSchema, forkWorkSchema } from "../services/validation.ts";
+import { parsePagination, pageMeta } from "../services/api-contract.ts";
 
 export function registerCommunityRoutes(app: any) {
   // ==========================================
@@ -93,17 +94,17 @@ export function registerCommunityRoutes(app: any) {
 
   app.get(`${ROUTE_PREFIX}/shared-works`, async (c: any) => {
     try {
-      const page = parseInt(c.req.query('page') || '1');
-      const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+      // A3：统一分页（沿用 page/limit，schema 由 parsePagination 归一）
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
       const index = await getSharedWorkIndex();
-      const works = await getAllSharedWorks(page, limit);
+      const works = await getAllSharedWorks(pager.page, pager.limit);
       return c.json({
-        works, total: index.length, page, limit,
-        hasMore: page * limit < index.length,
+        works,
+        ...pageMeta(index.length, pager),
       });
     } catch (error) {
       console.log("Error fetching shared works:", error);
-      return c.json({ works: [], total: 0 }, 500);
+      return c.json({ works: [], ...pageMeta(0, { page: 1, limit: 50, offset: 0 }) }, 500);
     }
   });
 
@@ -144,7 +145,6 @@ export function registerCommunityRoutes(app: any) {
       if (authorName && work.likes % 5 === 0) {
         try {
           // §v11.1 — Write notifications using userId (not userName) for key stability
-          const notifTargetId = authorId || authorName; // prefer userId
           const notifKey = authorId ? `notifications:user:${authorId}` : `notifications:${authorName}`;
           const notifRaw = await kv.get(notifKey);
           let notifs = notifRaw ? JSON.parse(notifRaw as string) : [];
@@ -192,7 +192,7 @@ export function registerCommunityRoutes(app: any) {
 
       const chainKey = `fork-chain:${originalWorkId}`;
       const chainRaw = await kv.get(chainKey);
-      let chain = chainRaw ? JSON.parse(chainRaw as string) : [];
+      const chain = chainRaw ? JSON.parse(chainRaw as string) : [];
       chain.push({ workId: fork.workId, author: userName, forkedAt: Date.now() });
       await kv.set(chainKey, JSON.stringify(chain));
 

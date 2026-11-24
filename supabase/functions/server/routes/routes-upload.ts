@@ -22,18 +22,31 @@
  *   lyrics:{mediaId}            -- Lyrics array (JSON)
  */
 
-import { ROUTE_PREFIX, kv, registerSongId, queryCache, createAdminClient } from "./server-utils.ts";
-import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
-import { validate } from "./validation.ts";
-import { z } from "npm:zod@3.23.8";
+import { ROUTE_PREFIX, kv, registerSongId, queryCache, getUserFromRequest } from "../services/server-utils.ts";
+import { rateLimit, RATE_SENSITIVE } from "../services/rate-limit.ts";
+import { validate } from "../services/validation.ts";
+import { z } from "zod";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { Readable } from "node:stream";
+import {
+  getMediaById, listUserMediaIds, listPublicMediaIds, upsertMedia, deleteMedia,
+} from "../services/db.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "../services/api-contract.ts";
 
 // ==========================================
 // Constants
 // ==========================================
 
-const MEDIA_BUCKET = 'make-f626b673-media';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const SIGNED_URL_EXPIRY = 3600; // 1 hour
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
+
+/** 媒体播放地址（相对/绝对，由 PUBLIC_BASE_URL 决定） */
+function mediaFileUrl(mediaId: string, variant?: 'cover'): string {
+  const base = (process.env.PUBLIC_BASE_URL ?? '').replace(/\/+$/, '');
+  const suffix = variant === 'cover' ? '?variant=cover' : '';
+  return `${base}${ROUTE_PREFIX}/upload/media/${mediaId}/file${suffix}`;
+}
 
 const ALLOWED_AUDIO_TYPES = [
   'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/flac',
@@ -163,16 +176,11 @@ let bucketEnsured = false;
 async function ensureMediaBucket(): Promise<void> {
   if (bucketEnsured) return;
   try {
-    const sb = createAdminClient();
-    const { data: buckets } = await sb.storage.listBuckets();
-    const exists = buckets?.some((b: any) => b.name === MEDIA_BUCKET);
-    if (!exists) {
-      await sb.storage.createBucket(MEDIA_BUCKET, { public: false });
-      console.log(`[Upload] Created media bucket: ${MEDIA_BUCKET}`);
-    }
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    console.log(`[Upload] Ensured local media dir: ${UPLOAD_DIR}`);
     bucketEnsured = true;
   } catch (err) {
-    console.log(`[Upload] Error ensuring bucket: ${err}`);
+    console.log(`[Upload] Error ensuring media dir: ${err}`);
   }
 }
 
@@ -202,6 +210,15 @@ function isVideoType(mimeType: string): boolean {
   return ALLOWED_VIDEO_TYPES.includes(mimeType);
 }
 
+/** P1b: 读取媒体元数据——关系表优先，未命中回退 KV */
+async function getMediaMeta(mediaId: string): Promise<MediaMeta | null> {
+  const fromDb = await getMediaById(mediaId);
+  if (fromDb) return fromDb as MediaMeta;
+  const raw = await kv.get(`media:${mediaId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw as string) as MediaMeta; } catch { return null; }
+}
+
 /** Upload bytes to Storage, store meta in KV, return full media object with signed URLs */
 async function finalizeUpload(
   fileBytes: Uint8Array,
@@ -213,18 +230,21 @@ async function finalizeUpload(
     tags: string[]; coverBase64?: string; coverMimeType?: string;
   }
 ): Promise<{ media: MediaMeta & { signedUrl: string | null; coverSignedUrl: string | null } }> {
-  const sb = createAdminClient();
+  // 路径穿越守卫（W8 安全加固，Mimosa high）：userId 为请求可控值，
+  // 直接参与 path.join 存储路径——只允许字母数字下划线连字符，1–64 位
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) {
+    throw new Error(`Invalid userId: ${JSON.stringify(userId.slice(0, 32))}`);
+  }
   const mediaId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ext = getExtension(opts.mimeType);
-  const filePath = `${userId}/${mediaId}.${ext}`;
+  const filePath = path.join(UPLOAD_DIR, userId, `${mediaId}.${ext}`);
 
-  // Upload to Storage
-  const { error: uploadErr } = await sb.storage
-    .from(MEDIA_BUCKET)
-    .upload(filePath, fileBytes, { contentType: opts.mimeType, upsert: false });
-
-  if (uploadErr) {
-    throw new Error(`Storage upload error: ${uploadErr.message}`);
+  // Write to local filesystem
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, fileBytes);
+  } catch (err) {
+    throw new Error(`Local storage write error: ${err}`);
   }
 
   // Upload cover if provided
@@ -234,10 +254,8 @@ async function finalizeUpload(
       const coverBytes = base64ToUint8Array(opts.coverBase64);
       if (coverBytes.length <= 2 * 1024 * 1024) {
         const coverExt = opts.coverMimeType.includes('png') ? 'png' : 'jpg';
-        coverPath = `${userId}/${mediaId}-cover.${coverExt}`;
-        await sb.storage
-          .from(MEDIA_BUCKET)
-          .upload(coverPath, coverBytes, { contentType: opts.coverMimeType, upsert: false });
+        coverPath = path.join(UPLOAD_DIR, userId, `${mediaId}-cover.${coverExt}`);
+        fs.writeFileSync(coverPath, coverBytes);
       }
     } catch (err) {
       console.log(`[Upload] Cover upload error (non-fatal):`, err);
@@ -276,18 +294,12 @@ async function finalizeUpload(
   // Register in song index
   await registerSongId(mediaId);
 
-  // Generate signed URLs
-  const { data: signedData } = await sb.storage
-    .from(MEDIA_BUCKET)
-    .createSignedUrl(filePath, SIGNED_URL_EXPIRY);
+  // P1b: 关系表侧尽力同步元数据
+  await upsertMedia(meta);
 
-  let coverSignedUrl: string | null = null;
-  if (coverPath) {
-    const { data: coverSigned } = await sb.storage
-      .from(MEDIA_BUCKET)
-      .createSignedUrl(coverPath, SIGNED_URL_EXPIRY);
-    coverSignedUrl = coverSigned?.signedUrl || null;
-  }
+  // 播放地址（相对/绝对由 PUBLIC_BASE_URL 决定）
+  const signedUrl = mediaFileUrl(mediaId);
+  const coverSignedUrl: string | null = coverPath ? mediaFileUrl(mediaId, 'cover') : null;
 
   queryCache.invalidate('cache:song-index');
 
@@ -296,7 +308,7 @@ async function finalizeUpload(
   return {
     media: {
       ...meta,
-      signedUrl: signedData?.signedUrl || null,
+      signedUrl,
       coverSignedUrl,
     },
   };
@@ -334,6 +346,9 @@ export function registerUploadRoutes(app: any) {
       }
 
       const userId = body.userId || 'anon';
+      if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) {
+        return c.json({ error: 'Invalid userId: use [A-Za-z0-9_-]{1,64}' }, 400);
+      }
       const userName = body.userName || 'Anonymous';
 
       const result = await finalizeUpload(fileBytes, userId, userName, {
@@ -361,6 +376,9 @@ export function registerUploadRoutes(app: any) {
       }
       const data = parsed.data;
       const userId = body.userId || 'anon';
+      if (!/^[A-Za-z0-9_-]{1,64}$/.test(userId)) {
+        return c.json({ error: 'Invalid userId: use [A-Za-z0-9_-]{1,64}' }, 400);
+      }
       const userName = body.userName || 'Anonymous';
 
       const sessionId = `cs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -494,8 +512,9 @@ export function registerUploadRoutes(app: any) {
   app.put(`${ROUTE_PREFIX}/upload/media/:mediaId/lyrics`, rateLimit(RATE_SENSITIVE), async (c: any) => {
     try {
       const mediaId = c.req.param('mediaId');
-      const metaRaw = await kv.get(`media:${mediaId}`);
-      if (!metaRaw) {
+      // P1b: 存在性校验走统一读取（关系表优先，回退 KV）
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) {
         return c.json({ error: 'Media not found' }, 404);
       }
 
@@ -531,35 +550,75 @@ export function registerUploadRoutes(app: any) {
     }
   });
 
+  // ---- GET /upload/media/:mediaId/file -- 流式播放（支持 Range）----
+  app.get(`${ROUTE_PREFIX}/upload/media/:mediaId/file`, async (c: any) => {
+    const mediaId = c.req.param('mediaId');
+    try {
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) return apiError(c, 404, 'Media not found', undefined, ERROR_CODES.NOT_FOUND);
+
+      const user = await getUserFromRequest(c);
+      if (!meta.isPublic && user?.id !== meta.userId) {
+        return apiError(c, 403, '无权访问该媒体', undefined, ERROR_CODES.FORBIDDEN);
+      }
+
+      const variant = c.req.query('variant');
+      const isCover = variant === 'cover';
+      const filePath = isCover ? meta.coverPath : meta.filePath;
+      if (!filePath || !fs.existsSync(filePath)) {
+        return apiError(c, 404, 'Media file not found', undefined, ERROR_CODES.NOT_FOUND);
+      }
+
+      const stat = fs.statSync(filePath);
+      const contentType = isCover
+        ? (filePath.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg')
+        : (meta.mimeType || 'application/octet-stream');
+
+      c.header('Content-Type', contentType);
+      c.header('Accept-Ranges', 'bytes');
+      c.header('Cache-Control', 'private, max-age=3600');
+
+      const range = c.req.header('range');
+      if (range) {
+        const m = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+        if (m) {
+          const start = m[1] ? parseInt(m[1], 10) : 0;
+          const end = m[2] ? Math.min(parseInt(m[2], 10), stat.size - 1) : stat.size - 1;
+          if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= stat.size) {
+            c.status(416);
+            c.header('Content-Range', `bytes */${stat.size}`);
+            return c.body(null);
+          }
+          c.status(206);
+          c.header('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+          c.header('Content-Length', String(end - start + 1));
+          return c.body(Readable.toWeb(fs.createReadStream(filePath, { start, end })) as any);
+        }
+      }
+
+      c.header('Content-Length', String(stat.size));
+      return c.body(Readable.toWeb(fs.createReadStream(filePath)) as any);
+    } catch (error) {
+      console.log(`[Upload] Stream error ${mediaId}:`, error);
+      return apiError(c, 500, '读取媒体失败', { detail: String(error) }, ERROR_CODES.INTERNAL);
+    }
+  });
+
   // ---- GET /upload/media/:mediaId -- Get media info + signed URL ----
   app.get(`${ROUTE_PREFIX}/upload/media/:mediaId`, async (c: any) => {
     const mediaId = c.req.param('mediaId');
     // Exclude lyrics sub-routes
-    if (mediaId === 'lyrics') return;
+    if (mediaId === 'lyrics') return c.json({ error: 'Media not found' }, 404);
     try {
-      const raw = await kv.get(`media:${mediaId}`);
-      if (!raw) {
+      // P1b: 关系表优先，未命中回退 KV
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) {
         return c.json({ error: 'Media not found' }, 404);
       }
-      const meta: MediaMeta = JSON.parse(raw as string);
 
-      const sb = createAdminClient();
-      const { data: signedData, error } = await sb.storage
-        .from(MEDIA_BUCKET)
-        .createSignedUrl(meta.filePath, SIGNED_URL_EXPIRY);
-
-      if (error) {
-        console.log(`[Upload] Signed URL error for ${mediaId}:`, error);
-        return c.json({ error: 'Failed to generate playback URL' }, 500);
-      }
-
-      let coverSignedUrl = null;
-      if (meta.coverPath) {
-        const { data: coverSigned } = await sb.storage
-          .from(MEDIA_BUCKET)
-          .createSignedUrl(meta.coverPath, SIGNED_URL_EXPIRY);
-        coverSignedUrl = coverSigned?.signedUrl || null;
-      }
+      // 播放地址
+      const signedUrl = mediaFileUrl(mediaId);
+      const coverSignedUrl = meta.coverPath ? mediaFileUrl(mediaId, 'cover') : null;
 
       // Also include lyrics if available
       const lyricsRaw = await kv.get(`lyrics:${mediaId}`);
@@ -568,9 +627,15 @@ export function registerUploadRoutes(app: any) {
       return c.json({
         media: {
           ...meta,
-          signedUrl: signedData?.signedUrl || null,
+          signedUrl,
           coverSignedUrl,
           lyrics,
+          // W3-1: Range/206 由 Supabase Storage 端原生支持（签名 URL 直连），
+          // 服务端不做流代理，避免带宽放大与 SSRF 面。
+          streaming: {
+            range: true,
+            strategy: 'signed-url',
+          },
         },
       });
 
@@ -587,47 +652,45 @@ export function registerUploadRoutes(app: any) {
       let mediaIds: string[];
 
       if (userId) {
-        const raw = await kv.get(`media:user:${userId}`);
-        mediaIds = raw ? JSON.parse(raw as string) : [];
+        // P1b: 用户列表读优先关系表，空则回退 KV
+        const dbIds = await listUserMediaIds(userId, 50);
+        if (dbIds.length > 0) {
+          mediaIds = dbIds;
+        } else {
+          const raw = await kv.get(`media:user:${userId}`);
+          mediaIds = raw ? JSON.parse(raw as string) : [];
+        }
       } else {
-        const raw = await kv.get('media:index');
-        mediaIds = raw ? JSON.parse(raw as string) : [];
+        const dbIds = await listPublicMediaIds(50);
+        if (dbIds.length > 0) {
+          mediaIds = dbIds;
+        } else {
+          const raw = await kv.get('media:index');
+          mediaIds = raw ? JSON.parse(raw as string) : [];
+        }
       }
 
-      // Fetch metadata for each (limited to 50)
-      const limited = mediaIds.slice(0, 50);
-      const sb = createAdminClient();
+      // Fetch metadata for each (A3：统一分页)
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
+      const limited = mediaIds.slice(pager.offset, pager.offset + pager.limit);
       const mediaList: any[] = [];
 
       for (const id of limited) {
-        const raw = await kv.get(`media:${id}`);
-        if (raw) {
-          const meta: MediaMeta = JSON.parse(raw as string);
-          const { data: signedData } = await sb.storage
-            .from(MEDIA_BUCKET)
-            .createSignedUrl(meta.filePath, SIGNED_URL_EXPIRY);
-
-          let coverSignedUrl = null;
-          if (meta.coverPath) {
-            const { data: coverSigned } = await sb.storage
-              .from(MEDIA_BUCKET)
-              .createSignedUrl(meta.coverPath, SIGNED_URL_EXPIRY);
-            coverSignedUrl = coverSigned?.signedUrl || null;
-          }
-
+        const meta = await getMediaMeta(id);
+        if (meta) {
           mediaList.push({
             ...meta,
-            signedUrl: signedData?.signedUrl || null,
-            coverSignedUrl,
+            signedUrl: mediaFileUrl(meta.id),
+            coverSignedUrl: meta.coverPath ? mediaFileUrl(meta.id, 'cover') : null,
           });
         }
       }
 
-      return c.json({ media: mediaList, total: mediaIds.length });
+      return c.json({ media: mediaList, ...pageMeta(mediaIds.length, pager) });
 
     } catch (error) {
       console.log(`[Upload] Error listing media:`, error);
-      return c.json({ error: `Failed to list media: ${error}` }, 500);
+      return apiError(c, 500, 'Failed to list media', { detail: String(error) });
     }
   });
 
@@ -635,22 +698,26 @@ export function registerUploadRoutes(app: any) {
   app.delete(`${ROUTE_PREFIX}/upload/media/:mediaId`, rateLimit(RATE_SENSITIVE), async (c: any) => {
     const mediaId = c.req.param('mediaId');
     try {
-      const raw = await kv.get(`media:${mediaId}`);
-      if (!raw) {
+      // P1b: 关系表优先，未命中回退 KV
+      const meta = await getMediaMeta(mediaId);
+      if (!meta) {
         return c.json({ error: 'Media not found' }, 404);
       }
-      const meta: MediaMeta = JSON.parse(raw as string);
 
-      // Delete from Storage
-      const sb = createAdminClient();
-      await sb.storage.from(MEDIA_BUCKET).remove([meta.filePath]);
-      if (meta.coverPath) {
-        await sb.storage.from(MEDIA_BUCKET).remove([meta.coverPath]);
+      // Delete from local filesystem
+      try {
+        if (meta.filePath) fs.unlinkSync(meta.filePath);
+        if (meta.coverPath) fs.unlinkSync(meta.coverPath);
+      } catch {
+        // file may already be absent; ignore
       }
 
       // Delete KV metadata + lyrics
       await kv.del(`media:${mediaId}`);
       await kv.del(`lyrics:${mediaId}`);
+
+      // P1b: 关系表侧尽力同步删除
+      await deleteMedia(mediaId);
 
       // Remove from user's list
       const userRaw = await kv.get(`media:user:${meta.userId}`);

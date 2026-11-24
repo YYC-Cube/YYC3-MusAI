@@ -3,9 +3,9 @@
  * Routes: achievements, notifications, timeline comments, fork tree, mheart
  */
 
-import { ROUTE_PREFIX, kv, requireAuth } from "./server-utils.ts";
-import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "./rate-limit.ts";
-import { validate, achievementTrackSchema } from "./validation.ts";
+import { ROUTE_PREFIX, kv, requireAuth } from "../services/server-utils.ts";
+import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "../services/rate-limit.ts";
+import { validate, achievementTrackSchema } from "../services/validation.ts";
 
 // ==========================================
 // Achievement Definitions
@@ -228,7 +228,7 @@ export function registerSocialRoutes(app: any) {
       const songId = c.req.param('songId');
       const commentId = c.req.param('commentId');
       const raw = await kv.get(`timeline-comments:${songId}`);
-      let comments: any[] = raw ? JSON.parse(raw as string) : [];
+      const comments: any[] = raw ? JSON.parse(raw as string) : [];
       const idx = comments.findIndex((cm: any) => cm.id === commentId);
       if (idx >= 0) {
         comments[idx].likes = (comments[idx].likes || 0) + 1;
@@ -287,7 +287,7 @@ export function registerSocialRoutes(app: any) {
 
       const histRaw = await kv.get(`user:${userId}:listening-history`);
       let emotionIntensity = 0;
-      let emotionBreakdown: Record<string, number> = {};
+      const emotionBreakdown: Record<string, number> = {};
       let totalListenDuration = 0;
       let totalSessions = 0;
       if (histRaw) {

@@ -10,11 +10,11 @@ CREATE TABLE kv_store_f626b673 (
 // View at https://supabase.com/dashboard/project/phgrinrlnxzjyxxhsqry/database/tables
 
 // This file provides a simple key-value interface for storing Figma Make data. It should be adequate for most small-scale use cases.
-import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { createClient } from "@supabase/supabase-js";
 
 const client = () => createClient(
-  Deno.env.get("SUPABASE_URL"),
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 // Set stores a key-value pair in the database.
@@ -64,7 +64,7 @@ export const mget = async (keys: string[]): Promise<any[]> => {
   if (error) {
     throw new Error(error.message);
   }
-  return data?.map((d) => d.value) ?? [];
+  return data?.map((d: { value: any }) => d.value) ?? [];
 };
 
 // Deletes multiple key-value pairs from the database.
@@ -83,5 +83,15 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
   if (error) {
     throw new Error(error.message);
   }
-  return data?.map((d) => d.value) ?? [];
+  return data?.map((d: { value: any }) => d.value) ?? [];
+};
+
+// 按前缀取键列表（诊断统计用；getByPrefix 返回值，这里返回键）
+export const getKeysByPrefix = async (prefix: string): Promise<string[]> => {
+  const supabase = client()
+  const { data, error } = await supabase.from("kv_store_f626b673").select("key").like("key", prefix + "%");
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data?.map((d: { key: string }) => d.key) ?? [];
 };

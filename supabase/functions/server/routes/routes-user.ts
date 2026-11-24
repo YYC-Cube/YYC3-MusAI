@@ -3,11 +3,15 @@
  * Routes: profile, creators, role, preferences, themes, export, error-report
  */
 
-import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   ROUTE_PREFIX, kv, requireAuth, getUserFromRequest, getAllSharedWorks,
-} from "./server-utils.ts";
-import { validate, profileUpdateSchema } from "./validation.ts";
+} from "../services/server-utils.ts";
+import { validate, profileUpdateSchema } from "../services/validation.ts";
+import {
+  getUserProfile, getUserPreferences, getUserUnlockedThemes,
+  upsertUserProfile, upsertUserPreferences, addUserUnlockedTheme,
+} from "../services/db.ts";
+import { apiError, ERROR_CODES, parsePagination, pageMeta } from "../services/api-contract.ts";
 
 export function registerUserRoutes(app: any) {
   // ==========================================
@@ -25,10 +29,13 @@ export function registerUserRoutes(app: any) {
         creatorsMap[name].latestWork = Math.max(creatorsMap[name].latestWork, w.createdAt || 0);
       }
       const creators = Object.values(creatorsMap).sort((a, b) => b.totalLikes - a.totalLikes);
-      return c.json({ creators });
+
+      // A3：统一分页
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
+      const limited = creators.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ creators: limited, ...pageMeta(creators.length, pager) });
     } catch (error) {
-      console.log("Creators list error:", error);
-      return c.json({ creators: [] }, 500);
+      return apiError(c, 500, 'Failed to list creators', { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 
@@ -37,10 +44,13 @@ export function registerUserRoutes(app: any) {
     try {
       const works = await getAllSharedWorks(1, 1000);
       const creatorWorks = works.filter((w: any) => w.userName === userName);
-      return c.json({ works: creatorWorks });
+
+      // A3：统一分页
+      const pager = parsePagination(c, { defaultLimit: 50, maxLimit: 100 });
+      const limited = creatorWorks.slice(pager.offset, pager.offset + pager.limit);
+      return c.json({ works: limited, ...pageMeta(creatorWorks.length, pager) });
     } catch (error) {
-      console.log(`Creator works error for ${userName}:`, error);
-      return c.json({ works: [] }, 500);
+      return apiError(c, 500, `Failed to list works for ${userName}`, { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 
@@ -50,6 +60,26 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/profile/:userId`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
+      // P1b: 读优先关系表，未命中回退 KV（legacy）
+      const pgProfile = await getUserProfile(userId);
+      if (pgProfile) {
+        return c.json({
+          profile: {
+            userId: pgProfile.id,
+            email: pgProfile.email || '',
+            displayName: pgProfile.nickname || pgProfile.username || '',
+            starPower: 0,
+            totalListeningTime: 0,
+            totalAnnotations: 0,
+            totalLikes: 0,
+            achievements: [],
+            joinedAt: pgProfile.created_at?.toISOString() || new Date().toISOString(),
+            streak: 0,
+            role: pgProfile.role || 'user',
+            avatar: pgProfile.avatar || '',
+          },
+        });
+      }
       const value = await kv.get(`user:${userId}:profile`);
       if (value) {
         const profile = JSON.parse(value as string);
@@ -81,6 +111,13 @@ export function registerUserRoutes(app: any) {
       const parsed = validate(profileUpdateSchema, body);
       if (!parsed.success) return c.json({ error: parsed.error }, 400);
       profile = { ...profile, ...parsed.data };
+      // P1b: KV 为响应基线，关系表侧尽力同步（PG 不可用不影响主流程）
+      await upsertUserProfile(userId, {
+        email: parsed.data.email,
+        nickname: parsed.data.displayName,
+        avatar: parsed.data.avatar,
+        role: parsed.data.role as string | undefined,
+      });
       await kv.set(`user:${userId}:profile`, JSON.stringify(profile));
       return c.json({ success: true, profile });
     } catch (error) {
@@ -95,9 +132,14 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/user/role/:userId`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
+      // P1b: 读优先关系表
+      const pgProfile = await getUserProfile(userId);
+      if (pgProfile) {
+        return c.json({ userId, role: pgProfile.role || 'user' });
+      }
       const roleVal = await kv.get(`user:${userId}:role`);
       return c.json({ userId, role: (roleVal as string) || 'user' });
-    } catch (error) {
+    } catch (_error) {
       return c.json({ userId, role: 'user' }, 500);
     }
   });
@@ -115,6 +157,8 @@ export function registerUserRoutes(app: any) {
       if (!validRoles.includes(role)) {
         return c.json({ error: `Invalid role. Must be: ${validRoles.join(', ')}` }, 400);
       }
+      // P1b: 双写 KV + PG
+      await upsertUserProfile(userId, { role });
       await kv.set(`user:${userId}:role`, role);
       console.log(`Role updated: user=${userId} role=${role} by=${requester.id}`);
       return c.json({ success: true, userId, role });
@@ -129,9 +173,14 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/user/:userId/unlocked-themes`, async (c: any) => {
     const userId = c.req.param("userId");
     try {
+      // P1b: 读优先关系表
+      const themes = await getUserUnlockedThemes(userId);
+      if (themes.length > 0) {
+        return c.json({ themes });
+      }
       const raw = await kv.get(`user:${userId}:unlocked-themes`);
-      const themes: string[] = raw ? JSON.parse(raw as string) : [];
-      return c.json({ themes });
+      const themesKV: string[] = raw ? JSON.parse(raw as string) : [];
+      return c.json({ themes: themesKV });
     } catch (error) { console.log(`Unlocked themes fetch error for ${userId}:`, error); return c.json({ themes: [] }, 500); }
   });
 
@@ -141,12 +190,14 @@ export function registerUserRoutes(app: any) {
       const body = await c.req.json();
       const { themeId } = body;
       if (!themeId) return c.json({ error: 'themeId required' }, 400);
+      // P1b: KV 为响应基线，关系表侧尽力同步
       const raw = await kv.get(`user:${userId}:unlocked-themes`);
       const themes: string[] = raw ? JSON.parse(raw as string) : [];
       if (!themes.includes(themeId)) {
         themes.push(themeId);
         await kv.set(`user:${userId}:unlocked-themes`, JSON.stringify(themes));
       }
+      await addUserUnlockedTheme(userId, themeId);
       console.log(`Theme ${themeId} unlocked for user ${userId}`);
       return c.json({ success: true, themes });
     } catch (error) { console.log(`Theme unlock error for ${userId}:`, error); return c.json({ error: `Failed: ${error}` }, 500); }
@@ -158,6 +209,19 @@ export function registerUserRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/preferences/:userId`, async (c: any) => {
     try {
       const userId = c.req.param('userId');
+      // P1b: 读优先关系表
+      const pgPrefs = await getUserPreferences(userId);
+      if (pgPrefs) {
+        return c.json({ preferences: {
+          lang: pgPrefs.language,
+          theme: pgPrefs.theme,
+          volume: null,
+          shuffleEnabled: null,
+          repeatMode: null,
+          mode: pgPrefs.theme,
+          ...pgPrefs,
+        } });
+      }
       const raw = await kv.get(`prefs:${userId}`);
       const preferences = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : null;
       return c.json({ preferences });
@@ -176,6 +240,8 @@ export function registerUserRoutes(app: any) {
       for (const key of allowed) {
         if (body[key] !== undefined) clean[key] = body[key];
       }
+      // P1b: 双写 KV + PG
+      await upsertUserPreferences(userId, clean);
       await kv.set(`prefs:${userId}`, JSON.stringify(clean));
       console.log(`[Prefs] Saved preferences for user ${userId}`);
       return c.json({ saved: true });
@@ -229,13 +295,8 @@ export function registerUserRoutes(app: any) {
       const userId = c.req.param('userId');
       if (!userId) return c.json({ error: 'userId required' }, 400);
 
-      const accessToken = c.req.header('Authorization')?.split(' ')[1];
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
-      const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
-      if (authErr || !user || user.id !== userId) {
+      const user = await getUserFromRequest(c);
+      if (!user || user.id !== userId) {
         return c.json({ error: 'Unauthorized - can only export your own data' }, 401);
       }
 

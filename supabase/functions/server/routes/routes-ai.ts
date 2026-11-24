@@ -11,9 +11,10 @@
  *   - 新增 /ai/status 和 /ai/usage 诊断端点
  */
 
-import { ROUTE_PREFIX } from "./server-utils.ts";
-import { rateLimit, RATE_HEAVY } from "./rate-limit.ts";
-import { aiModelManager } from "./ai-model-manager.ts";
+import { ROUTE_PREFIX } from "../services/server-utils.ts";
+import { rateLimit, RATE_HEAVY } from "../services/rate-limit.ts";
+import { aiModelManager } from "../services/ai-model-manager.ts";
+import { apiError, ERROR_CODES } from "../services/api-contract.ts";
 
 // ==========================================
 // AI Composition Constants
@@ -115,7 +116,6 @@ export function registerAiRoutes(app: any) {
       const totalDuration = Math.ceil(totalBars * barDuration);
 
       const verseBars = Math.floor(lyricBars * 0.6);
-      const chorusBars = lyricBars - verseBars;
       const sections = [
         { name: 'intro', startBar: 0, endBar: introBars, intensity: 0.3 },
         { name: 'verse', startBar: introBars, endBar: introBars + verseBars, intensity: 0.6 },
@@ -160,6 +160,65 @@ export function registerAiRoutes(app: any) {
     } catch (error) {
       console.log("AI usage error:", error);
       return c.json({ error: `AI usage failed: ${error}` }, 500);
+    }
+  });
+
+  // ==========================================
+  // §4.1 — AI 助手（通用多轮对话）
+  // ==========================================
+  app.post(`${ROUTE_PREFIX}/ai/chat`, rateLimit(RATE_HEAVY), async (c: any) => {
+    try {
+      const body = await c.req.json();
+      const raw = Array.isArray(body?.messages) ? body.messages : [];
+      const messages = raw
+        .filter((m: any) => m && typeof m.content === 'string' && ['system', 'user', 'assistant'].includes(m.role))
+        .slice(-30)
+        .map((m: any) => ({ role: m.role, content: String(m.content).slice(0, 4000) }));
+
+      if (messages.length === 0) {
+        return apiError(c, 400, 'messages 不能为空，且 role 仅支持 system/user/assistant', undefined, ERROR_CODES.VALIDATION_FAILED);
+      }
+
+      const temperature = typeof body.temperature === 'number'
+        ? Math.min(1.5, Math.max(0, body.temperature))
+        : undefined;
+      const maxTokens = typeof body.maxTokens === 'number'
+        ? Math.min(2000, Math.max(32, body.maxTokens))
+        : undefined;
+
+      const result = await aiModelManager.chat(messages, { temperature, maxTokens });
+      return c.json({ success: true, content: result.content, provider: result.provider });
+    } catch (error: any) {
+      if (error?.code === 'NO_MODEL') {
+        return apiError(c, 503, 'AI 助手未配置（VLLM_BASE_URL 或 OPENAI_API_KEY）', undefined, ERROR_CODES.INTERNAL);
+      }
+      console.log('AI chat error:', error);
+      return apiError(c, 500, 'AI 对话失败', { detail: String(error) }, ERROR_CODES.INTERNAL);
+    }
+  });
+
+  // ==========================================
+  // §4.1 — 情感分析（独立端点）
+  // ==========================================
+  app.post(`${ROUTE_PREFIX}/ai/emotion`, rateLimit(RATE_HEAVY), async (c: any) => {
+    try {
+      const body = await c.req.json();
+      if (!body?.workTitle || typeof body.workTitle !== 'string') {
+        return apiError(c, 400, 'workTitle 为必填项', undefined, ERROR_CODES.VALIDATION_FAILED);
+      }
+
+      const result = await aiModelManager.analyzeEmotion({
+        workTitle: body.workTitle,
+        workTheme: body.workTheme,
+        workLyrics: Array.isArray(body.workLyrics) ? body.workLyrics : undefined,
+        challengeTheme: body.challengeTheme,
+        challengeTags: Array.isArray(body.challengeTags) ? body.challengeTags : undefined,
+      });
+
+      return c.json({ success: true, ...result });
+    } catch (error) {
+      console.log('AI emotion error:', error);
+      return apiError(c, 500, '情感分析失败', { detail: String(error) }, ERROR_CODES.INTERNAL);
     }
   });
 

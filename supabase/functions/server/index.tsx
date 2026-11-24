@@ -23,27 +23,31 @@
  *   - ROUTE_PREFIX, kv, requireAuth, wilsonScore, song index, shared work helpers
  */
 
-import { Hono } from "npm:hono";
-import { cors } from "npm:hono/cors";
-import { logger } from "npm:hono/logger";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 
 // §2.2 Route modules
-import { registerAuthRoutes } from "./routes-auth.ts";
-import { registerMusicRoutes } from "./routes-music.ts";
-import { registerStarpowerRoutes } from "./routes-starpower.ts";
-import { registerUserRoutes } from "./routes-user.ts";
-import { registerCommunityRoutes } from "./routes-community.ts";
-import { registerAiRoutes } from "./routes-ai.ts";
-import { registerAnalyticsRoutes } from "./routes-analytics.ts";
-import { registerSocialRoutes } from "./routes-social.ts";
-import { registerSpacetimeRoutes } from "./routes-spacetime.ts";
-import { registerChallengeRoutes } from "./routes-challenge.ts";
-import { registerLiveSessionRoutes } from "./routes-live.ts";
-import { registerAlbumRoutes } from "./routes-albums.ts";
-import { registerPkiRoutes } from "./routes-pki.ts";
-import { registerMarketRoutes } from "./routes-market.ts";
-import { registerDiagnosticsRoutes } from "./routes-diagnostics.ts";
-import { registerUploadRoutes } from "./routes-upload.ts";
+import { registerAuthRoutes } from "./routes/routes-auth.ts";
+import { registerMusicRoutes } from "./routes/routes-music.ts";
+import { registerStarpowerRoutes } from "./routes/routes-starpower.ts";
+import { registerUserRoutes } from "./routes/routes-user.ts";
+import { registerCommunityRoutes } from "./routes/routes-community.ts";
+import { registerAiRoutes } from "./routes/routes-ai.ts";
+import { registerAnalyticsRoutes } from "./routes/routes-analytics.ts";
+import { registerSocialRoutes } from "./routes/routes-social.ts";
+import { registerSpacetimeRoutes } from "./routes/routes-spacetime.ts";
+import { registerChallengeRoutes } from "./routes/routes-challenge.ts";
+import { registerLiveSessionRoutes } from "./routes/routes-live.ts";
+import { registerLiveStreamRoutes } from "./services/live-stream.ts";
+import { registerLiveStreamRoutes as registerLivestreamRoomRoutes } from "./routes/routes-livestream.ts";
+import { registerPlaylistRoutes } from "./routes/routes-playlist.ts";
+import { registerFollowRoutes } from "./routes/routes-follow.ts";
+import { registerAlbumRoutes } from "./routes/routes-albums.ts";
+import { registerPkiRoutes } from "./routes/routes-pki.ts";
+import { registerMarketRoutes } from "./routes/routes-market.ts";
+import { registerDiagnosticsRoutes } from "./routes/routes-diagnostics.ts";
+import { registerUploadRoutes } from "./routes/routes-upload.ts";
 
 const app = new Hono();
 
@@ -54,8 +58,9 @@ app.use(
   "/*",
   cors({
     origin: (origin: string) => {
-      // Allow Figma Make proxy domains and local development
-      if (!origin) return '*';
+      // 安全加固（W8）：无 Origin 属同源/服务端调用，CORS 本不适用——不再回退通配符放行
+      if (!origin) return '';
+      // Figma Make 预览域（后缀白名单，限定 https 子域）与本地开发
       if (
         origin.endsWith('.figma.site') ||
         origin.endsWith('.supabase.co') ||
@@ -63,9 +68,9 @@ app.use(
       ) {
         return origin;
       }
-      // Fallback: allow with log for auditing (can tighten to reject later)
+      // 未识别来源：拒绝并审计（此前放行任意来源，Mimosa 标记 CORS 过度开放）
       console.log(`[CORS] Unrecognized origin: ${origin}`);
-      return origin;
+      return '';
     },
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -88,6 +93,10 @@ registerSocialRoutes(app);
 registerSpacetimeRoutes(app);
 registerChallengeRoutes(app);
 registerLiveSessionRoutes(app);
+registerLiveStreamRoutes(app);
+registerLivestreamRoomRoutes(app);
+registerPlaylistRoutes(app);
+registerFollowRoutes(app);
 registerAlbumRoutes(app);
 registerPkiRoutes(app);
 registerMarketRoutes(app);

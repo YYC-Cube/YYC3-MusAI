@@ -5,10 +5,10 @@
  * Extracted from index.tsx for modularization.
  */
 
-import * as kv from "./kv_store.tsx";
-import { ROUTE_PREFIX } from "./server-utils.ts";
-import { rateLimit, RATE_STANDARD } from "./rate-limit.ts";
-import { validate, liveHeartbeatSchema, liveLeaveSchema, danmakuSchema } from "./validation.ts";
+import * as kv from "../services/kv_store.ts";
+import { ROUTE_PREFIX } from "../services/server-utils.ts";
+import { rateLimit, RATE_STANDARD } from "../services/rate-limit.ts";
+import { validate, liveHeartbeatSchema, liveLeaveSchema, danmakuSchema } from "../services/validation.ts";
 
 const P = ROUTE_PREFIX;
 

@@ -20,8 +20,11 @@
  *   - Write operations require authentication
  */
 
-import { ROUTE_PREFIX, kv, requireAuth } from "./server-utils.ts";
-import { rateLimit, RATE_SENSITIVE } from "./rate-limit.ts";
+import { ROUTE_PREFIX, kv, requireAuth } from "../services/server-utils.ts";
+import { rateLimit, RATE_SENSITIVE } from "../services/rate-limit.ts";
+import {
+  getPkiPublicKey, upsertPkiPublicKey, getPkiKeyBackup, upsertPkiKeyBackup, deletePkiKeys,
+} from "../services/db.ts";
 
 // ==========================================
 // Types
@@ -67,6 +70,24 @@ async function getEnrollmentLog(): Promise<string[]> {
   try { return JSON.parse(raw as string); } catch { return []; }
 }
 
+/** P1b: 读取公钥记录——关系表优先，未命中回退 KV */
+async function readPublicKey(userId: string): Promise<PublicKeyRecord | null> {
+  const fromDb = await getPkiPublicKey(userId);
+  if (fromDb) return fromDb as PublicKeyRecord;
+  const raw = await kv.get(`pki:public-key:${userId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw as string) as PublicKeyRecord; } catch { return null; }
+}
+
+/** P1b: 读取密钥备份——关系表优先，未命中回退 KV */
+async function readKeyBackup(userId: string): Promise<KeyBackupRecord | null> {
+  const fromDb = await getPkiKeyBackup(userId);
+  if (fromDb) return fromDb as KeyBackupRecord;
+  const raw = await kv.get(`pki:key-backup:${userId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw as string) as KeyBackupRecord; } catch { return null; }
+}
+
 async function addToEnrollmentLog(userId: string): Promise<void> {
   const log = await getEnrollmentLog();
   if (!log.includes(userId)) {
@@ -81,14 +102,20 @@ async function addToEnrollmentLog(userId: string): Promise<void> {
 
 export function registerPkiRoutes(app: any) {
 
-  // ---- POST /pki/public-key — Upload/update public key ----
-  app.post(`${ROUTE_PREFIX}/pki/public-key`, rateLimit(RATE_SENSITIVE), async (c: any) => {
+  // ---- POST /pki/public-key — Upload/update public key（需登录且仅限本人） ----
+  app.post(`${ROUTE_PREFIX}/pki/public-key`, requireAuth, rateLimit(RATE_SENSITIVE), async (c: any) => {
     try {
       const body = await c.req.json();
       const { userId, publicKeyJwk } = body;
 
       if (!userId || !publicKeyJwk) {
         return c.json({ error: 'Missing required fields: userId, publicKeyJwk' }, 400);
+      }
+
+      // A2: 仅允许操作自己的公钥
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
       }
 
       // Validate JWK structure
@@ -99,9 +126,8 @@ export function registerPkiRoutes(app: any) {
       const fingerprint = computeFingerprint(publicKeyJwk);
       const now = Date.now();
 
-      // Check if key already exists
-      const existingRaw = await kv.get(`pki:public-key:${userId}`);
-      const existing = existingRaw ? JSON.parse(existingRaw as string) : null;
+      // P1b: 读优先关系表，未命中回退 KV
+      const existing = await readPublicKey(userId);
 
       const record: PublicKeyRecord = {
         userId,
@@ -113,6 +139,7 @@ export function registerPkiRoutes(app: any) {
       };
 
       await kv.set(`pki:public-key:${userId}`, JSON.stringify(record));
+      await upsertPkiPublicKey(record);
       await addToEnrollmentLog(userId);
 
       console.log(`[PKI] Public key ${existing ? 'updated' : 'registered'} for user ${userId} (fingerprint: ${fingerprint})`);
@@ -133,12 +160,12 @@ export function registerPkiRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/pki/public-key/:userId`, async (c: any) => {
     const userId = c.req.param('userId');
     try {
-      const raw = await kv.get(`pki:public-key:${userId}`);
-      if (!raw) {
+      // P1b: 读优先关系表，未命中回退 KV
+      const record = await readPublicKey(userId);
+      if (!record) {
         return c.json({ error: 'Public key not found', enrolled: false }, 404);
       }
 
-      const record = JSON.parse(raw as string) as PublicKeyRecord;
       return c.json({
         publicKeyJwk: record.publicKeyJwk,
         fingerprint: record.fingerprint,
@@ -153,12 +180,20 @@ export function registerPkiRoutes(app: any) {
     }
   });
 
-  // ---- DELETE /pki/public-key/:userId — Delete public key (key rotation) ----
-  app.delete(`${ROUTE_PREFIX}/pki/public-key/:userId`, rateLimit(RATE_SENSITIVE), async (c: any) => {
+  // ---- DELETE /pki/public-key/:userId — Delete public key (key rotation，需登录且仅限本人) ----
+  app.delete(`${ROUTE_PREFIX}/pki/public-key/:userId`, requireAuth, rateLimit(RATE_SENSITIVE), async (c: any) => {
     const userId = c.req.param('userId');
     try {
+      // A2: 仅允许删除自己的密钥
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
+      }
       await kv.del(`pki:public-key:${userId}`);
       await kv.del(`pki:key-backup:${userId}`);
+
+      // P1b: 关系表侧尽力同步删除
+      await deletePkiKeys(userId);
 
       // Remove from enrollment log
       const log = await getEnrollmentLog();
@@ -174,8 +209,8 @@ export function registerPkiRoutes(app: any) {
     }
   });
 
-  // ---- POST /pki/key-backup — Store encrypted key backup ----
-  app.post(`${ROUTE_PREFIX}/pki/key-backup`, rateLimit(RATE_SENSITIVE), async (c: any) => {
+  // ---- POST /pki/key-backup — Store encrypted key backup（需登录且仅限本人） ----
+  app.post(`${ROUTE_PREFIX}/pki/key-backup`, requireAuth, rateLimit(RATE_SENSITIVE), async (c: any) => {
     try {
       const body = await c.req.json();
       const { userId, encryptedPrivateKey, salt, iv, publicKeyJwk } = body;
@@ -184,9 +219,15 @@ export function registerPkiRoutes(app: any) {
         return c.json({ error: 'Missing required backup fields' }, 400);
       }
 
+      // A2: 仅允许写入自己的备份
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
+      }
+
       const now = Date.now();
-      const existingRaw = await kv.get(`pki:key-backup:${userId}`);
-      const existing = existingRaw ? JSON.parse(existingRaw as string) : null;
+      // P1b: 读优先关系表，未命中回退 KV
+      const existing = await readKeyBackup(userId);
 
       const record: KeyBackupRecord = {
         userId,
@@ -199,6 +240,7 @@ export function registerPkiRoutes(app: any) {
       };
 
       await kv.set(`pki:key-backup:${userId}`, JSON.stringify(record));
+      await upsertPkiKeyBackup(record);
 
       console.log(`[PKI] Key backup ${existing ? 'updated' : 'created'} for user ${userId}`);
 
@@ -213,16 +255,21 @@ export function registerPkiRoutes(app: any) {
     }
   });
 
-  // ---- GET /pki/key-backup/:userId — Retrieve encrypted key backup ----
-  app.get(`${ROUTE_PREFIX}/pki/key-backup/:userId`, async (c: any) => {
+  // ---- GET /pki/key-backup/:userId — Retrieve encrypted key backup（需登录且仅限本人） ----
+  app.get(`${ROUTE_PREFIX}/pki/key-backup/:userId`, requireAuth, async (c: any) => {
     const userId = c.req.param('userId');
     try {
-      const raw = await kv.get(`pki:key-backup:${userId}`);
-      if (!raw) {
+      // A2: 加密私钥备份仅本人可取
+      const authed = c.get('authedUser');
+      if (!authed || authed.id !== userId) {
+        return c.json({ error: 'Forbidden: userId mismatch' }, 403);
+      }
+      // P1b: 读优先关系表，未命中回退 KV
+      const record = await readKeyBackup(userId);
+      if (!record) {
         return c.json({ error: 'Key backup not found', hasBackup: false }, 404);
       }
 
-      const record = JSON.parse(raw as string) as KeyBackupRecord;
       return c.json({
         encryptedPrivateKey: record.encryptedPrivateKey,
         salt: record.salt,
@@ -241,25 +288,18 @@ export function registerPkiRoutes(app: any) {
   app.get(`${ROUTE_PREFIX}/pki/status/:userId`, async (c: any) => {
     const userId = c.req.param('userId');
     try {
-      const keyRaw = await kv.get(`pki:public-key:${userId}`);
-      const backupRaw = await kv.get(`pki:key-backup:${userId}`);
+      // P1b: 读优先关系表，未命中回退 KV
+      const keyRecord = await readPublicKey(userId);
+      const backupRecord = await readKeyBackup(userId);
 
-      const hasPublicKey = !!keyRaw;
-      const hasBackup = !!backupRaw;
-
-      let fingerprint: string | null = null;
-      let enrolledAt: number | null = null;
-      if (hasPublicKey) {
-        const record = JSON.parse(keyRaw as string) as PublicKeyRecord;
-        fingerprint = record.fingerprint;
-        enrolledAt = record.createdAt;
-      }
+      const hasPublicKey = !!keyRecord;
+      const hasBackup = !!backupRecord;
 
       return c.json({
         enrolled: hasPublicKey,
         hasBackup,
-        fingerprint,
-        enrolledAt,
+        fingerprint: keyRecord?.fingerprint ?? null,
+        enrolledAt: keyRecord?.createdAt ?? null,
       });
     } catch (error) {
       console.log(`[PKI] Error checking status for ${userId}:`, error);
