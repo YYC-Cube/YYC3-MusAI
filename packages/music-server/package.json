@@ -8,6 +8,7 @@
     "src"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "deploy": "supabase functions deploy make-server-f626b673 --project-ref $SUPABASE_PROJECT_REF",
     "prisma:validate": "prisma validate",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -116,6 +116,9 @@ export default defineConfig({
         test: {
           name: 'music-community',
           environment: 'jsdom',
+          // LiveSessionPanel 自动推导直播间通道在模块加载期读取 API_BASE，
+          // 测试需合法基址（生产由 .env.production / 宿主注入）
+          env: { VITE_API_BASE: 'https://api.example.com/functions/v1/make-server-f626b673' },
           include: ['packages/music-community/test/**/*.test.ts?(x)'],
           setupFiles: ['test/setup-dom.ts'],
         },

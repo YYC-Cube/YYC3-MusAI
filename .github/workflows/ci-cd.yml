@@ -36,7 +36,7 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Unit tests + coverage gate (>=80%)
+      - name: Unit tests + coverage gate (95/92/88/95 — thresholds in vitest.config.ts)
         run: pnpm test:coverage
 
       - name: M98 server tests (Jest)
