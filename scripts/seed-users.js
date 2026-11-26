@@ -4,18 +4,28 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { randomUUID } from 'node:crypto';
 
-const SUPABASE_URL = "https://phgrinrlnxzjyxxhsqry.supabase.co";
-const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoZ3JpbnJsbnh6anl4eGhzcXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NzgzNDEsImV4cCI6MjA4NTI1NDM0MX0.bNn7XeoXmFD0dGIXIkh_YzQw-i-IqWW4x5gvl8nMcDA";
+// 终审 R6：凭据一律 env 注入，源码零字面量（轮换见 PRODUCTION-READINESS-PLAN.md）
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('[seed] 缺少 SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 环境变量——拒绝以硬编码凭据运行');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+// 测试账号密码：env 覆盖或每次随机生成（仅打印一次，不回填源码）
+const SEED_PASSWORD = process.env.SEED_USER_PASSWORD ?? randomUUID().replace(/-/g, '').slice(0, 12);
+console.log(`[seed] 测试账号密码: ${SEED_PASSWORD}（仅本次有效，请自行记录）`);
 
 // 测试用户数据
 const testUsers = [
   {
     id: 'user-001',
     email: 'user001@test.com',
-    password: 'password123',
+    password: SEED_PASSWORD,
     username: 'user001',
     display_name: '普通用户',
     avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user001',
@@ -34,7 +44,7 @@ const testUsers = [
   {
     id: 'user-002',
     email: 'user002@test.com',
-    password: 'password123',
+    password: SEED_PASSWORD,
     username: 'user002',
     display_name: '创作者用户',
     avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user002',
@@ -53,7 +63,7 @@ const testUsers = [
   {
     id: 'user-003',
     email: 'user003@test.com',
-    password: 'password123',
+    password: SEED_PASSWORD,
     username: 'user003',
     display_name: 'VIP 用户',
     avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user003',
@@ -72,7 +82,7 @@ const testUsers = [
   {
     id: 'user-004',
     email: 'user004@test.com',
-    password: 'password123',
+    password: SEED_PASSWORD,
     username: 'user004',
     display_name: '管理员用户',
     avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user004',
@@ -91,7 +101,7 @@ const testUsers = [
   {
     id: 'user-005',
     email: 'user005@test.com',
-    password: 'password123',
+    password: SEED_PASSWORD,
     username: 'user005',
     display_name: '测试用户',
     avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user005',

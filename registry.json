@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-11-21T07:17:14.631Z",
+  "generatedAt": "2026-11-26T14:27:57.392Z",
   "totals": {
     "packages": 16,
     "components": 355,
@@ -419,7 +419,7 @@
       "category": "音效与文档",
       "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
-      "source": "packages/music-audio/src/EmotionAudioPlayer.tsx",
+      "source": "packages/music-audio/src/ui/EmotionAudioPlayer.tsx",
       "demo": null,
       "example": null
     },
@@ -430,7 +430,7 @@
       "category": "音效与文档",
       "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
-      "source": "packages/music-audio/src/InteractiveCodeBlock.tsx",
+      "source": "packages/music-audio/src/ui/InteractiveCodeBlock.tsx",
       "demo": null,
       "example": null
     },
@@ -441,7 +441,7 @@
       "category": "音效与文档",
       "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
-      "source": "packages/music-audio/src/InteractiveMindMap.tsx",
+      "source": "packages/music-audio/src/ui/InteractiveMindMap.tsx",
       "demo": null,
       "example": null
     },
@@ -452,7 +452,7 @@
       "category": "音效与文档",
       "description": "YYC³ D-Music 音效系统 (v1.2.0) — 高级播放器 / WebAudio / 音效资源 / 翻页交互 / 情感音频与文档交互组件",
       "props": [],
-      "source": "packages/music-audio/src/SmartTip.tsx",
+      "source": "packages/music-audio/src/ui/SmartTip.tsx",
       "demo": null,
       "example": null
     },
@@ -1455,7 +1455,8 @@
         "room",
         "user",
         "wsUrl",
-        "renderPlayer"
+        "renderPlayer",
+        "gifts"
       ],
       "source": "packages/music-live/src/LiveRoom.tsx",
       "demo": null,
@@ -2326,6 +2327,7 @@
       "props": [
         "open",
         "onOpenChange",
+        "disableShortcut",
         "className",
         "children",
         "onSelectSearchResult"

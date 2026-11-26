@@ -82,6 +82,46 @@ jobs:
           deno coverage /tmp/deno-cov --exclude=test-deno --exclude=src/index.tsx --lcov --output=/tmp/deno-src.lcov
           awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END {pct=lh/lf*100; printf "Deno src coverage: %.2f%% (%d/%d)\n", pct, lh, lf; exit (pct>=80?0:1)}' /tmp/deno-src.lcov
 
+  a11y:
+    # 终审 R5：axe 无障碍门禁。首跑 shadow 模式（continue-on-error）——
+    # 拿到首轮 serious/critical 清单并修复后，移除 continue-on-error 转硬阻断。
+    name: A11y Scan (axe-core)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright chromium
+        run: pnpm --filter @yyc3/yyc3-musai exec playwright install chromium --with-deps
+
+      - name: Build app
+        run: pnpm --filter @yyc3/yyc3-musai build
+
+      - name: Run a11y scan (blocking)
+        working-directory: apps/yyc3-musai
+        run: |
+          npx vite preview --port 4173 &
+          PREVIEW_PID=$!
+          # 等待 preview 就绪（最多 30s）
+          for i in $(seq 1 30); do curl -sf http://localhost:4173/ >/dev/null 2>&1 && break; sleep 1; done
+          node e2e/a11y.mjs --base http://localhost:4173
+          EXIT=$?
+          kill $PREVIEW_PID 2>/dev/null || true
+          exit $EXIT
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -92,8 +132,11 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Run audit (blocking)
-        run: pnpm audit --audit-level=high
+      - name: Run audit (blocking, production deps)
+        # 终审 R1：生产依赖 0 high+critical 硬门禁（--prod）。
+        # 全量口径含 m98-web 的 react-scripts(EOL) dev 工具链传递漏洞，
+        # 无生产运行时暴露——处置见 PRODUCTION-READINESS-PLAN.md；后续迁移 Vite 后可收紧回全量。
+        run: pnpm audit --prod --audit-level=high
         env:
           npm_config_registry: https://registry.npmjs.org
 

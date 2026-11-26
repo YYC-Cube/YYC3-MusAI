@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import {
   DButton, DCard, DBadge, StarPowerChart, DProgress, DInput, DSpinner,
   DEmptyState, DAchievementCard, AchievementRing, StatCard, SparklineChart
-} from '@yyc3/music-ui';
+} from '@yyc3/music-ui/dmusic';
 import { XiaoyuCharacter, XiaoyuBubble } from '@yyc3/music-emotion';
 import { LyricsDisplay, EmotionRipple } from '@yyc3/music-lyrics';
 import { AudioVisualizer, CoverFlow } from '@yyc3/music-player';

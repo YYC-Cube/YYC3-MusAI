@@ -105,7 +105,7 @@ import {
   ChartLegendContent,
   ChartStyle,
   ChartTooltipContent,
-} from '../src'
+} from '../src/ui/chart'
 import { useIsMobile } from '../src'
 
 const originalInnerWidth = window.innerWidth

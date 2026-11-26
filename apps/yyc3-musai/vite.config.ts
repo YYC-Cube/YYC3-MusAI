@@ -30,6 +30,10 @@ export default defineConfig({
           if (pkgName.startsWith('@radix-ui/')) return 'vendor-radix'
           // cmdk / vaul 依赖 @radix-ui/react-dialog，并入同组避免环形 chunk
           if (pkgName === 'cmdk' || pkgName === 'vaul') return 'vendor-radix'
+          // 终审 R7：流媒体内核单独分组（video 模式动态加载，勿并入首屏 vendor）
+          if (pkgName === 'hls.js' || pkgName === 'video.js' || pkgName === '@videojs') return 'vendor-video'
+          // 终审 R7：日历/日期组单独拆出，削减兜底 vendor 体积
+          if (pkgName === 'react-day-picker' || pkgName === 'date-fns') return 'vendor-date'
           if (
             pkgName === 'recharts' ||
             pkgName === 'victory-vendor' ||

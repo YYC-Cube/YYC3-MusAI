@@ -1,3 +1,5 @@
+// 终审 R7：chart（recharts 命名空间导入，tree-shake 免疫）与 dmusic 移出主 barrel，
+// 改子路径导入（@yyc3/music-ui/chart、/dmusic）——主 barrel 静态消费者不再牵入 recharts。
 // YYC³ music-ui — 基础 UI 组件库（shadcn 基件 + D-Music 设计层）
 // 原子/分子层：48 个 shadcn 基件
 export * from './ui/accordion';
@@ -11,7 +13,6 @@ export * from './ui/button';
 export * from './ui/calendar';
 export * from './ui/card';
 export * from './ui/carousel';
-export * from './ui/chart';
 export * from './ui/checkbox';
 export * from './ui/cmd-k-palette';
 export * from './ui/collapsible';
@@ -58,6 +59,5 @@ export * from './ui/vaul-drawer';
 export * from './ui/use-mobile';
 export * from './ui/utils';
 // 有机体设计层：D-Music 自研组件（DButton/DCard/DataViz 等）
-export * from './dmusic';
 // Figma 兼容层
 export * from './figma/ImageWithFallback';

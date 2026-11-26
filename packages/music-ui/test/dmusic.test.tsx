@@ -69,7 +69,7 @@ import {
   DTag,
   DToast,
   DUserCard,
-} from '../src'
+} from '../src/dmusic'
 import {
   AchievementGrid,
   DataExportButton,
@@ -79,9 +79,9 @@ import {
   SparklineChart,
   StarPowerChart,
   StatCard,
-} from '../src'
-import { DPanel } from '../src'
-import { DMusicShowcase } from '../src'
+} from '../src/dmusic'
+import { DPanel } from '../src/dmusic'
+import { DMusicShowcase } from '../src/dmusic'
 
 const originalCreateObjectURL = URL.createObjectURL
 const originalRevokeObjectURL = URL.revokeObjectURL

@@ -48,7 +48,6 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { PerfMonitor } from './components/PerfMonitor';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
 import { KeyboardShortcuts } from './components/KeyboardShortcuts';
-import { ListeningStats } from './components/ListeningStats';
 import { TimelineComments } from '@yyc3/music-community';
 import { EmotionRipple } from '@yyc3/music-lyrics';
 import { loadPref, savePref, pullPrefsFromKV } from '@yyc3/music-utils';
@@ -59,6 +58,8 @@ import { applyTheme, getTheme, type ThemeId } from '@yyc3/music-design-tokens';
 // These panels are heavy and only rendered when opened.
 // ==========================================
 const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard').then(m => ({ default: m.AnalyticsDashboard })));
+// 终审 R7：recharts 全量命名空间导入 → 懒加载，vendor-charts 出首屏 preload
+const ListeningStats = lazy(() => import('./components/ListeningStats').then(m => ({ default: m.ListeningStats })));
 const AILyricsGenerator = lazy(() => import('@yyc3/music-ai').then(m => ({ default: m.AILyricsGenerator })));
 const LeaderboardPanel = lazy(() => import('@yyc3/music-growth').then(m => ({ default: m.LeaderboardPanel })));
 const RecommendationsPanel = lazy(() => import('./components/RecommendationsPanel').then(m => ({ default: m.RecommendationsPanel })));
@@ -77,7 +78,7 @@ const ForkTree = lazy(() => import('@yyc3/music-community').then(m => ({ default
 const MHeartSystem = lazy(() => import('@yyc3/music-community').then(m => ({ default: m.MHeartSystem })));
 const SmartPlaylistPanel = lazy(() => import('./components/SmartPlaylistPanel').then(m => ({ default: m.SmartPlaylistPanel })));
 const LiveSessionPanel = lazy(() => import('@yyc3/music-community').then(m => ({ default: m.LiveSessionPanel })));
-const DMusicShowcase = lazy(() => import('@yyc3/music-ui').then(m => ({ default: m.DMusicShowcase })));
+const DMusicShowcase = lazy(() => import('@yyc3/music-ui/dmusic').then(m => ({ default: m.DMusicShowcase })));
 const AlbumStore = lazy(() => import('@yyc3/music-commerce').then(m => ({ default: m.AlbumStore })));
 const E2EKeySetup = lazy(() => import('@yyc3/music-community').then(m => ({ default: m.E2EKeySetup })));
 const SecondaryMarket = lazy(() => import('@yyc3/music-commerce').then(m => ({ default: m.SecondaryMarket })));
@@ -2188,13 +2189,15 @@ export function AppInner() {
       {/* §17.x — Keyboard Shortcuts Panel (? key to toggle) */}
       <KeyboardShortcuts lang={lang} />
 
-      {/* §18.x — Listening Stats Dashboard */}
-      <ListeningStats
-        isOpen={showListeningStats}
-        onClose={closePanel}
-        userId={user?.id}
-        lang={lang}
-      />
+      {/* §18.x — Listening Stats Dashboard（终审 R7 懒加载） */}
+      <Suspense fallback={null}>
+        <ListeningStats
+          isOpen={showListeningStats}
+          onClose={closePanel}
+          userId={user?.id}
+          lang={lang}
+        />
+      </Suspense>
 
       {/* §20.x — Fork Tree (创作协作分支树) */}
       <Suspense fallback={null}>

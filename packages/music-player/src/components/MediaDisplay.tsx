@@ -7,9 +7,8 @@ import { useI18n } from '@yyc3/music-hooks';
 
 // Video.js 10 + Media Chrome 播放器内核（W2）
 // 注：media-chrome v4 为 Web Components，样式内建 shadow DOM，无独立 CSS 文件
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
-import Hls from 'hls.js';
+// 终审 R7：video.js / hls.js 改为 video 模式按需动态加载——audio 模式（默认）
+// 零加载，主 vendor chunk 瘦身（两者合计约占旧 vendor 源码 55%+）。
 
 type VideoJsPlayer = any;
 
@@ -55,55 +54,76 @@ export const MediaDisplay: React.FC<MediaDisplayProps> = ({
   useEffect(() => {
     if (mode !== 'video' || !videoRef.current) return;
 
-    const el = videoRef.current;
-    const isHls = typeof videoUrl === 'string' && videoUrl.endsWith('.m3u8');
+    // 卸载后 videoRef.current 会被 React 置空——同步段先捕获 el 供 cleanup 使用
+    const mountedEl = videoRef.current;
 
-    if (isHls && Hls.isSupported()) {
-      // hls.js 接管 HLS 源，video.js 仅负责渲染与控制栏
-      const hls = new Hls();
-      hls.loadSource(videoUrl);
-      hls.attachMedia(el);
-      // jsdom / 旧浏览器 play() 可能返回 undefined，安全调用
-      try {
-        void Promise.resolve(el.play?.()).catch(() => {});
-      } catch {
-        /* 自动播放被策略阻止属预期，等待用户手势 */
-      }
-      (el as any).__hls = hls;
-      return () => {
-        if ((el as any).__hls) {
-          (el as any).__hls.destroy();
-          (el as any).__hls = null;
+    // 竞态防护：动态 import 未完成即卸载时，丢弃迟到实例
+    let disposed = false;
+
+    (async () => {
+      const el = mountedEl;
+      if (!el) return;
+      const isHls = typeof videoUrl === 'string' && videoUrl.endsWith('.m3u8');
+
+      if (isHls) {
+        const { default: Hls } = await import('hls.js');
+        if (disposed) return;
+        if (Hls.isSupported()) {
+          // hls.js 接管 HLS 源，video.js 仅负责渲染与控制栏
+          const hls = new Hls();
+          hls.loadSource(videoUrl);
+          hls.attachMedia(el);
+          // jsdom / 旧浏览器 play() 可能返回 undefined，安全调用
+          try {
+            void Promise.resolve(el.play?.()).catch(() => {});
+          } catch {
+            /* 自动播放被策略阻止属预期，等待用户手势 */
+          }
+          (el as any).__hls = hls;
+          return;
         }
-      };
-    }
+      }
 
-    // 非 HLS：Video.js 原生播放
-    const newPlayer: any = videojs(el, {
-      fluid: true,
-      controls: true,
-      playsinline: true,
-      preload: 'auto',
-      controlBar: {
-        volumePanel: true,
-        progressControl: true,
-        remainingTimeDisplay: false,
-      },
+      // 非 HLS（或 MSE 不可用）：Video.js 原生播放
+      const [{ default: videojs }] = await Promise.all([
+        import('video.js'),
+        import('video.js/dist/video-js.css'),
+      ]);
+      if (disposed || !videoRef.current) return;
+      const newPlayer: any = videojs(videoRef.current, {
+        fluid: true,
+        controls: true,
+        playsinline: true,
+        preload: 'auto',
+        controlBar: {
+          volumePanel: true,
+          progressControl: true,
+          remainingTimeDisplay: false,
+        },
+      });
+      // videojs 同步返回实例；不在 ready 回调内引用自身（避免 TDZ 时序缺陷）
+      playerRef.current = newPlayer;
+      // 深色主题色变量，与现有设计一致（主仓 §W2 合入；宿主元素缺失/无 style 时跳过，如测试 mock）
+      const hostEl = newPlayer.el() as (HTMLElement | undefined | null);
+      hostEl?.style?.setProperty?.('--vjs-color-accent', '#667eea');
+      hostEl?.style?.setProperty?.('--vjs-control-color', 'rgba(255,255,255,0.8)');
+      hostEl?.style?.setProperty?.('--vjs-control-hover-bg', 'rgba(255,255,255,0.15)');
+      hostEl?.style?.setProperty?.('--vjs-control-active-bg', 'rgba(255,255,255,0.25)');
+      hostEl?.style?.setProperty?.('--vjs-control-disabled-bg', 'rgba(255,255,255,0.05)');
+      newPlayer.src({ src: videoUrl, type: 'video/mp4' });
+      // 首次创建时按当前播放状态启动（闭包捕获创建时刻的 isPlaying）
+      if (isPlaying) newPlayer.play();
+    })().catch((err) => {
+      console.error('[MediaDisplay] 播放内核动态加载失败:', err);
     });
-    // videojs 同步返回实例；不在 ready 回调内引用自身（避免 TDZ 时序缺陷）
-    playerRef.current = newPlayer;
-    // 深色主题色变量，与现有设计一致（主仓 §W2 合入；宿主元素缺失/无 style 时跳过，如测试 mock）
-    const hostEl = newPlayer.el() as (HTMLElement | undefined | null);
-    hostEl?.style?.setProperty?.('--vjs-color-accent', '#667eea');
-    hostEl?.style?.setProperty?.('--vjs-control-color', 'rgba(255,255,255,0.8)');
-    hostEl?.style?.setProperty?.('--vjs-control-hover-bg', 'rgba(255,255,255,0.15)');
-    hostEl?.style?.setProperty?.('--vjs-control-active-bg', 'rgba(255,255,255,0.25)');
-    hostEl?.style?.setProperty?.('--vjs-control-disabled-bg', 'rgba(255,255,255,0.05)');
-    newPlayer.src({ src: videoUrl, type: 'video/mp4' });
-    // 首次创建时按当前播放状态启动（闭包捕获创建时刻的 isPlaying）
-    if (isPlaying) newPlayer.play();
 
     return () => {
+      disposed = true;
+      const el = mountedEl;
+      if (el && (el as any).__hls) {
+        (el as any).__hls.destroy();
+        (el as any).__hls = null;
+      }
       if (playerRef.current) {
         playerRef.current.dispose();
         playerRef.current = null;

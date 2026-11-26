@@ -1,7 +1,7 @@
 /**
  * MediaDisplay 单元测试 — Video.js 10 + hls.js 集成分支（mock 内核）
  */
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockPlayer = {
@@ -74,10 +74,12 @@ describe('MediaDisplay', () => {
     expect(utils.container.querySelector('video')).toBeNull();
   });
 
-  it('video 模式 m3u8 源由 hls.js 接管（loadSource + attachMedia）', () => {
+  it('video 模式 m3u8 源由 hls.js 接管（loadSource + attachMedia）', async () => {
     const utils = render(
       <MediaDisplay {...baseProps} mode="video" videoUrl="https://cdn.example.com/live/index.m3u8" />,
     );
+    // R7：播放内核动态 import——flush 微任务后再断言
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
     expect(utils.container.querySelector('video')).toBeTruthy();
     expect(hlsInstances).toHaveLength(1);
     expect(hlsInstances[0].loadSource).toHaveBeenCalledWith('https://cdn.example.com/live/index.m3u8');
@@ -85,27 +87,30 @@ describe('MediaDisplay', () => {
     expect(videojs).not.toHaveBeenCalled();
   });
 
-  it('HLS 不支持时回退（不实例化 Hls）', () => {
+  it('HLS 不支持时回退（不实例化 Hls）', async () => {
     (Hls.isSupported as any) = vi.fn(() => false);
     render(
       <MediaDisplay {...baseProps} mode="video" videoUrl="https://cdn.example.com/live/index.m3u8" />,
     );
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
     expect(hlsInstances).toHaveLength(0);
   });
 
-  it('卸载时销毁 hls 实例（防泄漏）', () => {
+  it('卸载时销毁 hls 实例（防泄漏）', async () => {
     const utils = render(
       <MediaDisplay {...baseProps} mode="video" videoUrl="https://cdn.example.com/live/index.m3u8" />,
     );
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
     expect(hlsInstances).toHaveLength(1);
     utils.unmount();
     expect(hlsInstances[0].destroy).toHaveBeenCalled();
   });
 
-  it('mp4 源走 Video.js 原生（videojs 被创建并设置 src）', () => {
+  it('mp4 源走 Video.js 原生（videojs 被创建并设置 src）', async () => {
     render(
       <MediaDisplay {...baseProps} isPlaying mode="video" videoUrl="https://cdn.example.com/media/movie.mp4" />,
     );
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
     expect(videojs).toHaveBeenCalled();
     expect(mockPlayer.src).toHaveBeenCalledWith({
       src: 'https://cdn.example.com/media/movie.mp4',
@@ -114,11 +119,12 @@ describe('MediaDisplay', () => {
     expect(mockPlayer.play).toHaveBeenCalled();
   });
 
-  it('同源复用实例：仅同步播放状态不重建', () => {
+  it('同源复用实例：仅同步播放状态不重建', async () => {
     mockPlayer.currentSrc.mockReturnValue('https://cdn.example.com/media/movie.mp4');
     const utils = render(
       <MediaDisplay {...baseProps} isPlaying mode="video" videoUrl="https://cdn.example.com/media/movie.mp4" />,
     );
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
     const created = vi.mocked(videojs).mock.calls.length;
     // isPlaying 翻转（同 url）→ 复用实例，仅 pause
     utils.rerender(

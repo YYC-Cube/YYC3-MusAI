@@ -21,7 +21,7 @@ import {
   DToast,
   RankingList,
   StatCard,
-} from '../src'
+} from '../src/dmusic'
 
 // jsdom 缺失浏览器 API 守卫（W7-P2-3 环境自足化；守卫式，不覆盖宿主已有实现）
 if (typeof window !== 'undefined') {
