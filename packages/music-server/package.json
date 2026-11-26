@@ -36,6 +36,6 @@
     "@types/pg": "^8.11.10",
     "@types/ws": "^8.18.0",
     "prisma": "7.10.1",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   }
 }
