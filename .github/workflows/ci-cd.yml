@@ -131,11 +131,11 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Run audit (blocking, production deps)
-        # 终审 R1：生产依赖 0 high+critical 硬门禁（--prod）。
-        # 全量口径含 m98-web 的 react-scripts(EOL) dev 工具链传递漏洞，
-        # 无生产运行时暴露——处置见 PRODUCTION-READINESS-PLAN.md；后续迁移 Vite 后可收紧回全量。
-        run: pnpm audit --prod --audit-level=high
+      - name: Run audit (blocking, all deps)
+        # 遗留闭环：m98-web 已迁移 Vite（react-scripts EOL 工具链移除）+
+        # overrides 收敛 effect/semver/tar —— 全量口径 51→1（仅 1 low @tootallnate/once，
+        # ws 链 ESM-only 升级有 break 风险，诚实保留不阻断）。
+        run: pnpm audit --audit-level=high
         env:
           npm_config_registry: https://registry.npmjs.org
 

@@ -29,14 +29,14 @@ function App() {
             </div>
           </nav>
         </header>
-        
+
         <main className="app-main">
           <Routes>
             <Route path="/" element={<HomePage />} />
             {/* 其他路由将在后续添加 */}
           </Routes>
         </main>
-        
+
         <footer className="app-footer">
           <p>&copy; 2024 M98 董小姐. All rights reserved.</p>
           <div className="footer-links">

@@ -28,6 +28,7 @@ import { registerPkiRoutes } from '../../src/routes/routes-pki.ts';
 import { registerMarketRoutes } from '../../src/routes/routes-market.ts';
 import { registerDiagnosticsRoutes } from '../../src/routes/routes-diagnostics.ts';
 import { registerUploadRoutes } from '../../src/routes/routes-upload.ts';
+import { registerMonitoringRoutes } from '../../src/routes/routes-monitoring.ts';
 
 export function createTestApp(): Hono {
   const app = new Hono();
@@ -58,6 +59,7 @@ export function createTestApp(): Hono {
   registerMarketRoutes(app);
   registerDiagnosticsRoutes(app);
   registerUploadRoutes(app);
+  registerMonitoringRoutes(app);
 
   return app;
 }

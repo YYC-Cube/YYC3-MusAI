@@ -157,6 +157,15 @@ export default defineConfig({
         },
       },
       {
+        // 覆盖率提升：music-mv 场景组件（原全包 0%）
+        test: {
+          name: 'music-mv',
+          environment: 'jsdom',
+          include: ['packages/music-mv/test/**/*.test.ts?(x)'],
+          setupFiles: ['test/setup-dom.ts'],
+        },
+      },
+      {
         test: {
           name: 'music-server',
           environment: 'node',

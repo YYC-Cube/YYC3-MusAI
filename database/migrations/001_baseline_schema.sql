@@ -43,10 +43,10 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
 
 -- 用户社交信息
 CREATE TABLE IF NOT EXISTS user_social (
@@ -102,9 +102,9 @@ CREATE TABLE IF NOT EXISTS user_star_power (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_star_power_user ON user_star_power(user_id);
-CREATE INDEX idx_star_power_vip ON user_star_power(vip_level);
-CREATE INDEX idx_star_power_mheart ON user_star_power(mheart_value);
+CREATE INDEX IF NOT EXISTS idx_star_power_user ON user_star_power(user_id);
+CREATE INDEX IF NOT EXISTS idx_star_power_vip ON user_star_power(vip_level);
+CREATE INDEX IF NOT EXISTS idx_star_power_mheart ON user_star_power(mheart_value);
 
 -- 星力交易记录
 CREATE TABLE IF NOT EXISTS star_power_transactions (
@@ -119,8 +119,8 @@ CREATE TABLE IF NOT EXISTS star_power_transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_transactions_user_created ON star_power_transactions(user_id, created_at);
-CREATE INDEX idx_transactions_type ON star_power_transactions(transaction_type, related_type);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_created ON star_power_transactions(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON star_power_transactions(transaction_type, related_type);
 
 -- 星力获取规则
 CREATE TABLE IF NOT EXISTS star_power_rules (
@@ -173,11 +173,11 @@ CREATE TABLE IF NOT EXISTS musics (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_musics_creator ON musics(creator_id);
-CREATE INDEX idx_musics_status ON musics(status);
-CREATE INDEX idx_musics_play_count ON musics(play_count DESC);
-CREATE INDEX idx_musics_created ON musics(created_at DESC);
-CREATE INDEX idx_musics_title_artist ON musics USING gin(to_tsvector('english', title || ' ' || artist));
+CREATE INDEX IF NOT EXISTS idx_musics_creator ON musics(creator_id);
+CREATE INDEX IF NOT EXISTS idx_musics_status ON musics(status);
+CREATE INDEX IF NOT EXISTS idx_musics_play_count ON musics(play_count DESC);
+CREATE INDEX IF NOT EXISTS idx_musics_created ON musics(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_musics_title_artist ON musics USING gin(to_tsvector('english', title || ' ' || artist));
 
 -- 专辑表
 CREATE TABLE IF NOT EXISTS albums (
@@ -198,8 +198,8 @@ CREATE TABLE IF NOT EXISTS albums (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_albums_creator ON albums(creator_id);
-CREATE INDEX idx_albums_release ON albums(release_date DESC);
+CREATE INDEX IF NOT EXISTS idx_albums_creator ON albums(creator_id);
+CREATE INDEX IF NOT EXISTS idx_albums_release ON albums(release_date DESC);
 
 -- ============================================================
 -- 4. 播放列表系统
@@ -226,9 +226,9 @@ CREATE TABLE IF NOT EXISTS playlists (
     last_played_at TIMESTAMP
 );
 
-CREATE INDEX idx_playlists_creator ON playlists(creator_id);
-CREATE INDEX idx_playlists_public ON playlists(is_public, play_count DESC);
-CREATE INDEX idx_playlists_created ON playlists(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_playlists_creator ON playlists(creator_id);
+CREATE INDEX IF NOT EXISTS idx_playlists_public ON playlists(is_public, play_count DESC);
+CREATE INDEX IF NOT EXISTS idx_playlists_created ON playlists(created_at DESC);
 
 -- 播放列表-音乐关联表
 CREATE TABLE IF NOT EXISTS playlist_musics (
@@ -241,7 +241,7 @@ CREATE TABLE IF NOT EXISTS playlist_musics (
     UNIQUE (playlist_id, music_id)
 );
 
-CREATE INDEX idx_playlist_musics_position ON playlist_musics(playlist_id, position);
+CREATE INDEX IF NOT EXISTS idx_playlist_musics_position ON playlist_musics(playlist_id, position);
 
 -- 播放列表协作者
 CREATE TABLE IF NOT EXISTS playlist_collaborators (
@@ -277,8 +277,8 @@ CREATE TABLE IF NOT EXISTS ranking_data (
     UNIQUE (content_id, content_type, ranking_type, ranking_date)
 );
 
-CREATE INDEX idx_ranking_score ON ranking_data(ranking_type, ranking_date, final_score DESC);
-CREATE INDEX idx_ranking_wilson ON ranking_data(wilson_score DESC);
+CREATE INDEX IF NOT EXISTS idx_ranking_score ON ranking_data(ranking_type, ranking_date, final_score DESC);
+CREATE INDEX IF NOT EXISTS idx_ranking_wilson ON ranking_data(wilson_score DESC);
 
 -- ============================================================
 -- 6. 互动系统
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS likes (
     UNIQUE (user_id, target_type, target_id)
 );
 
-CREATE INDEX idx_likes_target ON likes(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_likes_target ON likes(target_type, target_id);
 
 -- 评论表
 CREATE TABLE IF NOT EXISTS comments (
@@ -311,9 +311,9 @@ CREATE TABLE IF NOT EXISTS comments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_comments_user ON comments(user_id);
-CREATE INDEX idx_comments_target ON comments(target_type, target_id);
-CREATE INDEX idx_comments_parent ON comments(parent_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_target ON comments(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id);
 
 -- 分享记录
 CREATE TABLE IF NOT EXISTS shares (
@@ -325,8 +325,8 @@ CREATE TABLE IF NOT EXISTS shares (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_shares_user ON shares(user_id);
-CREATE INDEX idx_shares_target ON shares(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_shares_user ON shares(user_id);
+CREATE INDEX IF NOT EXISTS idx_shares_target ON shares(target_type, target_id);
 
 -- ============================================================
 -- 7. 播放历史与收藏
@@ -342,8 +342,8 @@ CREATE TABLE IF NOT EXISTS play_history (
     played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_play_history_user_time ON play_history(user_id, played_at DESC);
-CREATE INDEX idx_play_history_music ON play_history(music_id);
+CREATE INDEX IF NOT EXISTS idx_play_history_user_time ON play_history(user_id, played_at DESC);
+CREATE INDEX IF NOT EXISTS idx_play_history_music ON play_history(music_id);
 
 -- 收藏夹
 CREATE TABLE IF NOT EXISTS favorites (
@@ -356,7 +356,7 @@ CREATE TABLE IF NOT EXISTS favorites (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_favorites_user ON favorites(user_id);
+CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);
 
 -- 收藏项
 CREATE TABLE IF NOT EXISTS favorite_items (
@@ -382,8 +382,8 @@ CREATE TABLE IF NOT EXISTS follows (
     CHECK (follower_id != following_id)
 );
 
-CREATE INDEX idx_follows_follower ON follows(follower_id);
-CREATE INDEX idx_follows_following ON follows(following_id);
+CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
 
 -- ============================================================
 -- 9. 消息通知系统
@@ -403,8 +403,8 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_messages_receiver_read ON messages(receiver_id, is_read);
-CREATE INDEX idx_messages_created ON messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_receiver_read ON messages(receiver_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
 
 -- ============================================================
 -- 10. 签到系统
@@ -422,7 +422,7 @@ CREATE TABLE IF NOT EXISTS checkins (
     UNIQUE (user_id, checkin_date)
 );
 
-CREATE INDEX idx_checkins_user ON checkins(user_id);
+CREATE INDEX IF NOT EXISTS idx_checkins_user ON checkins(user_id);
 
 -- ============================================================
 -- 11. AI 创作系统
@@ -452,9 +452,9 @@ CREATE TABLE IF NOT EXISTS ai_works (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_ai_works_user ON ai_works(user_id);
-CREATE INDEX idx_ai_works_status ON ai_works(status);
-CREATE INDEX idx_ai_works_public ON ai_works(is_public, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_works_user ON ai_works(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_works_status ON ai_works(status);
+CREATE INDEX IF NOT EXISTS idx_ai_works_public ON ai_works(is_public, created_at DESC);
 
 -- ============================================================
 -- 12. 时空系统
@@ -467,7 +467,9 @@ CREATE TABLE IF NOT EXISTS spacetime_messages (
     content TEXT NOT NULL,
     type VARCHAR(50),
     emotion VARCHAR(50),
-    target_location GEOGRAPHY(POINT, 4326),
+    -- 演练实测：NAS 生产库无 postgis——location 存 GeoJSON（{"lat":..,"lng":..}），
+    -- 去 postgis 硬依赖保证空库一键复现；若未来启用地理查询再独立迁移引入 postgis
+    target_location JSONB,
     target_time TIMESTAMP,
     song_id UUID REFERENCES musics(id),
     song_title VARCHAR(200),
@@ -480,9 +482,8 @@ CREATE TABLE IF NOT EXISTS spacetime_messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_spacetime_location ON spacetime_messages USING GIST(target_location);
-CREATE INDEX idx_spacetime_user ON spacetime_messages(user_id);
-CREATE INDEX idx_spacetime_created ON spacetime_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_spacetime_user ON spacetime_messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_spacetime_created ON spacetime_messages(created_at DESC);
 
 -- 时空胶囊表
 CREATE TABLE IF NOT EXISTS spacetime_capsules (
@@ -497,8 +498,8 @@ CREATE TABLE IF NOT EXISTS spacetime_capsules (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_capsules_unlock ON spacetime_capsules(unlock_ts);
-CREATE INDEX idx_capsules_user ON spacetime_capsules(user_id);
+CREATE INDEX IF NOT EXISTS idx_capsules_unlock ON spacetime_capsules(unlock_ts);
+CREATE INDEX IF NOT EXISTS idx_capsules_user ON spacetime_capsules(user_id);
 
 -- ============================================================
 -- 13. 成就系统
@@ -528,7 +529,7 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     UNIQUE (user_id, achievement_id)
 );
 
-CREATE INDEX idx_user_achievements_user ON user_achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id);
 
 -- 用户成就统计
 CREATE TABLE IF NOT EXISTS user_achievement_stats (
@@ -589,8 +590,8 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_notifications_user_read ON notifications(user_id, is_read);
-CREATE INDEX idx_notifications_created ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
 
 -- ============================================================
 -- 16. 语音存储
@@ -609,7 +610,7 @@ CREATE TABLE IF NOT EXISTS voice_files (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_voice_files_user ON voice_files(user_id);
+CREATE INDEX IF NOT EXISTS idx_voice_files_user ON voice_files(user_id);
 
 -- ============================================================
 -- 初始化数据

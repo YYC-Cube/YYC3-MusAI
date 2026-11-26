@@ -26,6 +26,8 @@ MODE="${1:-all}"
 PGHOST="${PGHOST:-192.168.3.45}"
 PGPORT="${PGPORT:-5433}"
 PGDATABASE="${PGDATABASE:-yyc3_music}"
+# 备份 schema 边界（多项目共享库，仅本项目管辖 musai；逗号分隔可扩展）
+PGSCHEMAS="${PGSCHEMAS:-musai}"
 PGUSER="${PGUSER:-musai_owner}"
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
 UPLOADS_DIR="${UPLOADS_DIR:-./uploads}"
@@ -39,10 +41,15 @@ log() { printf '[backup %s] %s\n' "$(date '+%F %T')" "$*"; }
 do_db() {
   local out="$BACKUP_DIR/musai-db-$TS.dump"
   log "pg_dump -> $out"
-  pg_dump -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -Fc -f "$out"
+  # 库为多项目共享（m98/monitor/ai/core/workflow 等非本项目管辖）——
+  # 备份边界 = 账号边界：仅 dump musai schema（演练实测 musai_app_rw 对其他 schema 无 LOCK 权限）
+  local schema_args=()
+  IFS=',' read -ra SCHEMAS <<< "$PGSCHEMAS"
+  for s in "${SCHEMAS[@]}"; do schema_args+=("--schema=$s"); done
+  pg_dump -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -Fc "${schema_args[@]}" -f "$out"
   local size
   size=$(du -h "$out" | cut -f1)
-  log "DB 备份完成：$size"
+  log "DB 备份完成：${size}（schema: ${PGSCHEMAS}）"
 }
 
 do_uploads() {
@@ -68,12 +75,12 @@ case "$MODE" in
   uploads) do_uploads ;;
   all)     do_db; do_uploads; do_rotate ;;
   verify)
-    F="${2:-$(latest_dump)}"
+    F="${2:-latest}"; [ "$F" = "latest" ] && F="$(latest_dump)"
     log "校验归档：$F"
     if pg_restore --list "$F" > /dev/null 2>&1; then log "✓ 归档完整（$(pg_restore --list "$F" | grep -c 'TABLE') 张表元数据可读）"; else log "✗ 归档损坏"; exit 1; fi
     ;;
   restore)
-    F="${2:-$(latest_dump)}"
+    F="${2:-latest}"; [ "$F" = "latest" ] && F="$(latest_dump)"
     log "目标：$PGHOST:$PGPORT/$PGDATABASE ← $F"
     read -r -p "将覆盖目标库当前数据，确认恢复？输入 YES 继续: " ok
     [ "$ok" = "YES" ] || { log "已取消"; exit 1; }

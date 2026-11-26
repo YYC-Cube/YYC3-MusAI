@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 
 // 从环境变量读取配置
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://phgrinrlnxzjyxxhsqry.supabase.co'
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoZ3JpbnJsbnh6anl4eGhzcXJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NzgzNDEsImV4cCI6MjA4NTI1NDM0MX0.bNn7XeoXmFD0dGIXIkh_YzQw-i-IqWW4x5gvl8nMcDA'
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY
 
 const KV_TABLE = "kv_store_f626b673"
 
