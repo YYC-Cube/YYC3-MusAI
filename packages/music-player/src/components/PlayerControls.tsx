@@ -280,7 +280,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
               onClick={handleLike}
               whileTap={{ scale: 0.9 }}
               className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/[0.08] transition-colors relative overflow-hidden flex-shrink-0"
-              aria-label={`M❤️值: ${mValue}, ${liked ? '已收藏，点击取消 / Unlike' : '点击喜欢 / Like'}`}
+              aria-label={`M${mValue > 0 ? '❤️' : '♡'} ${mValue} — ${liked ? '已收藏，点击取消 / Unlike' : '点击喜欢 / Like'}`}
               aria-pressed={liked}
             >
               <motion.div
@@ -435,7 +435,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
           {/* Right: Tools */}
           <div className="flex items-center justify-end gap-2 md:gap-3 w-1/3">
             {/* Time display */}
-            <div className="hidden lg:flex text-xs text-white/30 font-mono tabular-nums gap-1">
+            <div className="hidden lg:flex text-xs text-white/60 font-mono tabular-nums gap-1">
               <span>{formatTime(progress)}</span>
               <span>/</span>
               <span>{formatTime(duration)}</span>
@@ -452,6 +452,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     : 'text-white/30 hover:text-white/60'
                 )}
                 title="Emotion Filter"
+                aria-label="Emotion Filter"
+                aria-expanded={showEmotionFilter}
               >
                 {emotion && EMOTION_FILTER_CONFIG[emotion] ? (
                   React.createElement(EMOTION_FILTER_CONFIG[emotion].icon, { className: 'w-4 h-4' })
@@ -488,6 +490,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                                   : `text-white/40 hover:text-white/70 hover:bg-white/5`
                               )}
                               title={t(`player.${emo}` as any)}
+                              aria-label={t(`player.${emo}` as any)}
+                              aria-pressed={isActive}
                             >
                               <Icon className="w-5 h-5" />
                             </button>
@@ -510,6 +514,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     ? 'bg-white/15 text-white shadow-sm'
                     : 'text-white/40 hover:text-white/70'
                 )}
+                aria-label="音频模式 / Audio mode"
+                aria-pressed={mode === 'audio'}
               >
                 <Music className="w-3.5 h-3.5" />
               </button>
@@ -521,6 +527,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                     ? 'bg-white/15 text-white shadow-sm'
                     : 'text-white/40 hover:text-white/70'
                 )}
+                aria-label="视频模式 / Video mode"
+                aria-pressed={mode === 'video'}
               >
                 <Video className="w-3.5 h-3.5" />
               </button>
@@ -535,6 +543,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
               <button
                 onClick={() => onVolumeChange(volume === 0 ? 0.7 : 0)}
                 className="text-white/40 hover:text-white/80 transition-colors p-1"
+                aria-label={volume === 0 ? '取消静音 / Unmute' : '静音 / Mute'}
               >
                 <VolumeIcon className="w-4 h-4" />
               </button>

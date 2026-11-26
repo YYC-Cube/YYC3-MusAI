@@ -316,7 +316,6 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                   onClick={() => setShowSaved((value) => !value)}
                   className="w-full flex items-center justify-between px-4 py-3 text-white/50 hover:text-white/80 transition-colors"
                   aria-expanded={showSaved}
-                  aria-label="已保存歌单 / Saved playlists"
                   data-testid="toggle-saved-playlists"
                 >
                   <span className="text-xs font-medium uppercase tracking-wider">
@@ -399,6 +398,7 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
               style={{ scrollbarWidth: 'none' }}
               role="list"
               aria-label={`${t('playlist.title')} — ${playlist.length} ${t('playlist.tracks')}`}
+              tabIndex={0}
             >
               {playlist.slice(0, visibleCount).map((track, index) => {
                 const isCurrent = index === currentTrackIndex;
@@ -422,7 +422,9 @@ export const PlaylistPanel: React.FC<PlaylistPanelProps> = ({
                       type="button"
                       onClick={() => onSelectTrack(index)}
                       className="flex flex-1 items-center gap-3 min-w-0 text-left"
-                      aria-label={`${track.title} — ${track.artist}, ${formatDuration(track.duration)}`}
+                      // a11y：accessible name 取可见文本（标题+艺术家），时长补充进 title——
+                      // 避免 aria-label 与可见文本不一致触发 label-content-name-mismatch
+                      title={`${track.title} · ${formatDuration(track.duration)}`}
                     >
                     {/* Active indicator */}
                     {isCurrent && (

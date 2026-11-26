@@ -181,6 +181,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
       <div
         ref={containerRef}
         className="w-full h-full overflow-y-auto py-[40vh] relative"
+        tabIndex={0}
         style={{
           maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)',
           WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)',

@@ -31,6 +31,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
         <button
           onClick={onClose}
           className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors"
+          aria-label="关闭上传面板 / Close upload panel"
         >
           <X className="w-4 h-4 text-white/60" />
         </button>

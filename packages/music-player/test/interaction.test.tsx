@@ -121,7 +121,7 @@ describe('PlayerControls 交互', () => {
   it('喜欢按钮触发 onLike', async () => {
     const user = userEvent.setup()
     const handlers = setup()
-    await user.click(screen.getByRole('button', { name: /M❤️值/ }))
+    await user.click(screen.getByRole('button', { name: /M[❤♡]/ }))
     expect(handlers.onLike).toHaveBeenCalledTimes(1)
   })
 

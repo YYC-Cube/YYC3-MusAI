@@ -218,7 +218,7 @@ describe('PlayerControls 核心控制', () => {
 
   it('喜欢按钮触发 onLike 并渲染粒子动画，600ms 后复位', async () => {
     const { handlers, container } = setup({ mValue: 0 })
-    const likeBtn = screen.getByRole('button', { name: /M❤️值/ })
+    const likeBtn = screen.getByRole('button', { name: /M[❤♡]/ })
 
     fireEvent.click(likeBtn)
     expect(handlers.onLike).toHaveBeenCalledTimes(1)

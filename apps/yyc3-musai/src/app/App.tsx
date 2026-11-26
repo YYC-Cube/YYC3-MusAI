@@ -1640,6 +1640,7 @@ export function AppInner() {
                 onClick={() => openPanel('mheart')}
                 className="hidden md:flex items-center gap-1 text-white/25 hover:text-pink-400/70 transition-colors px-2 py-1.5 rounded-full hover:bg-white/[0.04]"
                 title={lang === 'zh' ? 'M❤️值' : 'M❤️ Score'}
+                aria-label={lang === 'zh' ? 'M❤️值' : 'M❤️ Score'}
               >
                 <Heart className="w-3.5 h-3.5" />
               </button>
