@@ -83,11 +83,10 @@ jobs:
           awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END {pct=lh/lf*100; printf "Deno src coverage: %.2f%% (%d/%d)\n", pct, lh, lf; exit (pct>=80?0:1)}' /tmp/deno-src.lcov
 
   a11y:
-    # 终审 R5：axe 无障碍门禁。首跑 shadow 模式（continue-on-error）——
-    # 拿到首轮 serious/critical 清单并修复后，移除 continue-on-error 转硬阻断。
+    # 终审 R5：axe 无障碍门禁（serious+critical=0 阻断）。
+    # shadow 首跑 12 处 → 二跑 2 处 → 三跑 0 处收敛后转硬门禁。
     name: A11y Scan (axe-core)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

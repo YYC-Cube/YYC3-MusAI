@@ -421,6 +421,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 ? 'bg-[#0D1235] border-purple-500/30'
                 : 'bg-[#0D1235]/90 backdrop-blur-xl border-white/10 hover:border-purple-500/30'
           )}
+          aria-label={isListening ? '停止聆听 / Stop listening' : 'AI 音乐助手 / AI music assistant'}
+          aria-expanded={isExpanded}
           style={{
             boxShadow: isListening
               ? `0 0 ${15 + audioEnergy * 20}px rgba(139,92,246,0.4)`
@@ -473,6 +475,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 ? 'bg-purple-600 border-purple-400/50 text-white'
                 : 'bg-[#0D1235]/80 backdrop-blur-xl border-white/10 text-white/40 hover:text-purple-400 hover:border-purple-500/30'
             )}
+            aria-label={isListening ? '停止语音输入 / Stop voice input' : '开始语音输入 / Start voice input'}
+            aria-pressed={isListening}
           >
             {isListening ? (
               <MicOff className="w-3.5 h-3.5" />
