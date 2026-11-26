@@ -10,16 +10,23 @@ CREATE TABLE kv_store_f626b673 (
 // View the table in your Supabase project dashboard (project ref: SUPABASE_URL env)
 
 // This file provides a simple key-value interface for storing Figma Make data. It should be adequate for most small-scale use cases.
-import { createClient } from "@supabase/supabase-js";
-
-const client = () => createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// 去 Supabase 化加载：生产默认 KV_DRIVER=pg，本模块仅在显式 supabase 驱动时
+// 动态加载 @supabase/supabase-js——pg 形态零加载、零启动警告。
+type SupabaseClient = { from: (t: string) => any };
+let cached: SupabaseClient | null = null;
+async function client(): Promise<SupabaseClient> {
+  if (cached) return cached;
+  const { createClient } = await import("@supabase/supabase-js");
+  cached = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  ) as SupabaseClient;
+  return cached;
+}
 
 // Set stores a key-value pair in the database.
 export const set = async (key: string, value: any): Promise<void> => {
-  const supabase = client()
+  const supabase = await client()
   const { error } = await supabase.from("kv_store_f626b673").upsert({
     key,
     value
@@ -31,7 +38,7 @@ export const set = async (key: string, value: any): Promise<void> => {
 
 // Get retrieves a key-value pair from the database.
 export const get = async (key: string): Promise<any> => {
-  const supabase = client()
+  const supabase = await client()
   const { data, error } = await supabase.from("kv_store_f626b673").select("value").eq("key", key).maybeSingle();
   if (error) {
     throw new Error(error.message);
@@ -41,7 +48,7 @@ export const get = async (key: string): Promise<any> => {
 
 // Delete deletes a key-value pair from the database.
 export const del = async (key: string): Promise<void> => {
-  const supabase = client()
+  const supabase = await client()
   const { error } = await supabase.from("kv_store_f626b673").delete().eq("key", key);
   if (error) {
     throw new Error(error.message);
@@ -50,7 +57,7 @@ export const del = async (key: string): Promise<void> => {
 
 // Sets multiple key-value pairs in the database.
 export const mset = async (keys: string[], values: any[]): Promise<void> => {
-  const supabase = client()
+  const supabase = await client()
   const { error } = await supabase.from("kv_store_f626b673").upsert(keys.map((k, i) => ({ key: k, value: values[i] })));
   if (error) {
     throw new Error(error.message);
@@ -59,7 +66,7 @@ export const mset = async (keys: string[], values: any[]): Promise<void> => {
 
 // Gets multiple key-value pairs from the database.
 export const mget = async (keys: string[]): Promise<any[]> => {
-  const supabase = client()
+  const supabase = await client()
   const { data, error } = await supabase.from("kv_store_f626b673").select("value").in("key", keys);
   if (error) {
     throw new Error(error.message);
@@ -69,7 +76,7 @@ export const mget = async (keys: string[]): Promise<any[]> => {
 
 // Deletes multiple key-value pairs from the database.
 export const mdel = async (keys: string[]): Promise<void> => {
-  const supabase = client()
+  const supabase = await client()
   const { error } = await supabase.from("kv_store_f626b673").delete().in("key", keys);
   if (error) {
     throw new Error(error.message);
@@ -78,7 +85,7 @@ export const mdel = async (keys: string[]): Promise<void> => {
 
 // Search for key-value pairs by prefix.
 export const getByPrefix = async (prefix: string): Promise<any[]> => {
-  const supabase = client()
+  const supabase = await client()
   const { data, error } = await supabase.from("kv_store_f626b673").select("key, value").like("key", prefix + "%");
   if (error) {
     throw new Error(error.message);
@@ -88,7 +95,7 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
 
 // 按前缀取键列表（诊断统计用；getByPrefix 返回值，这里返回键）
 export const getKeysByPrefix = async (prefix: string): Promise<string[]> => {
-  const supabase = client()
+  const supabase = await client()
   const { data, error } = await supabase.from("kv_store_f626b673").select("key").like("key", prefix + "%");
   if (error) {
     throw new Error(error.message);

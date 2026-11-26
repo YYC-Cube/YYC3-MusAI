@@ -456,7 +456,11 @@ Deno.test('spacetime: nearby 地理位置过滤', async () => {
   assertEquals(down.status, 500);
 });
 
-Deno.test('spacetime: 语音上传与签名 URL', async () => {
+Deno.test('spacetime: 语音上传与播放地址（本地卷，去 Supabase 化）', async () => {
+  // 隔离写盘目录（VOICE_DIR 惰性求值，import 后设置仍生效）
+  Deno.env.set('UPLOAD_DIR', '/tmp/musai-voice-test');
+  Deno.env.set('PUBLIC_BASE_URL', 'https://musai.example.com');
+
   const missing = await request(app, `${P}/voice/upload`, { body: {} });
   assertEquals(missing.status, 400);
 
@@ -467,8 +471,11 @@ Deno.test('spacetime: 语音上传与签名 URL', async () => {
   const body = await jsonBody(ok);
   assertEquals(body.success, true);
   assertMatch(body.filePath, /^voice-user\/.+\.mp4$/);
-  assert(body.signedUrl);
-  assert(fake.buckets.has('make-f626b673-voice'));
+  // 本地持久地址（signedUrl 为兼容别名）
+  assertEquals(body.url.startsWith('https://musai.example.com/uploads/voice/voice-user/'), true);
+  assertEquals(body.signedUrl, body.url);
+  // 文件真实落盘
+  assertEquals(await Deno.stat(`/tmp/musai-voice-test/voice/${body.filePath}`).then(() => true, () => false), true);
 
   const noPrefix = await request(app, `${P}/voice/upload`, {
     body: { userId: 'voice-user', audioBase64: 'AAAA' },
@@ -480,40 +487,22 @@ Deno.test('spacetime: 语音上传与签名 URL', async () => {
   });
   assertEquals(badBase64.status, 500);
 
-  fake.uploadError = 'upload exploded';
-  const uploadFail = await request(app, `${P}/voice/upload`, {
-    body: { userId: 'voice-user', audioBase64: 'AAAA' },
-  });
-  fake.uploadError = null;
-  assertEquals(uploadFail.status, 500);
-  assertMatch((await jsonBody(uploadFail)).error, /Upload failed/);
-
-  fake.signError = 'sign exploded';
-  const signFail = await request(app, `${P}/voice/upload`, {
-    body: { userId: 'voice-user', audioBase64: 'AAAA' },
-  });
-  const signUrlFail = await request(app, `${P}/voice/url?path=a.webm`);
-  fake.signError = null;
-  assertEquals(signFail.status, 500);
-  assertEquals(signUrlFail.status, 500);
-
   const noPath = await request(app, `${P}/voice/url`);
   assertEquals(noPath.status, 400);
   const url = await request(app, `${P}/voice/url?path=a.webm`);
   assertEquals(url.status, 200);
-  assert((await jsonBody(url)).signedUrl);
+  assertMatch((await jsonBody(url)).signedUrl, /\/uploads\/voice\/a\.webm$/);
 
-  fake.storageDown = true;
-  const downUpload = await request(app, `${P}/voice/upload`, {
-    body: { userId: 'voice-user', audioBase64: 'AAAA' },
-  });
-  const downUrl = await request(app, `${P}/voice/url?path=a.webm`);
-  fake.storageDown = false;
-  assertEquals(downUpload.status, 500);
-  assertEquals(downUrl.status, 500);
+  // 路径穿越守卫：绝对路径与上跳一律 400
+  const abs = await request(app, `${P}/voice/url?path=${encodeURIComponent('/etc/passwd')}`);
+  assertEquals(abs.status, 400);
+  const trav = await request(app, `${P}/voice/url?path=${encodeURIComponent('../../etc/passwd')}`);
+  assertEquals(trav.status, 400);
 
   const broken = await request(app, `${P}/voice/upload`, { body: '{bad' });
   assertEquals(broken.status, 500);
+
+  Deno.env.delete('PUBLIC_BASE_URL');
 });
 
 Deno.test('spacetime: 语音 STT 代理 /voice/stt（本地服务成功/失败/异常）', async () => {

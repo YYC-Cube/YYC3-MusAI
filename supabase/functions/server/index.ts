@@ -15,6 +15,12 @@ import { verifyAccessToken } from "./services/auth.ts";
 const port = Number(process.env.PORT ?? 8080);
 const hostname = process.env.HOST ?? '0.0.0.0';
 
+// 启动守卫（W8-P0-2）：JWT_SECRET 缺失 = 注册/登录/会话全部不可用，fail-fast
+if (!process.env.JWT_SECRET) {
+  console.error('[boot] 环境变量 JWT_SECRET 未配置——鉴权不可用。生成：openssl rand -hex 32');
+  process.exit(1);
+}
+
 const server = serve({ fetch: app.fetch, port, hostname }, (info) => {
   console.log(`[Server] YYC³ MusAI API listening on http://${info.address}:${info.port}`);
 });

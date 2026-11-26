@@ -5,7 +5,8 @@
  * Extracted from index.tsx for modularization.
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import * as kv from "../services/kv_store.ts";
 import { requireAuth, ROUTE_PREFIX } from "../services/server-utils.ts";
 import { rateLimit, RATE_STANDARD, RATE_SENSITIVE } from "../services/rate-limit.ts";
@@ -16,21 +17,25 @@ import {
 const P = ROUTE_PREFIX;
 
 // ==========================================
-// Voice Storage (Supabase Storage)
+// Voice Storage（去 Supabase 化：本地持久卷，模式同 routes-upload）
+// 自托管形态：UPLOAD_DIR 挂持久卷，nginx/静态路由暴露 /uploads/voice/*；
+// Edge 形态（Deno）不支持本地写盘——语音功能仅自托管可用。
 // ==========================================
-const VOICE_BUCKET = 'make-f626b673-voice';
-let voiceBucketReady = false;
-async function ensureVoiceBucket() {
-  if (voiceBucketReady) return;
-  try {
-    const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-    const { data: buckets } = await sb.storage.listBuckets();
-    if (!buckets?.some((b: any) => b.name === VOICE_BUCKET)) {
-      await sb.storage.createBucket(VOICE_BUCKET, { public: false });
-      console.log(`Created voice bucket: ${VOICE_BUCKET}`);
-    }
-    voiceBucketReady = true;
-  } catch (err) { console.log('ensureVoiceBucket error:', err); }
+/** 惰性求值（测试可在 import 后设置 UPLOAD_DIR） */
+function voiceDir() {
+  return path.join(process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads'), 'voice');
+}
+let voiceDirReady = false;
+function ensureVoiceDir() {
+  if (voiceDirReady) return;
+  mkdirSync(voiceDir(), { recursive: true });
+  voiceDirReady = true;
+}
+
+/** 语音播放地址：PUBLIC_BASE_URL + /uploads/voice/<file>（本地无签名语义，路径即持久地址） */
+function voicePublicUrl(filePath: string): string {
+  const base = (process.env.PUBLIC_BASE_URL ?? '').replace(/\/+$/, '');
+  return `${base}/uploads/voice/${filePath}`;
 }
 
 export function registerSpacetimeRoutes(app: any) {
@@ -281,26 +286,25 @@ export function registerSpacetimeRoutes(app: any) {
     }
   });
 
-  // --- Voice Upload/URL ---
+  // --- Voice Upload/URL（本地卷；signedUrl 字段保留为兼容别名=持久地址） ---
   app.post(`${P}/voice/upload`, async (c: any) => {
     try {
       const body = await c.req.json();
       const { userId, audioBase64, mimeType } = body;
       if (!userId || !audioBase64) return c.json({ error: 'userId and audioBase64 required' }, 400);
-      await ensureVoiceBucket();
-      const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+      ensureVoiceDir();
       const base64Data = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
       const binaryStr = atob(base64Data);
       const bytes = new Uint8Array(binaryStr.length);
       for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
       const ext = (mimeType || 'audio/webm').includes('mp4') ? 'mp4' : 'webm';
       const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-      const { error: uploadErr } = await sb.storage.from(VOICE_BUCKET).upload(fileName, bytes, { contentType: mimeType || 'audio/webm', upsert: false });
-      if (uploadErr) { console.log('Voice upload error:', uploadErr); return c.json({ error: `Upload failed: ${uploadErr.message}` }, 500); }
-      const { data: signedData, error: signErr } = await sb.storage.from(VOICE_BUCKET).createSignedUrl(fileName, 3600);
-      if (signErr) return c.json({ error: `Signed URL failed: ${signErr.message}` }, 500);
+      // 每用户子目录随写随建（userId 可含新值，recursive 幂等）
+      mkdirSync(path.dirname(path.join(voiceDir(), fileName)), { recursive: true });
+      writeFileSync(path.join(voiceDir(), fileName), bytes);
       console.log(`Voice uploaded: ${fileName}`);
-      return c.json({ success: true, filePath: fileName, signedUrl: signedData?.signedUrl });
+      const url = voicePublicUrl(fileName);
+      return c.json({ success: true, filePath: fileName, signedUrl: url, url });
     } catch (error) { console.log('Voice upload error:', error); return c.json({ error: `Voice upload failed: ${error}` }, 500); }
   });
 
@@ -308,11 +312,11 @@ export function registerSpacetimeRoutes(app: any) {
     try {
       const filePath = c.req.query("path");
       if (!filePath) return c.json({ error: 'path query required' }, 400);
-      await ensureVoiceBucket();
-      const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-      const { data, error } = await sb.storage.from(VOICE_BUCKET).createSignedUrl(filePath, 3600);
-      if (error) return c.json({ error: `URL failed: ${error.message}` }, 500);
-      return c.json({ signedUrl: data?.signedUrl });
+      // 路径穿越守卫：拒绝绝对路径/上跳（与 routes-upload 同构）
+      if (path.isAbsolute(filePath) || filePath.split('/').includes('..')) {
+        return c.json({ error: 'invalid path' }, 400);
+      }
+      return c.json({ signedUrl: voicePublicUrl(filePath), url: voicePublicUrl(filePath) });
     } catch (error) { console.log('Voice URL error:', error); return c.json({ error: `Failed: ${error}` }, 500); }
   });
 

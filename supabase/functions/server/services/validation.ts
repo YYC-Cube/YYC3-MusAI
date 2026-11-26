@@ -307,7 +307,7 @@ export function validate<T extends z.ZodTypeAny>(schema: T, data: unknown):
     return { success: true, data: result.data };
   }
   const issues = result.error.issues
-    .map((i: { path: (string | number)[]; message: string }) => `${i.path.join('.')}: ${i.message}`)
+    .map((i) => `${i.path.join('.')}: ${i.message}`)
     .join('; ');
   return { success: false, error: `Validation failed: ${issues}` };
 }

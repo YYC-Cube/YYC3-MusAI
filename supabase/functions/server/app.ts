@@ -29,6 +29,7 @@ import { registerUploadRoutes } from "./routes/routes-upload.ts";
 import { registerPlaylistRoutes } from "./routes/routes-playlist.ts";
 import { registerFollowRoutes } from "./routes/routes-follow.ts";
 import { registerLiveStreamRoutes } from "./routes/routes-livestream.ts";
+import { registerMonitoringRoutes } from "./routes/routes-monitoring.ts";
 
 const app = new Hono();
 
@@ -130,5 +131,6 @@ registerUploadRoutes(app);
 registerPlaylistRoutes(app);
 registerFollowRoutes(app);
 registerLiveStreamRoutes(app);
+registerMonitoringRoutes(app);
 
 export { app };
